@@ -1,0 +1,165 @@
+---
+// Dashboard.astro
+---
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 mb-8 border border-gray-100 dark:border-gray-700">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Dashboard</h2>
+    <p class="text-gray-600 dark:text-gray-300 mb-6">Simulación del invernadero y la posición del sol.</p>
+    
+    <!-- Contenedor para Three.js -->
+    <div id="three-container" class="w-full h-96 bg-gray-900 rounded-xl overflow-hidden shadow-inner relative">
+       <div id="time-display" class="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg backdrop-blur-sm font-mono text-sm">
+         Hora: --:--
+       </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import * as THREE from 'three';
+
+  // --- CONFIGURACIÓN INICIAL ---
+  const container = document.getElementById('three-container');
+  const timeDisplay = document.getElementById('time-display');
+
+  if (container) {
+    // --- ESCENA BÁSICA ---
+    const scene = new THREE.Scene();
+    
+    // Configurar cámara según el tamaño del contenedor
+    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 5, 20);
+
+    // Configurar el renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    // Ajustar el canvas si la ventana cambia de tamaño
+    window.addEventListener('resize', () => {
+      if (container) {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      }
+    });
+
+    // Añadir un suelo simple (para notar mejor las sombras/iluminación)
+    const groundGeometry = new THREE.PlaneGeometry(50, 50);
+    const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.8 }); // Verde para simular pasto
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Añadir un modelo básico del "invernadero" en el centro
+    const greenhouseGeometry = new THREE.BoxGeometry(10, 5, 6);
+    const greenhouseMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.5 });
+    const greenhouse = new THREE.Mesh(greenhouseGeometry, greenhouseMaterial);
+    greenhouse.position.y = 2.5; // Elevarlo para que quede sobre el suelo
+    greenhouse.castShadow = true;
+    greenhouse.receiveShadow = true;
+    scene.add(greenhouse);
+
+    // Luz ambiental suave para que las partes oscuras no sean completamente negras
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5); 
+    scene.add(ambientLight);
+
+    // --- 1. LUZ DEL SOL ---
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    dirLight.castShadow = true; 
+    
+    // Mejorar la calidad de las sombras
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 150;
+    dirLight.shadow.camera.left = -20;
+    dirLight.shadow.camera.right = 20;
+    dirLight.shadow.camera.top = 20;
+    dirLight.shadow.camera.bottom = -20;
+    scene.add(dirLight);
+
+    // --- 2. SOL VISUAL ---
+    const sunGeometry = new THREE.SphereGeometry(2, 32, 32); 
+    const sunMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xfffca3, 
+    });
+    const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+    scene.add(sunMesh);
+
+    // --- FUNCIÓN DE CÁLCULO DE POSICIÓN ---
+    function updateSun(hour: number) {
+      // Actualizar el display de tiempo
+      if (timeDisplay) {
+         const hh = Math.floor(hour).toString().padStart(2, '0');
+         const mm = Math.floor((hour % 1) * 60).toString().padStart(2, '0');
+         timeDisplay.textContent = `Hora: ${hh}:${mm}`;
+      }
+
+      // Entre las 6:00 y las 18:00
+      if (hour < 6 || hour > 18) {
+        dirLight.intensity = 0.1; // Noche
+        sunMesh.visible = false; 
+        scene.background = new THREE.Color(0x0a0a2a); // Cielo oscuro
+        return;
+      }
+
+      sunMesh.visible = true; 
+      
+      // Calcular progreso del día: 6am = 0, 12pm = 0.5, 6pm = 1
+      const progress = (hour - 6) / 12;
+      const angle = progress * Math.PI; // De 0 a PI (180 grados)
+      
+      const distance = 40; // Distancia del sol al invernadero
+      
+      // La órbita del sol: nace en el este (x positivo), se pone en el oeste (x negativo)
+      const x = Math.cos(angle) * distance; 
+      const y = Math.sin(angle) * distance;  
+      const z = -10; // Ligeramente por detrás
+      
+      dirLight.position.set(x, y, z);
+      sunMesh.position.set(x, y, z);
+      
+      // Ajustar brillo de la luz según altura (Cenit = más brillante)
+      const heightFactor = Math.sin(angle); 
+      dirLight.intensity = Math.max(0.1, heightFactor * 2); 
+      
+      // Cambiar el color del cielo basado en la hora (amanecer/atardecer vs mediodía)
+      let skyColor = new THREE.Color();
+      if (progress < 0.2 || progress > 0.8) {
+         skyColor.setHex(0xff7b54); // Naranja/rojizo al amanecer y atardecer
+      } else {
+         skyColor.setHex(0x87ceeb); // Celeste claro en el día
+      }
+      scene.background = skyColor;
+      
+      // Cambiar ligeramente el color del sol en los extremos
+      if (progress < 0.1 || progress > 0.9) {
+          sunMaterial.color.setHex(0xff4500); // Rojo anaranjado
+      } else {
+          sunMaterial.color.setHex(0xfffca3); // Amarillo brillante
+      }
+    }
+
+    // --- BUCLE DE ANIMACIÓN ---
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      // Obtener la hora real actual
+      const now = new Date();
+      const currentHour = now.getHours() + (now.getMinutes() / 60) + (now.getSeconds() / 3600);
+      
+      updateSun(currentHour);
+      
+      renderer.render(scene, camera);
+    }
+    
+    // Activar sombras en el renderer
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    animate(); 
+  }
+</script>
