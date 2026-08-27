@@ -9,8 +9,24 @@
     
     <!-- Contenedor para Three.js -->
     <div id="three-container" class="w-full h-96 bg-gray-900 rounded-xl overflow-hidden shadow-inner relative">
-       <div id="time-display" class="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg backdrop-blur-sm font-mono text-sm">
+       <div id="time-display" class="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg backdrop-blur-sm font-mono text-sm z-10">
          Hora: --:--
+       </div>
+
+       <!-- Widget del Clima (Glassmorphism) -->
+       <div id="weather-widget" class="absolute top-4 right-4 bg-white/30 dark:bg-black/40 backdrop-blur-md text-gray-900 dark:text-white p-4 rounded-xl shadow-lg border border-white/40 dark:border-gray-600/50 flex flex-col gap-1 z-10 min-w-[160px] transition-all duration-300">
+         <div class="flex items-center justify-between mb-1">
+           <span id="weather-title" class="text-[10px] font-bold uppercase tracking-widest opacity-80">Clima Local</span>
+           <span id="weather-icon" class="text-xl">☀️</span>
+         </div>
+         <div class="flex items-end gap-1">
+           <span id="weather-temp" class="text-4xl font-extrabold tracking-tighter">--</span>
+           <span class="text-lg font-medium mb-1">°C</span>
+         </div>
+         <div class="flex justify-between text-xs font-semibold opacity-90 mt-2">
+           <span id="weather-humidity" class="bg-blue-100/50 dark:bg-blue-900/50 px-2 py-1 rounded-md">💧 --%</span>
+           <span id="weather-rain" class="bg-indigo-100/50 dark:bg-indigo-900/50 px-2 py-1 rounded-md">🌧️ --%</span>
+         </div>
        </div>
     </div>
   </div>
@@ -159,6 +175,80 @@
     // Activar sombras en el renderer
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // --- 3. DATOS DEL CLIMA (Predicción para el Invernadero) ---
+    async function fetchWeather(lat: number, lon: number, isFallback = false) {
+      try {
+        const tempEl = document.getElementById('weather-temp');
+        const humEl = document.getElementById('weather-humidity');
+        const rainEl = document.getElementById('weather-rain');
+        const iconEl = document.getElementById('weather-icon');
+        const titleEl = document.getElementById('weather-title');
+        
+        // API Open-Meteo dinámica basada en lat y lon
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code&hourly=precipitation_probability&timezone=America%2FBogota`);
+        if (!res.ok) throw new Error('Error de red');
+        
+        const data = await res.json();
+        const current = data.current;
+        
+        // Obtener la probabilidad de lluvia para la hora actual
+        const currentHour = new Date().getHours();
+        const rainProb = data.hourly.precipitation_probability[currentHour] || 0;
+        
+        if (tempEl) tempEl.textContent = Math.round(current.temperature_2m).toString();
+        if (humEl) humEl.textContent = `💧 ${current.relative_humidity_2m}%`;
+        if (rainEl) rainEl.textContent = `🌧️ ${rainProb}%`;
+        if (titleEl) {
+           titleEl.textContent = isFallback ? "Clima (Medellín)" : "Clima (Tu ubicación)";
+        }
+        
+        // Cambiar ícono según código meteorológico WMO
+        if (iconEl) {
+          const code = current.weather_code;
+          if (code === 0) iconEl.textContent = '☀️';
+          else if (code >= 1 && code <= 3) iconEl.textContent = '⛅';
+          else if (code >= 51 && code <= 67) iconEl.textContent = '🌧️';
+          else if (code >= 71 && code <= 77) iconEl.textContent = '❄️';
+          else if (code >= 95) iconEl.textContent = '⛈️';
+          else iconEl.textContent = '☁️';
+        }
+      } catch (e) {
+        console.error("Error cargando el clima:", e);
+      }
+    }
+
+    function initWeather() {
+      // Intentar obtener la ubicación del dispositivo
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            fetchWeather(lat, lon, false);
+            // Configurar actualización automática cada 10 min
+            setInterval(() => fetchWeather(lat, lon, false), 600000);
+          },
+          (error) => {
+            console.warn("Geolocalización denegada o fallida, usando Medellín por defecto.", error);
+            // Coordenadas por defecto (Medellín)
+            const fallbackLat = 6.2442;
+            const fallbackLon = -75.5812;
+            fetchWeather(fallbackLat, fallbackLon, true);
+            setInterval(() => fetchWeather(fallbackLat, fallbackLon, true), 600000);
+          },
+          { timeout: 10000 }
+        );
+      } else {
+        // Navegador no soporta geolocalización
+        const fallbackLat = 6.2442;
+        const fallbackLon = -75.5812;
+        fetchWeather(fallbackLat, fallbackLon, true);
+        setInterval(() => fetchWeather(fallbackLat, fallbackLon, true), 600000);
+      }
+    }
+    
+    initWeather();
 
     animate(); 
   }
