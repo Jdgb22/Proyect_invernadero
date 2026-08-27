@@ -1,1 +1,52 @@
-barra de tareas
+---
+import { getSession } from "auth-astro/server";
+
+const session = await getSession(Astro.request);
+---
+
+<nav class="bg-white dark:bg-gray-800 shadow">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16">
+      <div class="flex items-center">
+        <img
+          src="/icons8-invernadero-64.svg"
+          alt="Logo"
+          width="32"
+          height="32"
+        />
+        <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400"
+          >AquaSens</span
+        >
+      </div>
+      <div class="flex items-center space-x-4">
+        {
+          session?.user && (
+            <div class="text-sm text-gray-700 dark:text-gray-300">
+              Hola, <span class="font-semibold">{session.user.name}</span>
+              <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                {(session.user as any).role}
+              </span>
+            </div>
+          )
+        }
+        <button
+          id="nav-logout-btn"
+          class="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+        >
+          Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  const { signOut } = await import("auth-astro/client");
+  const logoutBtn = document.getElementById("nav-logout-btn");
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      signOut();
+    });
+  }
+</script>

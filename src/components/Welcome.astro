@@ -1,46 +1,6 @@
 
----
-import { getSession } from 'auth-astro/server';
-
-const session = await getSession(Astro.request);
-const isAuthenticated = !!session;
-const userRole = session?.user?.role;
----
-
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 p-4">
   <div class="max-w-md w-full p-8 rounded-3xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl shadow-2xl border border-white/20 dark:border-gray-700/50">
-    {isAuthenticated ? (
-      <div class="text-center">
-        <div class="w-20 h-20 mx-auto bg-gradient-to-tr from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg mb-6 text-white text-2xl font-bold">
-           {session?.user?.name?.charAt(0).toUpperCase()}
-        </div>
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">¡Bienvenido!</h1>
-        <p class="text-gray-600 dark:text-gray-300 mb-6">Has iniciado sesión como <span class="font-semibold text-indigo-600 dark:text-indigo-400">{session?.user?.name}</span></p>
-        
-        <div class="mb-8 p-5 bg-white/50 dark:bg-gray-700/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600">
-          <span class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">Tu Rol</span>
-          <div class="mt-2 flex items-center justify-center">
-            <span class={`px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm ${userRole === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 ring-1 ring-purple-200 dark:ring-purple-700' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-700'}`}>
-              {userRole === 'admin' ? 'Administrador' : 'Usuario'}
-            </span>
-          </div>
-        </div>
-
-        {userRole === 'admin' && (
-          <div class="mb-8 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl border border-purple-100 dark:border-purple-800 text-left relative overflow-hidden">
-             <div class="absolute top-0 right-0 p-2 opacity-10">
-                <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path></svg>
-             </div>
-             <h3 class="font-bold text-purple-900 dark:text-purple-300 mb-1">Panel de Administrador</h3>
-             <p class="text-purple-700/80 dark:text-purple-300/80 text-sm">Tienes acceso total al sistema.</p>
-          </div>
-        )}
-
-        <button id="logout-btn" class="w-full flex justify-center py-3.5 px-4 rounded-xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-          Cerrar Sesión
-        </button>
-      </div>
-    ) : (
       <div>
         <div class="text-center mb-10">
           <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400 mb-4 shadow-inner">
@@ -81,15 +41,13 @@ const userRole = session?.user?.role;
           <div id="error-message" class="hidden p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">Credenciales incorrectas. Intenta nuevamente.</div>
         </form>
       </div>
-    )}
   </div>
 </div>
 
 <script>
-  const { signIn, signOut } = await import('auth-astro/client');
+  const { signIn } = await import('auth-astro/client');
 
   const loginForm = document.getElementById('login-form');
-  const logoutBtn = document.getElementById('logout-btn');
   const errorMessage = document.getElementById('error-message');
 
   if (loginForm) {
@@ -117,12 +75,6 @@ const userRole = session?.user?.role;
       } catch (err) {
         console.error(err);
       }
-    });
-  }
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      signOut();
     });
   }
 </script>
