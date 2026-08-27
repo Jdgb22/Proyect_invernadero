@@ -1,5 +1,5 @@
 # Astro Starter Kit: Basics
-
+Nombre de participantes: Luis Manuel Florez
 ```sh
 pnpm create astro@latest -- --template basics
 ```
