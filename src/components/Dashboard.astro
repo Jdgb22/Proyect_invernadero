@@ -34,6 +34,7 @@
 
 <script>
   import * as THREE from 'three';
+  import { fetchWeatherData, getWeatherEmoji } from '../services/weather';
 
   // --- CONFIGURACIÓN INICIAL ---
   const container = document.getElementById('three-container');
@@ -185,33 +186,16 @@
         const iconEl = document.getElementById('weather-icon');
         const titleEl = document.getElementById('weather-title');
         
-        // API Open-Meteo dinámica basada en lat y lon
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code&hourly=precipitation_probability&timezone=America%2FBogota`);
-        if (!res.ok) throw new Error('Error de red');
+        const data = await fetchWeatherData(lat, lon, isFallback);
         
-        const data = await res.json();
-        const current = data.current;
-        
-        // Obtener la probabilidad de lluvia para la hora actual
-        const currentHour = new Date().getHours();
-        const rainProb = data.hourly.precipitation_probability[currentHour] || 0;
-        
-        if (tempEl) tempEl.textContent = Math.round(current.temperature_2m).toString();
-        if (humEl) humEl.textContent = `💧 ${current.relative_humidity_2m}%`;
-        if (rainEl) rainEl.textContent = `🌧️ ${rainProb}%`;
+        if (tempEl) tempEl.textContent = Math.round(data.temperature).toString();
+        if (humEl) humEl.textContent = `💧 ${data.humidity}%`;
+        if (rainEl) rainEl.textContent = `🌧️ ${data.rainProbability}%`;
         if (titleEl) {
-           titleEl.textContent = isFallback ? "Clima (Medellín)" : "Clima (Tu ubicación)";
+           titleEl.textContent = data.isFallback ? "Clima (Medellín)" : "Clima (Tu ubicación)";
         }
-        
-        // Cambiar ícono según código meteorológico WMO
         if (iconEl) {
-          const code = current.weather_code;
-          if (code === 0) iconEl.textContent = '☀️';
-          else if (code >= 1 && code <= 3) iconEl.textContent = '⛅';
-          else if (code >= 51 && code <= 67) iconEl.textContent = '🌧️';
-          else if (code >= 71 && code <= 77) iconEl.textContent = '❄️';
-          else if (code >= 95) iconEl.textContent = '⛈️';
-          else iconEl.textContent = '☁️';
+          iconEl.textContent = getWeatherEmoji(data.weatherCode);
         }
       } catch (e) {
         console.error("Error cargando el clima:", e);
