@@ -1,11 +1,11 @@
 ---
 import { getSession } from 'auth-astro/server';
-import Dashboard from "../components/Dashboard.astro";
-import Welcome from "../components/Welcome.astro";
-import Layout from "../layouts/Layout.astro";
-import Historial from "../components/Historial.astro";
-import Metrics from "../components/Metrics.astro";
-import Navbar from "../components/navbar.astro";
+import Dashboard from "../frontend/components/Dashboard.astro";
+import Welcome from "../frontend/components/Welcome.astro";
+import Layout from "../frontend/layouts/Layout.astro";
+import Historial from "../frontend/components/Historial.astro";
+import Metrics from "../frontend/components/Metrics.astro";
+import Navbar from "../frontend/components/navbar.astro";
 
 const session = await getSession(Astro.request);
 const isAuthenticated = !!session;
