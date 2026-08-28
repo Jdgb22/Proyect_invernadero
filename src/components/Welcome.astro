@@ -1,26 +1,38 @@
+---
+// Welcome.astro
+---
+<!-- Importamos el reproductor oficial de Lottie -->
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" is:inline></script>
+
 <div class="min-h-screen flex flex-col lg:flex-row w-full bg-gray-50 dark:bg-gray-900">
   
   <!-- Left Side: Farmer Image Panel -->
   <div id="farmer-panel" class="w-full h-72 lg:h-auto lg:min-h-screen lg:w-1/2 relative bg-gray-950 dark:bg-black overflow-hidden flex items-center justify-center flex-shrink-0">
-    <!-- SVG estático de fondo -->
+    
+    <!-- Imagen estática (visible por defecto) -->
     <img
       id="farmer-static"
       src="/static-farmer.svg"
       alt="Agrónomo en la finca"
-      class="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700"
-      style="opacity:1"
+      class="absolute inset-0 w-full h-full object-cover object-center"
+      style="opacity:1; transition:opacity 0.6s ease; z-index:1;"
     />
-    <!-- Contenedor donde inyectaremos el SVG animado inline -->
-    <div
-      id="farmer-anim"
-      class="absolute inset-0 w-full h-full transition-opacity duration-700"
-      style="opacity:0"
-      aria-hidden="true"
-    ></div>
+
+    <!-- Reproductor de Lottie (oculto, de calidad vectorial infinita) -->
+    <lottie-player
+      id="farmer-anim-lottie"
+      src="/animated-farmer.json.json"
+      background="transparent"
+      speed="1"
+      preserveAspectRatio="xMidYMid slice"
+      class="absolute inset-0 w-full h-full"
+      style="opacity:0; transition:opacity 0.6s ease; z-index:2;"
+    ></lottie-player>
+
     <!-- Degradado inferior -->
-    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent pointer-events-none"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent pointer-events-none" style="z-index:3;"></div>
     <!-- Texto superpuesto -->
-    <div class="absolute bottom-6 lg:bottom-10 left-6 lg:left-10 text-white z-10 max-w-xs lg:max-w-sm">
+    <div class="absolute bottom-6 lg:bottom-10 left-6 lg:left-10 text-white max-w-xs lg:max-w-sm" style="z-index:4;">
       <h2 class="text-2xl lg:text-4xl font-bold drop-shadow-md mb-1 lg:mb-3">AquaSens</h2>
       <p class="text-sm lg:text-base text-gray-300 drop-shadow">Plataforma integral para el monitoreo y gestión inteligente de tu invernadero.</p>
     </div>
@@ -37,14 +49,14 @@
       <form id="login-form" class="space-y-6" novalidate>
         <div>
           <label for="username" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Usuario</label>
-          <input id="username" name="username" type="text" autocomplete="username" required
+          <input id="username" name="username" type="text" autocomplete="username"
             class="block w-full px-4 py-3.5 bg-gray-50 border border-gray-200 dark:border-gray-600 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700/50 dark:text-white text-sm transition-all shadow-sm"
             placeholder="admin o user" />
         </div>
 
         <div>
           <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Contraseña</label>
-          <input id="password" name="password" type="password" autocomplete="current-password" required
+          <input id="password" name="password" type="password" autocomplete="current-password"
             class="block w-full px-4 py-3.5 bg-gray-50 border border-gray-200 dark:border-gray-600 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700/50 dark:text-white text-sm transition-all shadow-sm"
             placeholder="••••••••" />
         </div>
@@ -77,92 +89,88 @@
   </div>
 </div>
 
-<!-- Script is:inline para las funciones DOM disponibles globalmente -->
-<script is:inline>
-  // Pre-carga el SVG animado en background
-  let _animatedSVGContent = null;
-  fetch('/animated-farmer.svg')
-    .then(r => r.text())
-    .then(html => { _animatedSVGContent = html; })
-    .catch(() => {});
-
-  function showAnim() {
-    const staticImg = document.getElementById('farmer-static');
-    const animDiv   = document.getElementById('farmer-anim');
-    if (!_animatedSVGContent || !staticImg || !animDiv) return;
-    animDiv.innerHTML = _animatedSVGContent;
-    const svg = animDiv.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('width', '100%');
-      svg.setAttribute('height', '100%');
-      svg.style.cssText = 'width:100%;height:100%;position:absolute;inset:0';
-    }
-    staticImg.style.opacity = '0';
-    animDiv.style.opacity   = '1';
-  }
-
-  function hideAnim() {
-    const staticImg = document.getElementById('farmer-static');
-    const animDiv   = document.getElementById('farmer-anim');
-    if (!staticImg || !animDiv) return;
-    staticImg.style.opacity = '1';
-    animDiv.style.opacity   = '0';
-    setTimeout(function() { animDiv.innerHTML = ''; }, 700);
-  }
-</script>
-
-<!-- Script normal procesado por Astro para usar auth-astro/client -->
 <script>
   import { signIn } from 'auth-astro/client';
 
-  const loginForm  = document.getElementById('login-form');
+  const loginForm  = document.getElementById('login-form')!;
   const loginBtn   = document.getElementById('login-btn') as HTMLButtonElement;
-  const btnText    = document.getElementById('btn-text');
-  const btnSpinner = document.getElementById('btn-spinner');
+  const btnText    = document.getElementById('btn-text')!;
+  const btnSpinner = document.getElementById('btn-spinner')!;
   const errorMsg   = document.getElementById('error-message') as HTMLElement;
+  
+  const farmerImg  = document.getElementById('farmer-static')  as HTMLElement;
+  const animLottie = document.getElementById('farmer-anim-lottie') as any;
+
+  const ANIM_DURATION = 2500;
 
   function setLoading(on: boolean) {
     loginBtn.disabled = on;
-    if (btnText) btnText.textContent = on ? 'Cargando…' : 'Iniciar Sesión';
-    btnSpinner?.classList.toggle('hidden', !on);
+    btnText.textContent = on ? 'Cargando…' : 'Iniciar Sesión';
+    btnSpinner.classList.toggle('hidden', !on);
   }
 
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errorMsg.classList.add('hidden');
-      setLoading(true);
-      (window as any).showAnim?.();
+  function startAnim() {
+    // Forzamos a que inicie desde el frame 0 y reproduzca la animación vectorial Lottie
+    animLottie.seek(0);
+    animLottie.play();
+    
+    // Transición suave: ocultar imagen, mostrar animación
+    farmerImg.style.opacity = '0';
+    animLottie.style.opacity = '1';
+  }
 
-      const username = (document.getElementById('username') as HTMLInputElement).value;
-      const password = (document.getElementById('password') as HTMLInputElement).value;
+  function stopAnim() {
+    farmerImg.style.opacity = '1';
+    animLottie.style.opacity = '0';
+    
+    setTimeout(() => {
+      animLottie.pause();
+    }, 600);
+  }
 
-      try {
-        const result = await signIn('credentials', {
-          username,
-          password,
-          redirect: false,
-        } as any);
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.classList.add('hidden');
 
-        // Esperar mínimo 3s para ver la animación completa
-        await new Promise(r => setTimeout(r, 3000));
+    const username = (document.getElementById('username') as HTMLInputElement).value.trim();
+    const password = (document.getElementById('password') as HTMLInputElement).value;
 
-        if ((result as any)?.error) {
-          (window as any).hideAnim?.();
-          setLoading(false);
-          errorMsg.textContent = 'Credenciales incorrectas. Intenta nuevamente.';
-          errorMsg.classList.remove('hidden');
-        } else {
-          window.location.href = '/';
-        }
-      } catch (err) {
-        console.error('Login error:', err);
-        await new Promise(r => setTimeout(r, 2000));
-        (window as any).hideAnim?.();
+    if (!username || !password) {
+      errorMsg.textContent = 'Por favor ingresa usuario y contraseña.';
+      errorMsg.classList.remove('hidden');
+      return;
+    }
+
+    setLoading(true);
+
+    // 1. Mostrar y reproducir el archivo JSON (animación Lottie vectorial y nítida)
+    startAnim();
+
+    // 2. Esperar que el usuario aprecie la animación perfecta
+    await new Promise(r => setTimeout(r, ANIM_DURATION));
+
+    // 3. Login
+    try {
+      const result = await signIn('credentials', {
+        username,
+        password,
+        redirect: false,
+      } as any);
+
+      if ((result as any)?.error) {
+        stopAnim();
         setLoading(false);
-        errorMsg.textContent = 'Error inesperado. Intenta nuevamente.';
+        errorMsg.textContent = 'Credenciales incorrectas. Intenta nuevamente.';
         errorMsg.classList.remove('hidden');
+      } else {
+        window.location.href = '/';
       }
-    });
-  }
+    } catch (err) {
+      console.error(err);
+      stopAnim();
+      setLoading(false);
+      errorMsg.textContent = 'Error inesperado. Intenta nuevamente.';
+      errorMsg.classList.remove('hidden');
+    }
+  });
 </script>
