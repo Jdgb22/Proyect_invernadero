@@ -23,9 +23,12 @@
            <span id="weather-temp" class="text-4xl font-extrabold tracking-tighter">--</span>
            <span class="text-lg font-medium mb-1">°C</span>
          </div>
-         <div class="flex justify-between text-xs font-semibold opacity-90 mt-2">
-           <span id="weather-humidity" class="bg-blue-100/50 dark:bg-blue-900/50 px-2 py-1 rounded-md">💧 --%</span>
-           <span id="weather-rain" class="bg-indigo-100/50 dark:bg-indigo-900/50 px-2 py-1 rounded-md">🌧️ --%</span>
+         <div class="flex justify-between text-xs font-semibold opacity-90 mt-2 gap-2">
+           <span id="weather-humidity" class="bg-blue-100/50 dark:bg-blue-900/50 px-2 py-1 rounded-md flex-1 text-center">💧 --%</span>
+           <span id="weather-rain" class="bg-indigo-100/50 dark:bg-indigo-900/50 px-2 py-1 rounded-md flex-1 text-center">🌧️ --%</span>
+         </div>
+         <div class="flex justify-center text-xs font-semibold opacity-90 mt-2">
+           <span id="weather-irradiation" class="bg-yellow-100/50 dark:bg-yellow-900/50 px-2 py-1 rounded-md w-full text-center">☀️ -- W/m²</span>
          </div>
        </div>
     </div>
@@ -106,6 +109,12 @@
     const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
     scene.add(sunMesh);
 
+    // --- 3. LUNA VISUAL ---
+    const moonGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+    const moonMaterial = new THREE.MeshBasicMaterial({ color: 0xe0e0e0 });
+    const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+    scene.add(moonMesh);
+
     // --- FUNCIÓN DE CÁLCULO DE POSICIÓN ---
     function updateSun(hour: number) {
       // Actualizar el display de tiempo
@@ -115,48 +124,57 @@
          timeDisplay.textContent = `Hora: ${hh}:${mm}`;
       }
 
-      // Entre las 6:00 y las 18:00
-      if (hour < 6 || hour > 18) {
-        dirLight.intensity = 0.1; // Noche
-        sunMesh.visible = false; 
-        scene.background = new THREE.Color(0x0a0a2a); // Cielo oscuro
-        return;
-      }
+      const distanceX = 22; // Distancia horizontal (este a oeste)
+      const distanceY = 16; // Altura máxima en el cielo (cenit)
+      const z = -15; // Ligeramente por detrás
 
-      sunMesh.visible = true; 
-      
-      // Calcular progreso del día: 6am = 0, 12pm = 0.5, 6pm = 1
-      const progress = (hour - 6) / 12;
-      const angle = progress * Math.PI; // De 0 a PI (180 grados)
-      
-      const distance = 40; // Distancia del sol al invernadero
-      
-      // La órbita del sol: nace en el este (x positivo), se pone en el oeste (x negativo)
-      const x = Math.cos(angle) * distance; 
-      const y = Math.sin(angle) * distance;  
-      const z = -10; // Ligeramente por detrás
-      
-      dirLight.position.set(x, y, z);
-      sunMesh.position.set(x, y, z);
-      
-      // Ajustar brillo de la luz según altura (Cenit = más brillante)
-      const heightFactor = Math.sin(angle); 
-      dirLight.intensity = Math.max(0.1, heightFactor * 2); 
-      
-      // Cambiar el color del cielo basado en la hora (amanecer/atardecer vs mediodía)
-      let skyColor = new THREE.Color();
-      if (progress < 0.2 || progress > 0.8) {
-         skyColor.setHex(0xff7b54); // Naranja/rojizo al amanecer y atardecer
+      // Entre las 6:00 y las 18:00 (Día)
+      if (hour >= 6 && hour <= 18) {
+        moonMesh.visible = false;
+        sunMesh.visible = true; 
+        
+        const progress = (hour - 6) / 12; // 0 (6am) a 1 (6pm)
+        const angle = progress * Math.PI; 
+        
+        const x = Math.cos(angle) * distanceX; 
+        const y = Math.sin(angle) * distanceY;  
+        
+        dirLight.position.set(x, y, z);
+        sunMesh.position.set(x, y, z);
+        
+        const heightFactor = Math.sin(angle); 
+        dirLight.intensity = Math.max(0.1, heightFactor * 2); 
+        dirLight.color.setHex(0xffffff);
+        
+        let skyColor = new THREE.Color();
+        if (progress < 0.2 || progress > 0.8) {
+           skyColor.setHex(0xff7b54); 
+           sunMaterial.color.setHex(0xff4500); 
+        } else {
+           skyColor.setHex(0x87ceeb); 
+           sunMaterial.color.setHex(0xfffca3); 
+        }
+        scene.background = skyColor;
       } else {
-         skyColor.setHex(0x87ceeb); // Celeste claro en el día
-      }
-      scene.background = skyColor;
-      
-      // Cambiar ligeramente el color del sol en los extremos
-      if (progress < 0.1 || progress > 0.9) {
-          sunMaterial.color.setHex(0xff4500); // Rojo anaranjado
-      } else {
-          sunMaterial.color.setHex(0xfffca3); // Amarillo brillante
+        // Noche (Luna)
+        sunMesh.visible = false;
+        moonMesh.visible = true;
+        scene.background = new THREE.Color(0x0a0a2a); 
+
+        // Progreso de la noche: 18:00 (0) -> 6:00 (1)
+        const nightHour = hour > 18 ? hour - 18 : hour + 6;
+        const progress = nightHour / 12;
+        const angle = progress * Math.PI;
+
+        const x = Math.cos(angle) * distanceX; 
+        const y = Math.sin(angle) * distanceY;  
+        
+        dirLight.position.set(x, y, z);
+        moonMesh.position.set(x, y, z);
+        
+        // Luz de luna más suave y azulada
+        dirLight.intensity = 0.3;
+        dirLight.color.setHex(0xaaccff);
       }
     }
 
@@ -183,6 +201,7 @@
         const tempEl = document.getElementById('weather-temp');
         const humEl = document.getElementById('weather-humidity');
         const rainEl = document.getElementById('weather-rain');
+        const irrEl = document.getElementById('weather-irradiation');
         const iconEl = document.getElementById('weather-icon');
         const titleEl = document.getElementById('weather-title');
         
@@ -191,6 +210,7 @@
         if (tempEl) tempEl.textContent = Math.round(data.temperature).toString();
         if (humEl) humEl.textContent = `💧 ${data.humidity}%`;
         if (rainEl) rainEl.textContent = `🌧️ ${data.rainProbability}%`;
+        if (irrEl) irrEl.textContent = `☀️ ${data.irradiation} W/m²`;
         if (titleEl) {
            titleEl.textContent = data.isFallback ? "Clima (Medellín)" : "Clima (Tu ubicación)";
         }

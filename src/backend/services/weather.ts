@@ -3,13 +3,14 @@ export interface WeatherData {
   humidity: number;
   rainProbability: number;
   weatherCode: number;
+  irradiation: number;
   isFallback: boolean;
 }
 
 export async function fetchWeatherData(lat: number, lon: number, isFallback = false): Promise<WeatherData> {
   try {
     const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code&hourly=precipitation_probability&timezone=America%2FBogota`
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,shortwave_radiation&hourly=precipitation_probability&timezone=America%2FBogota`
     );
     
     if (!res.ok) throw new Error('Error de red al obtener el clima');
@@ -26,6 +27,7 @@ export async function fetchWeatherData(lat: number, lon: number, isFallback = fa
       humidity: current.relative_humidity_2m,
       rainProbability: rainProb,
       weatherCode: current.weather_code,
+      irradiation: current.shortwave_radiation,
       isFallback
     };
   } catch (error) {
