@@ -1,5 +1,5 @@
 ---
-import { getSession } from 'auth-astro/server';
+import { getSession } from "auth-astro/server";
 import Dashboard from "../frontend/components/Dashboard.astro";
 import Welcome from "../frontend/components/Welcome.astro";
 import Layout from "../frontend/layouts/Layout.astro";
@@ -12,14 +12,14 @@ const isAuthenticated = !!session;
 ---
 
 <Layout>
-  {isAuthenticated ? (
-    <>
-      <Navbar />
-      <Dashboard />
-      <Historial />
-      <Metrics />
-    </>
-  ) : (
-    <Welcome />
-  )}
+  {
+    isAuthenticated ? (
+      <>
+        <Navbar />
+        <Dashboard />
+      </>
+    ) : (
+      <Welcome />
+    )
+  }
 </Layout>

@@ -3,53 +3,206 @@
 ---
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 mb-8 border border-gray-100 dark:border-gray-700">
-    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Dashboard</h2>
-    <p class="text-gray-600 dark:text-gray-300 mb-6">Simulación del invernadero y la posición del sol.</p>
-    
-    <!-- Contenedor para Three.js -->
-    <div id="three-container" class="w-full h-96 bg-gray-900 rounded-xl overflow-hidden shadow-inner relative">
-       <div id="time-display" class="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg backdrop-blur-sm font-mono text-sm z-10">
-         Hora: --:--
-       </div>
-
-       <!-- Widget del Clima (Glassmorphism) -->
-       <div id="weather-widget" class="absolute top-4 right-4 bg-white/30 dark:bg-black/40 backdrop-blur-md text-gray-900 dark:text-white p-4 rounded-xl shadow-lg border border-white/40 dark:border-gray-600/50 flex flex-col gap-1 z-10 min-w-[160px] transition-all duration-300">
-         <div class="flex items-center justify-between mb-1">
-           <span id="weather-title" class="text-[10px] font-bold uppercase tracking-widest opacity-80">Clima Local</span>
-           <span id="weather-icon" class="text-xl">☀️</span>
-         </div>
-         <div class="flex items-end gap-1">
-           <span id="weather-temp" class="text-4xl font-extrabold tracking-tighter">--</span>
-           <span class="text-lg font-medium mb-1">°C</span>
-         </div>
-         <div class="flex justify-between text-xs font-semibold opacity-90 mt-2 gap-2">
-           <span id="weather-humidity" class="bg-blue-100/50 dark:bg-blue-900/50 px-2 py-1 rounded-md flex-1 text-center">💧 --%</span>
-           <span id="weather-rain" class="bg-indigo-100/50 dark:bg-indigo-900/50 px-2 py-1 rounded-md flex-1 text-center">🌧️ --%</span>
-         </div>
-         <div class="flex justify-center text-xs font-semibold opacity-90 mt-2">
-           <span id="weather-irradiation" class="bg-yellow-100/50 dark:bg-yellow-900/50 px-2 py-1 rounded-md w-full text-center">☀️ -- W/m²</span>
-         </div>
-       </div>
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Dashboard Principal</h2>
+      <p class="text-gray-600 dark:text-gray-300">Monitoreo de cultivos y simulación ambiental del invernadero.</p>
     </div>
+
+    <div class="grid lg:grid-cols-2 gap-6 items-start">
+      <!-- Matriz de Plantas (4x5) -->
+      <div class="flex flex-col">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
+    >
+      <h2
+        class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
+      >
+        <span>🌱</span> Estado de los Cultivos
+      </h2>
+      <div
+        class="flex gap-4 text-xs font-semibold text-gray-600 dark:text-gray-300"
+      >
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></span> Óptimo
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-yellow-400 shadow-sm"></span> Atención
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-rose-500 shadow-sm"></span> Crítico
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+      {
+        Array.from({ length: 20 }).map((_, i) => {
+          // Generar algunos estados aleatorios para demostrar el diseño
+          const isWarning = i === 4 || i === 12;
+          const isCritical = i === 8;
+          const statusColor = isCritical
+            ? "bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/50"
+            : isWarning
+              ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/50"
+              : "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800/30";
+
+          const iconBg = isCritical
+            ? "bg-rose-500"
+            : isWarning
+              ? "bg-yellow-400"
+              : "bg-emerald-500";
+
+          const humedad = isCritical ? "30%" : isWarning ? "45%" : "65%";
+          const temp = isCritical ? "32°C" : isWarning ? "28°C" : "24°C";
+          const plantIcon = isCritical ? "🥀" : isWarning ? "🌿" : "🪴";
+
+          return (
+            <div
+              class={`relative group overflow-hidden rounded-xl border p-2.5 transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer ${statusColor}`}
+            >
+              <div class="flex justify-between items-start mb-1.5">
+                <span class="text-[9px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  P-{i + 1}
+                </span>
+                <span class={`w-1.5 h-1.5 rounded-full ${iconBg} shadow-sm`} />
+              </div>
+              <div class="flex justify-center mb-2 text-2xl transition-transform duration-300 group-hover:scale-110">
+                {plantIcon}
+              </div>
+              <div class="grid grid-cols-2 gap-1 text-[9px] font-bold text-gray-700 dark:text-gray-300">
+                <div class="flex flex-col items-center bg-white/60 dark:bg-black/20 rounded py-0.5">
+                  <span class="opacity-60 mb-px">💧</span>
+                  <span>{humedad}</span>
+                </div>
+                <div class="flex flex-col items-center bg-white/60 dark:bg-black/20 rounded py-0.5">
+                  <span class="opacity-60 mb-px">🌡️</span>
+                  <span>{temp}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+  </div>
+
+  <div class="flex flex-col">
+    <!-- Contenedor para Three.js -->
+    <div
+      id="three-container"
+      class="w-full h-96 bg-gray-900 rounded-xl overflow-hidden shadow-inner relative"
+    >
+      <div
+        id="time-display"
+        class="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg backdrop-blur-sm font-mono text-sm z-10"
+      >
+        Hora: --:--
+      </div>
+
+      <!-- Widget del Clima (Glassmorphism) -->
+      <div
+        id="weather-widget"
+        class="absolute top-4 right-4 bg-white/30 dark:bg-black/40 backdrop-blur-md text-gray-900 dark:text-white p-4 rounded-xl shadow-lg border border-white/40 dark:border-gray-600/50 flex flex-col gap-1 z-10 min-w-[160px] transition-all duration-300"
+      >
+        <div class="flex items-center justify-between mb-1">
+          <span
+            id="weather-title"
+            class="text-[10px] font-bold uppercase tracking-widest opacity-80"
+            >Clima Local</span
+          >
+          <span id="weather-icon" class="text-xl">☀️</span>
+        </div>
+        <div class="flex items-end gap-1">
+          <span
+            id="weather-temp"
+            class="text-4xl font-extrabold tracking-tighter">--</span
+          >
+          <span class="text-lg font-medium mb-1">°C</span>
+        </div>
+        <div
+          class="flex justify-between text-xs font-semibold opacity-90 mt-2 gap-2"
+        >
+          <span
+            id="weather-humidity"
+            class="bg-blue-100/50 dark:bg-blue-900/50 px-2 py-1 rounded-md flex-1 text-center"
+            >💧 --%</span
+          >
+          <span
+            id="weather-rain"
+            class="bg-indigo-100/50 dark:bg-indigo-900/50 px-2 py-1 rounded-md flex-1 text-center"
+            >🌧️ --%</span
+          >
+        </div>
+        <div class="flex justify-center text-xs font-semibold opacity-90 mt-2">
+          <span
+            id="weather-irradiation"
+            class="bg-yellow-100/50 dark:bg-yellow-900/50 px-2 py-1 rounded-md w-full text-center"
+            >☀️ -- W/m²</span
+          >
+        </div>
+
+      </div>
+    </div>
+
+    <!-- WAQI API Widget (Debajo del mapa del sol) -->
+    <div
+      class="mt-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600">
+          <span class="text-xl">🌬️</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+            Calidad del Aire (AQI) - WAQI
+          </span>
+          <span class="text-[10px] text-gray-400 dark:text-gray-500">
+            Índice en tiempo real
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+        <span
+          id="aqi-value"
+          class="text-2xl font-black tracking-tighter text-gray-800 dark:text-gray-200">--</span
+        >
+        <span
+          id="aqi-status"
+          class="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700 font-bold"
+          >Cargando</span
+        >
+      </div>
+    </div>
+  </div>
+  </div>
   </div>
 </div>
 
 <script>
-  import * as THREE from 'three';
-  import { fetchWeatherData, getWeatherEmoji } from '../../backend/services/weather';
+  import * as THREE from "three";
+  import {
+    fetchWeatherData,
+    getWeatherEmoji,
+  } from "../../backend/services/weather";
 
   // --- CONFIGURACIÓN INICIAL ---
-  const container = document.getElementById('three-container');
-  const timeDisplay = document.getElementById('time-display');
+  const container = document.getElementById("three-container");
+  const timeDisplay = document.getElementById("time-display");
 
   if (container) {
     // --- ESCENA BÁSICA ---
     const scene = new THREE.Scene();
-    
+
     // Configurar cámara según el tamaño del contenedor
-    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 5, 20);
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      1000,
+    );
+    // Alejar la cámara para que se vea el cielo y el sol
+    camera.position.set(0, 8, 32);
 
     // Configurar el renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -57,7 +210,7 @@
     container.appendChild(renderer.domElement);
 
     // Ajustar el canvas si la ventana cambia de tamaño
-    window.addEventListener('resize', () => {
+    window.addEventListener("resize", () => {
       if (container) {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
@@ -67,7 +220,10 @@
 
     // Añadir un suelo simple (para notar mejor las sombras/iluminación)
     const groundGeometry = new THREE.PlaneGeometry(50, 50);
-    const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.8 }); // Verde para simular pasto
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0x2e8b57,
+      roughness: 0.8,
+    }); // Verde para simular pasto
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
@@ -75,7 +231,11 @@
 
     // Añadir un modelo básico del "invernadero" en el centro
     const greenhouseGeometry = new THREE.BoxGeometry(10, 5, 6);
-    const greenhouseMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.5 });
+    const greenhouseMaterial = new THREE.MeshStandardMaterial({
+      color: 0xaaaaaa,
+      transparent: true,
+      opacity: 0.5,
+    });
     const greenhouse = new THREE.Mesh(greenhouseGeometry, greenhouseMaterial);
     greenhouse.position.y = 2.5; // Elevarlo para que quede sobre el suelo
     greenhouse.castShadow = true;
@@ -83,13 +243,13 @@
     scene.add(greenhouse);
 
     // Luz ambiental suave para que las partes oscuras no sean completamente negras
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5); 
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
     scene.add(ambientLight);
 
     // --- 1. LUZ DEL SOL ---
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    dirLight.castShadow = true; 
-    
+    dirLight.castShadow = true;
+
     // Mejorar la calidad de las sombras
     dirLight.shadow.mapSize.width = 1024;
     dirLight.shadow.mapSize.height = 1024;
@@ -102,9 +262,9 @@
     scene.add(dirLight);
 
     // --- 2. SOL VISUAL ---
-    const sunGeometry = new THREE.SphereGeometry(2, 32, 32); 
-    const sunMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xfffca3, 
+    const sunGeometry = new THREE.SphereGeometry(2, 32, 32);
+    const sunMaterial = new THREE.MeshBasicMaterial({
+      color: 0xfffca3,
     });
     const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
     scene.add(sunMesh);
@@ -119,59 +279,62 @@
     function updateSun(hour: number) {
       // Actualizar el display de tiempo
       if (timeDisplay) {
-         const hh = Math.floor(hour).toString().padStart(2, '0');
-         const mm = Math.floor((hour % 1) * 60).toString().padStart(2, '0');
-         timeDisplay.textContent = `Hora: ${hh}:${mm}`;
+        const hh = Math.floor(hour).toString().padStart(2, "0");
+        const mm = Math.floor((hour % 1) * 60)
+          .toString()
+          .padStart(2, "0");
+        timeDisplay.textContent = `Hora: ${hh}:${mm}`;
       }
 
-      const distanceX = 22; // Distancia horizontal (este a oeste)
-      const distanceY = 16; // Altura máxima en el cielo (cenit)
-      const z = -15; // Ligeramente por detrás
+      // Órbita más cerrada para asegurar que el sol y la luna no se salgan de pantalla
+      const distanceX = 16; // Distancia horizontal (este a oeste)
+      const distanceY = 12; // Altura máxima en el cielo (cenit)
+      const z = -10; // Ligeramente por detrás
 
       // Entre las 6:00 y las 18:00 (Día)
       if (hour >= 6 && hour <= 18) {
         moonMesh.visible = false;
-        sunMesh.visible = true; 
-        
+        sunMesh.visible = true;
+
         const progress = (hour - 6) / 12; // 0 (6am) a 1 (6pm)
-        const angle = progress * Math.PI; 
-        
-        const x = Math.cos(angle) * distanceX; 
-        const y = Math.sin(angle) * distanceY;  
-        
+        const angle = progress * Math.PI;
+
+        const x = Math.cos(angle) * distanceX;
+        const y = Math.sin(angle) * distanceY;
+
         dirLight.position.set(x, y, z);
         sunMesh.position.set(x, y, z);
-        
-        const heightFactor = Math.sin(angle); 
-        dirLight.intensity = Math.max(0.1, heightFactor * 2); 
+
+        const heightFactor = Math.sin(angle);
+        dirLight.intensity = Math.max(0.1, heightFactor * 2);
         dirLight.color.setHex(0xffffff);
-        
+
         let skyColor = new THREE.Color();
         if (progress < 0.2 || progress > 0.8) {
-           skyColor.setHex(0xff7b54); 
-           sunMaterial.color.setHex(0xff4500); 
+          skyColor.setHex(0xff7b54);
+          sunMaterial.color.setHex(0xff4500);
         } else {
-           skyColor.setHex(0x87ceeb); 
-           sunMaterial.color.setHex(0xfffca3); 
+          skyColor.setHex(0x87ceeb);
+          sunMaterial.color.setHex(0xfffca3);
         }
         scene.background = skyColor;
       } else {
         // Noche (Luna)
         sunMesh.visible = false;
         moonMesh.visible = true;
-        scene.background = new THREE.Color(0x0a0a2a); 
+        scene.background = new THREE.Color(0x0a0a2a);
 
         // Progreso de la noche: 18:00 (0) -> 6:00 (1)
         const nightHour = hour > 18 ? hour - 18 : hour + 6;
         const progress = nightHour / 12;
         const angle = progress * Math.PI;
 
-        const x = Math.cos(angle) * distanceX; 
-        const y = Math.sin(angle) * distanceY;  
-        
+        const x = Math.cos(angle) * distanceX;
+        const y = Math.sin(angle) * distanceY;
+
         dirLight.position.set(x, y, z);
         moonMesh.position.set(x, y, z);
-        
+
         // Luz de luna más suave y azulada
         dirLight.intensity = 0.3;
         dirLight.color.setHex(0xaaccff);
@@ -181,16 +344,17 @@
     // --- BUCLE DE ANIMACIÓN ---
     function animate() {
       requestAnimationFrame(animate);
-      
+
       // Obtener la hora real actual
       const now = new Date();
-      const currentHour = now.getHours() + (now.getMinutes() / 60) + (now.getSeconds() / 3600);
-      
+      const currentHour =
+        now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+
       updateSun(currentHour);
-      
+
       renderer.render(scene, camera);
     }
-    
+
     // Activar sombras en el renderer
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -198,27 +362,77 @@
     // --- 3. DATOS DEL CLIMA (Predicción para el Invernadero) ---
     async function fetchWeather(lat: number, lon: number, isFallback = false) {
       try {
-        const tempEl = document.getElementById('weather-temp');
-        const humEl = document.getElementById('weather-humidity');
-        const rainEl = document.getElementById('weather-rain');
-        const irrEl = document.getElementById('weather-irradiation');
-        const iconEl = document.getElementById('weather-icon');
-        const titleEl = document.getElementById('weather-title');
-        
+        const tempEl = document.getElementById("weather-temp");
+        const humEl = document.getElementById("weather-humidity");
+        const rainEl = document.getElementById("weather-rain");
+        const irrEl = document.getElementById("weather-irradiation");
+        const iconEl = document.getElementById("weather-icon");
+        const titleEl = document.getElementById("weather-title");
+
         const data = await fetchWeatherData(lat, lon, isFallback);
-        
-        if (tempEl) tempEl.textContent = Math.round(data.temperature).toString();
+
+        if (tempEl)
+          tempEl.textContent = Math.round(data.temperature).toString();
         if (humEl) humEl.textContent = `💧 ${data.humidity}%`;
         if (rainEl) rainEl.textContent = `🌧️ ${data.rainProbability}%`;
         if (irrEl) irrEl.textContent = `☀️ ${data.irradiation} W/m²`;
         if (titleEl) {
-           titleEl.textContent = data.isFallback ? "Clima (Medellín)" : "Clima (Tu ubicación)";
+          titleEl.textContent = data.isFallback
+            ? "Clima (Medellín)"
+            : "Clima (Tu ubicación)";
         }
         if (iconEl) {
           iconEl.textContent = getWeatherEmoji(data.weatherCode);
         }
       } catch (e) {
         console.error("Error cargando el clima:", e);
+      }
+    }
+
+    async function fetchAQI(lat: number, lon: number) {
+      try {
+        const token = "b3e64cc0156d4ea004ea5f3dd5b2e2a4d4e37656";
+        const url = `https://api.waqi.info/feed/geo:${lat};${lon}/?token=${token}`;
+        const res = await fetch(url);
+        const json = await res.json();
+
+        if (json.status === "ok") {
+          const aqi = json.data.aqi;
+          const valueEl = document.getElementById("aqi-value");
+          const statusEl = document.getElementById("aqi-status");
+
+          if (valueEl) valueEl.textContent = aqi.toString();
+
+          if (statusEl) {
+            if (aqi <= 50) {
+              statusEl.textContent = "BUENO";
+              statusEl.className =
+                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-green-500/20 text-green-700 dark:text-green-300 font-bold";
+            } else if (aqi <= 100) {
+              statusEl.textContent = "MODERADO";
+              statusEl.className =
+                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 font-bold";
+            } else if (aqi <= 150) {
+              statusEl.textContent = "SENS. DAÑINO";
+              statusEl.className =
+                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-700 dark:text-orange-300 font-bold";
+            } else if (aqi <= 200) {
+              statusEl.textContent = "DAÑINO";
+              statusEl.className =
+                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-red-500/20 text-red-700 dark:text-red-300 font-bold";
+            } else if (aqi <= 300) {
+              statusEl.textContent = "MUY DAÑINO";
+              statusEl.className =
+                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold";
+            } else {
+              statusEl.textContent = "PELIGROSO";
+              statusEl.className =
+                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-rose-900/50 text-rose-300 font-bold";
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching AQI:", err);
       }
     }
 
@@ -230,30 +444,45 @@
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             fetchWeather(lat, lon, false);
+            fetchAQI(lat, lon);
             // Configurar actualización automática cada 10 min
-            setInterval(() => fetchWeather(lat, lon, false), 600000);
+            setInterval(() => {
+              fetchWeather(lat, lon, false);
+              fetchAQI(lat, lon);
+            }, 600000);
           },
           (error) => {
-            console.warn("Geolocalización denegada o fallida, usando Medellín por defecto.", error);
+            console.warn(
+              "Geolocalización denegada o fallida, usando Medellín por defecto.",
+              error,
+            );
             // Coordenadas por defecto (Medellín)
             const fallbackLat = 6.2442;
             const fallbackLon = -75.5812;
             fetchWeather(fallbackLat, fallbackLon, true);
-            setInterval(() => fetchWeather(fallbackLat, fallbackLon, true), 600000);
+            fetchAQI(fallbackLat, fallbackLon);
+            setInterval(() => {
+              fetchWeather(fallbackLat, fallbackLon, true);
+              fetchAQI(fallbackLat, fallbackLon);
+            }, 600000);
           },
-          { timeout: 10000 }
+          { timeout: 10000 },
         );
       } else {
         // Navegador no soporta geolocalización
         const fallbackLat = 6.2442;
         const fallbackLon = -75.5812;
         fetchWeather(fallbackLat, fallbackLon, true);
-        setInterval(() => fetchWeather(fallbackLat, fallbackLon, true), 600000);
+        fetchAQI(fallbackLat, fallbackLon);
+        setInterval(() => {
+          fetchWeather(fallbackLat, fallbackLon, true);
+          fetchAQI(fallbackLat, fallbackLon);
+        }, 600000);
       }
     }
-    
+
     initWeather();
 
-    animate(); 
+    animate();
   }
 </script>
