@@ -7,6 +7,8 @@ import Navbar from "../frontend/components/navbar.astro";
 
 const session = await getSession(Astro.request);
 const isAuthenticated = !!session;
+const userName = session?.user?.name || "Administrador";
+const userRole = (session?.user as any)?.role === 'admin' ? "Administrador de Cultivo" : "Operario de Campo";
 ---
 
 <Layout>
@@ -14,7 +16,7 @@ const isAuthenticated = !!session;
     isAuthenticated ? (
       <>
         <Navbar />
-        <Metrics />
+        <Metrics currentUserName={userName} currentUserRole={userRole} />
       </>
     ) : (
       <Welcome />
