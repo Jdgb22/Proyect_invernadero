@@ -151,13 +151,13 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
       <button
         id="btn-export-csv"
         type="button"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all cursor-pointer"
-        title="Descargar mediciones de hoy en formato CSV compatible con Excel"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 transition-all cursor-pointer shadow-xs"
+        title="Descargar base de datos agronómica organizada en formato Excel (.xlsx)"
       >
-        <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <span>Exportar Excel</span>
+        <span id="btn-export-text">Exportar Excel (.xlsx)</span>
       </button>
     </div>
   </div>
@@ -775,6 +775,18 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
         <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold hidden sm:inline">
           20 Plantas Registradas
         </span>
+
+        <button
+          id="btn-export-excel-table"
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs bg-emerald-100/70 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200/70 dark:hover:bg-emerald-800/60 border border-emerald-300 dark:border-emerald-700 transition-all cursor-pointer shadow-2xs"
+          title="Descargar esta tabla organizada en archivo Excel (.xlsx)"
+        >
+          <svg class="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Descargar .xlsx</span>
+        </button>
 
         <button
           id="btn-toggle-excel-table"
@@ -2174,22 +2186,88 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
   filterRowSelect?.addEventListener('change', filterTable);
   filterHealthSelect?.addEventListener('change', filterTable);
 
-  // Exportar Excel CSV
-  document.getElementById('btn-export-csv')?.addEventListener('click', () => {
-    let csv = "PlantaID,Invernadero,Fila,Columna,Fecha,Hora,pHSuelo,TempInterna,TempExterna,TempSuelo,Crecimiento,Productividad,Sanidad,Responsable,Observaciones\n";
-    plantsState.forEach((p) => {
-      const m = p.latestMetric;
-      csv += `"${p.plantId}","Invernadero AquaSens","${p.fila}","${p.columna}","${m.fecha}","${m.hora}",${m.phSuelo},${m.tempInterna},${m.tempExterna},${m.tempSuelo},${m.crecimiento}%,"${m.productividad}","${m.sanidad}","${m.responsable}","${m.observaciones || ''}"\n`;
-    });
+  // Exportar Excel Nativo (.xlsx) Organizado y Formateado
+  const handleExportExcel = async (btn: HTMLElement | null) => {
+    const originalContent = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.style.pointerEvents = 'none';
+      btn.innerHTML = `
+        <svg class="animate-spin w-4 h-4 text-emerald-700 dark:text-emerald-300" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Generando Excel...</span>
+      `;
+    }
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `AquaSens_Mediciones_Plantas_Hoy_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  });
+    try {
+      const response = await fetch('/api/export-excel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plants: plantsState })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error en servidor (${response.status})`);
+      }
+
+      const blob = await response.blob();
+      const nowStr = new Date().toISOString().slice(0, 10);
+      const filename = `AquaSens_Mediciones_Invernadero_${nowStr}.xlsx`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      if (btn) {
+        btn.innerHTML = `
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>¡Excel Descargado!</span>
+        `;
+        setTimeout(() => {
+          btn.innerHTML = originalContent;
+          btn.style.pointerEvents = '';
+        }, 2200);
+      }
+    } catch (err) {
+      console.error('Error al exportar Excel:', err);
+      // Fallback a CSV formateado con UTF-8 BOM y punto y coma (;) para compatibilidad en Excel español
+      let csv = "PlantaID;Invernadero;Fila;Columna;Fecha;Hora;pH Suelo;Temp Interna (°C);Temp Externa (°C);Temp Suelo (°C);Crecimiento (%);Productividad;Sanidad;Responsable;Observaciones\n";
+      plantsState.forEach((p) => {
+        const m = p.latestMetric;
+        csv += `"${p.plantId}";"Invernadero AquaSens";"${p.fila}";"${p.columna}";"${m.fecha}";"${m.hora}";${m.phSuelo};${m.tempInterna};${m.tempExterna};${m.tempSuelo};${m.crecimiento}%;"${m.productividad}";"${m.sanidad}";"${m.responsable}";"${m.observaciones || ''}"\n`;
+      });
+
+      const bom = "\uFEFF";
+      const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AquaSens_Mediciones_Invernadero_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      if (btn) {
+        btn.innerHTML = originalContent;
+        btn.style.pointerEvents = '';
+      }
+    }
+  };
+
+  const btnExportTop = document.getElementById('btn-export-csv');
+  btnExportTop?.addEventListener('click', () => handleExportExcel(btnExportTop));
+
+  const btnExportTable = document.getElementById('btn-export-excel-table');
+  btnExportTable?.addEventListener('click', () => handleExportExcel(btnExportTable));
 
   // Modal Nueva Medición Formulario
   const modalAdd = document.getElementById('modal-add');

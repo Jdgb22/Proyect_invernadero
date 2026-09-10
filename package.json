@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.2.8",
     "auth-astro": "^4.2.0",
+    "exceljs": "^4.4.0",
     "tailwindcss": "^4.3.3",
     "three": "^0.185.1"
   },
