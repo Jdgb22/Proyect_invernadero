@@ -145,30 +145,57 @@
           </div>
         </div>
         <div class="grid grid-cols-3 gap-2">
-          <span id="weather-humidity" class="bg-blue-100/50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-1 py-1.5 rounded-md text-[10px] font-bold text-center">💧 --%</span>
-          <span id="weather-rain" class="bg-indigo-100/50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-1 py-1.5 rounded-md text-[10px] font-bold text-center">🌧️ --%</span>
-          <span id="weather-irradiation" class="bg-yellow-100/50 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 px-1 py-1.5 rounded-md text-[10px] font-bold text-center">☀️ -- W/m²</span>
+          <span id="weather-humidity" class="bg-blue-100/50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">💧</span><span class="value">--%</span></span>
+          <span id="weather-rain" class="bg-indigo-100/50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">🌧️</span><span class="value">--%</span></span>
+          <span id="weather-irradiation" class="bg-yellow-100/50 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">☀️</span><span class="value">-- W/m²</span></span>
         </div>
       </div>
 
-      <!-- WAQI API Widget -->
+      <!-- Widget Calidad Ambiental (Plantas) -->
       <div class="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl p-4 flex flex-col justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600">
-            <span class="text-xl">🌬️</span>
-          </div>
-          <div class="flex flex-col">
-            <span class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
-              Calidad del Aire (AQI)
-            </span>
-            <span class="text-[10px] text-gray-400 dark:text-gray-500">
-              Índice en tiempo real
-            </span>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-800/50">
+              <span class="text-xl">🌿</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+                Calidad Ambiental
+              </span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400">
+                Fotosíntesis y Transpiración
+              </span>
+            </div>
           </div>
         </div>
-        <div class="flex items-center justify-between w-full gap-3 bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-          <span id="aqi-value" class="text-2xl font-black tracking-tighter text-gray-800 dark:text-gray-200">--</span>
-          <span id="aqi-status" class="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700 font-bold">Cargando</span>
+        
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <!-- CO2 -->
+          <div class="bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+             <span class="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase">CO₂ (PPM)</span>
+             <div class="flex items-end justify-between mt-1">
+               <span class="text-lg font-black tracking-tight text-gray-800 dark:text-gray-200">420</span>
+               <span class="text-[8px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">ÓPTIMO</span>
+             </div>
+          </div>
+          
+          <!-- DPV -->
+          <div class="bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+             <span class="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase">DPV (kPa)</span>
+             <div class="flex items-end justify-between mt-1">
+               <span class="text-lg font-black tracking-tight text-gray-800 dark:text-gray-200">0.8</span>
+               <span class="text-[8px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">IDEAL</span>
+             </div>
+          </div>
+          
+          <!-- Ozono/Contaminantes externos (WAQI) -->
+          <div class="col-span-2 bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between">
+             <div class="flex flex-col">
+               <span class="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase">Polución Externa (AQI)</span>
+               <span id="aqi-value" class="text-lg font-black tracking-tight text-gray-800 dark:text-gray-200">--</span>
+             </div>
+             <span id="aqi-status" class="text-[9px] uppercase px-2 py-1 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 font-bold">Cargando</span>
+          </div>
         </div>
       </div>
       
@@ -418,9 +445,9 @@
 
         if (tempEl)
           tempEl.textContent = Math.round(data.temperature).toString();
-        if (humEl) humEl.textContent = `💧 ${data.humidity}%`;
-        if (rainEl) rainEl.textContent = `🌧️ ${data.rainProbability}%`;
-        if (irrEl) irrEl.textContent = `☀️ ${data.irradiation} W/m²`;
+        if (humEl) humEl.innerHTML = `<span class="text-lg">💧</span><span class="value">${data.humidity}%</span>`;
+        if (rainEl) rainEl.innerHTML = `<span class="text-lg">🌧️</span><span class="value">${data.rainProbability}%</span>`;
+        if (irrEl) irrEl.innerHTML = `<span class="text-lg">☀️</span><span class="value">${data.irradiation} W/m²</span>`;
         if (titleEl) {
           titleEl.textContent = data.isFallback
             ? "Clima (Medellín)"
@@ -450,29 +477,29 @@
 
           if (statusEl) {
             if (aqi <= 50) {
-              statusEl.textContent = "BUENO";
+              statusEl.textContent = "ÓPTIMO";
               statusEl.className =
-                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-green-500/20 text-green-700 dark:text-green-300 font-bold";
+                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-green-500/20 text-green-700 dark:text-green-300 font-bold";
             } else if (aqi <= 100) {
-              statusEl.textContent = "MODERADO";
+              statusEl.textContent = "ACEPTABLE";
               statusEl.className =
-                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 font-bold";
+                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 font-bold";
             } else if (aqi <= 150) {
-              statusEl.textContent = "SENS. DAÑINO";
+              statusEl.textContent = "RIESGO LEVE";
               statusEl.className =
-                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-700 dark:text-orange-300 font-bold";
+                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-700 dark:text-orange-300 font-bold";
             } else if (aqi <= 200) {
-              statusEl.textContent = "DAÑINO";
+              statusEl.textContent = "DAÑINO (CERRAR VENT.)";
               statusEl.className =
-                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-red-500/20 text-red-700 dark:text-red-300 font-bold";
+                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-red-500/20 text-red-700 dark:text-red-300 font-bold";
             } else if (aqi <= 300) {
               statusEl.textContent = "MUY DAÑINO";
               statusEl.className =
-                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold";
+                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold";
             } else {
               statusEl.textContent = "PELIGROSO";
               statusEl.className =
-                "text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-rose-900/50 text-rose-300 font-bold";
+                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-rose-900/50 text-rose-300 font-bold";
             }
           }
         }
