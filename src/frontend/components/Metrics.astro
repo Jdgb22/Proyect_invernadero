@@ -1,10 +1,15 @@
 ---
 // src/frontend/components/Metrics.astro
-// Panel Profesional de Métricas Agronómicas para Invernadero AquaSens (Invernadero Único).
-// Incluye gráficos individuales por métrica, tabla estructurada estilo Excel por Filas (t0, t1...) y Columnas (Col 1, Col 2...),
-// filtro por fecha y asignación automática del responsable según la sesión autenticada.
+// Panel Profesional de Métricas Agronómicas para Invernadero AquaSens.
+// Matriz de 4 Filas (t0 a t3) × 5 Columnas (Col 1 a Col 5) = 20 Plantas.
+// Al hacer clic en cualquier planta (en el selector rápido o en la tabla Excel),
+// se abre un MODAL emergente con la última medición de hoy y sus gráficos individuales.
 
-import { getAllMetrics, type MetricRecord } from "../../backend/services/metricsData";
+import {
+  getAllPlantsGrid,
+  type PlantMatrixItem,
+  type MetricRecord
+} from "../../backend/services/metricsData";
 
 interface Props {
   currentUserName?: string;
@@ -13,8 +18,7 @@ interface Props {
 
 const { currentUserName = "Administrador", currentUserRole = "Líder de Cultivo" } = Astro.props;
 
-// Filtrar 't4' ya que la matriz ahora es máximo de t0 a t3
-const metrics: MetricRecord[] = getAllMetrics().filter(m => m.fila !== 't4');
+const plants: PlantMatrixItem[] = getAllPlantsGrid();
 
 // Helpers para badges y semáforos
 function getPhBadge(ph: number) {
@@ -35,33 +39,77 @@ function getProdBadge(prod: string) {
 
 function getHealthBadge(sanidad: string) {
   if (sanidad === 'Excelente' || sanidad === 'Saludable') {
-    return { icon: '🟢', class: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" };
+    return { icon: '🟢', label: sanidad, class: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" };
   }
   if (sanidad === 'Vulnerable') {
-    return { icon: '🟡', class: "bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800" };
+    return { icon: '🟡', label: sanidad, class: "bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800" };
   }
-  return { icon: '🔴', class: "bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800" };
+  return { icon: '🔴', label: sanidad, class: "bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800" };
 }
+
+// Agregaciones y métricas globales para los 6 gráficos generales del invernadero
+const totalPlants = plants.length || 20;
+const globalAvgPh = +(plants.reduce((acc, p) => acc + p.latestMetric.phSuelo, 0) / totalPlants).toFixed(2);
+const globalAvgTin = +(plants.reduce((acc, p) => acc + p.latestMetric.tempInterna, 0) / totalPlants).toFixed(1);
+const globalAvgTout = +(plants.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / totalPlants).toFixed(1);
+const globalAvgTsoil = +(plants.reduce((acc, p) => acc + p.latestMetric.tempSuelo, 0) / totalPlants).toFixed(1);
+const globalAvgGrowth = Math.round(plants.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / totalPlants);
+
+const filasKeys = ['t0', 't1', 't2', 't3'] as const;
+const filaMetrics = filasKeys.map((f) => {
+  const fPlants = plants.filter(p => p.fila === f);
+  const count = fPlants.length || 1;
+  const avgPh = +(fPlants.reduce((acc, p) => acc + p.latestMetric.phSuelo, 0) / count).toFixed(2);
+  const avgTin = +(fPlants.reduce((acc, p) => acc + p.latestMetric.tempInterna, 0) / count).toFixed(1);
+  const avgTout = +(fPlants.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / count).toFixed(1);
+  const avgTsoil = +(fPlants.reduce((acc, p) => acc + p.latestMetric.tempSuelo, 0) / count).toFixed(1);
+  const avgGrowth = Math.round(fPlants.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / count);
+  return {
+    fila: f,
+    label: `Fila ${f}`,
+    plants: fPlants,
+    avgPh,
+    avgTin,
+    avgTout,
+    avgTsoil,
+    avgGrowth
+  };
+});
+
+const healthCounts = {
+  Excelente: plants.filter(p => p.latestMetric.sanidad === 'Excelente').length,
+  Saludable: plants.filter(p => p.latestMetric.sanidad === 'Saludable').length,
+  Vulnerable: plants.filter(p => p.latestMetric.sanidad === 'Vulnerable').length,
+  Crítica: plants.filter(p => p.latestMetric.sanidad === 'Crítica').length,
+};
+
+const prodCounts = {
+  Alta: plants.filter(p => p.latestMetric.productividad === 'Alta').length,
+  Media: plants.filter(p => p.latestMetric.productividad === 'Media').length,
+  Baja: plants.filter(p => p.latestMetric.productividad === 'Baja').length,
+};
+
+const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludable) / totalPlants) * 100);
 ---
 
-<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10">
+<!-- Datos de plantas serializados de forma segura para el script de cliente -->
+<script id="plants-data-source" type="application/json" set:html={JSON.stringify(plants)}></script>
+
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
   
-  <!-- Encabezado Profesional -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+  <!-- Encabezado Principal -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
     <div class="flex items-center gap-3.5">
-      <div class="p-3 bg-gradient-to-br from-indigo-600 to-emerald-600 text-white rounded-2xl shadow-md">
+      <div class="p-3 bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl shadow-md">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       </div>
       <div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <h1 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight">
-            Panel de Métricas y Analítica Agronómica
+            Métricas de Cultivo por Planta
           </h1>
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-300">
-            Invernadero AquaSens (Único)
-          </span>
         </div>
         <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
           Sesión activa: <strong class="text-gray-800 dark:text-gray-200 font-semibold">{currentUserName}</strong> ({currentUserRole})
@@ -69,15 +117,24 @@ function getHealthBadge(sanidad: string) {
       </div>
     </div>
 
-    <!-- Botones Superiores -->
+    <!-- Botones de Acción Superiores -->
     <div class="flex flex-wrap items-center gap-2.5">
       <button
         id="btn-toggle-charts"
         type="button"
         class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer"
       >
-        <span id="charts-toggle-icon">📊</span>
-        <span id="charts-toggle-text">Ocultar Gráficas</span>
+        <span id="charts-toggle-icon">🌐</span>
+        <span id="charts-toggle-text">Ver Gráficas Globales</span>
+      </button>
+
+      <button
+        id="btn-toggle-table-top"
+        type="button"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-800 transition-all cursor-pointer"
+      >
+        <span id="top-table-toggle-icon">📑</span>
+        <span id="top-table-toggle-text">Ampliar Tabla Excel</span>
       </button>
 
       <button
@@ -94,111 +151,699 @@ function getHealthBadge(sanidad: string) {
       <button
         id="btn-export-csv"
         type="button"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-gray-700 dark:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all cursor-pointer"
-        title="Descargar en formato CSV compatible con Excel"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 transition-all cursor-pointer shadow-xs"
+        title="Descargar base de datos agronómica organizada en formato Excel (.xlsx)"
       >
-        <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <span>Exportar Excel</span>
+        <span id="btn-export-text">Exportar Excel (.xlsx)</span>
       </button>
     </div>
   </div>
 
-  <!-- BARRA DE BÚSQUEDA Y FILTROS (INCLUYE BÚSQUEDA POR FECHA EXACTA) -->
-  <div class="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-    
-    <!-- Filtros de búsqueda combinada -->
-    <div class="flex flex-wrap items-center gap-3 flex-1">
-      
-      <!-- Buscador por texto (Fila, Columna, Responsable, etc.) -->
-      <div class="relative flex-1 min-w-[240px]">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-        <input
-          id="search-input"
-          type="text"
-          placeholder="Buscar fila (ej: t0, t1), columna, responsable..."
-          class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        />
+  <!-- 1. SELECTOR RÁPIDO: MATRIZ DE PLANTAS 4x5 (t0 a t3 × Col 1 a Col 5) -->
+  <div class="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+      <div>
+        <h2 class="text-base sm:text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+          <span>🌱</span> Selector Rápido: Estado de los Cultivos
+        </h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          Haz clic en cualquier planta para <strong>abrir su ficha de medición de hoy y sus gráficos individuales</strong>.
+        </p>
       </div>
 
-      <!-- Búsqueda específica por FECHA -->
-      <div class="flex items-center gap-2">
-        <label for="filter-date" class="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-          <span>📅</span> Fecha:
-        </label>
-        <input
-          id="filter-date"
-          type="date"
-          class="py-2 px-3 text-xs sm:text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-          title="Filtrar por fecha específica"
-        />
+      <!-- Leyenda de Estados -->
+      <div class="flex items-center gap-3 text-xs font-semibold text-gray-600 dark:text-gray-300">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Óptimo
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Atención
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Crítico
+        </div>
+      </div>
+    </div>
+
+    <!-- Cuadrícula 4x5 de 20 botones de planta -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+      {plants.map((plant) => {
+        const m = plant.latestMetric;
+        const isCritical = m.sanidad === 'Crítica';
+        const isWarning = m.sanidad === 'Vulnerable';
+        const statusBorder = isCritical
+          ? 'border-rose-300 dark:border-rose-800 bg-rose-50/60 dark:bg-rose-950/20 hover:border-rose-500'
+          : isWarning
+            ? 'border-amber-300 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/20 hover:border-amber-500'
+            : 'border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-950/10 hover:border-emerald-500';
+
+        const dotColor = isCritical ? 'bg-rose-500' : isWarning ? 'bg-amber-400' : 'bg-emerald-500';
+        const plantIcon = isCritical ? '🥀' : isWarning ? '🌿' : '🪴';
+
+        return (
+          <button
+            type="button"
+            class={`plant-card-btn text-left p-3 rounded-xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-md cursor-pointer relative group ${statusBorder}`}
+            data-fila={plant.fila}
+            data-columna={plant.columna}
+            data-plantid={plant.plantId}
+            title={`Ver métricas y gráficos de ${plant.plantId} (${plant.fila} • ${plant.columna})`}
+          >
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-black font-mono uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                {plant.plantId} • {plant.fila}
+              </span>
+              <span class={`w-2.5 h-2.5 rounded-full ${dotColor} shadow-xs`}></span>
+            </div>
+
+            <div class="flex items-center justify-between my-1">
+              <span class="text-2xl group-hover:scale-115 transition-transform duration-200">{plantIcon}</span>
+              <div class="text-right">
+                <span class="text-xs font-mono font-black text-gray-800 dark:text-gray-200 block">
+                  {plant.columna}
+                </span>
+                <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                  {m.crecimiento}%
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-2 flex items-center justify-between text-[9px] font-mono text-gray-500 dark:text-gray-400 border-t border-gray-200/70 dark:border-gray-700/70 pt-1.5">
+              <span>🧪 {m.phSuelo.toFixed(1)} pH</span>
+              <span>🌡️ {m.tempInterna.toFixed(1)}°C</span>
+            </div>
+
+            <div class="mt-1 text-center">
+              <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 group-hover:underline flex items-center justify-center gap-1">
+                <span>Ver Analítica</span>
+                <span>→</span>
+              </span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+
+  <!-- 2. GRÁFICOS GENERALES CONSOLIDADOS DEL INVERNADERO (COLAPSABLE / MINIMIZABLE) -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+    
+    <!-- Barra superior de Gráficos Globales (con botón Minimizar / Ampliar) -->
+    <div class="px-5 py-3.5 bg-gray-50 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2.5">
+        <span class="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-sm">🌐</span>
+        <div>
+          <h3 class="font-black text-gray-900 dark:text-white text-sm">
+            Gráficos Generales del Invernadero AquaSens
+          </h3>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">
+            Consolidado estadístico y tendencias agronómicas de todas las plantas (Filas t0 a t3)
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold hidden sm:inline">
+          Vista Global 20 Plantas
+        </span>
+
         <button
-          id="btn-clear-date"
+          id="btn-toggle-charts-inline"
           type="button"
-          class="p-2 text-xs font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-          title="Limpiar filtro de fecha"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-gray-600 border border-indigo-200 dark:border-gray-600 shadow-xs transition-all cursor-pointer"
         >
-          ✕
+          <span id="charts-inline-toggle-icon">⤢</span>
+          <span id="charts-inline-toggle-text">Ampliar Gráficos Globales</span>
         </button>
       </div>
+    </div>
 
-      <!-- Filtro Fila -->
-      <div class="flex items-center gap-1.5">
-        <label for="filter-fila" class="text-xs font-bold text-gray-600 dark:text-gray-300">Fila:</label>
-        <select
-          id="filter-fila"
-          class="py-2 px-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+    <!-- Contenedor Colapsable de Gráficos (Inicia Minimizado) -->
+    <div id="general-charts-collapsible" class="hidden p-5 sm:p-6 space-y-6 transition-all duration-300">
+      
+      <!-- Resumen Superior de Indicadores Globales -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pb-2">
+        <div class="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-900/40 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">pH Promedio</span>
+          <span class="text-xl font-black text-blue-900 dark:text-blue-100">{globalAvgPh} <span class="text-xs font-normal opacity-70">pH</span></span>
+          <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">● Rango Óptimo</span>
+        </div>
+        <div class="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/40 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">Temp. Interna</span>
+          <span class="text-xl font-black text-amber-900 dark:text-amber-100">{globalAvgTin}°C</span>
+          <span class="text-[10px] text-gray-500 dark:text-gray-400 block mt-0.5">Microclima</span>
+        </div>
+        <div class="p-3 bg-sky-50/70 dark:bg-sky-950/30 rounded-xl border border-sky-200 dark:border-sky-900/40 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 block">Temp. Externa</span>
+          <span class="text-xl font-black text-sky-900 dark:text-sky-100">{globalAvgTout}°C</span>
+          <span class="text-[10px] text-gray-500 dark:text-gray-400 block mt-0.5">Ambiente</span>
+        </div>
+        <div class="p-3 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">Temp. Suelo</span>
+          <span class="text-xl font-black text-emerald-900 dark:text-emerald-100">{globalAvgTsoil}°C</span>
+          <span class="text-[10px] text-gray-500 dark:text-gray-400 block mt-0.5">Radicular</span>
+        </div>
+        <div class="p-3 bg-teal-50/70 dark:bg-teal-950/30 rounded-xl border border-teal-200 dark:border-teal-900/40 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400 block">Crecimiento</span>
+          <span class="text-xl font-black text-teal-900 dark:text-teal-100">{globalAvgGrowth}%</span>
+          <span class="text-[10px] text-gray-500 dark:text-gray-400 block mt-0.5">Avance Foliar</span>
+        </div>
+        <div class="p-3 bg-purple-50/70 dark:bg-purple-950/30 rounded-xl border border-purple-200 dark:border-purple-900/40 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 block">Sanidad General</span>
+          <span class="text-xl font-black text-purple-900 dark:text-purple-100">{healthyRatio}%</span>
+          <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">16/20 Plantas OK</span>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de 6 Gráficos Generales (1 por cada medición agronómica) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        
+        <!-- GRÁFICO 1: pH del Suelo de todas las plantas -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/40 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group relative"
+          data-chart-title="1. pH del Suelo (General Invernadero)"
+          data-chart-subtitle="Zona óptima (6.0 - 6.8 pH) y dispersión de las 20 plantas"
+          data-chart-icon="🧪"
+          data-chart-badge={`${globalAvgPh} pH Promedio`}
+          data-chart-info="El pH del suelo regula directamente la solubilidad y absorción de nutrientes. El promedio general es de ${globalAvgPh} pH, ubicándose en la banda óptima agronómica. Se aprecian valores controlados en las 4 filas con alertas puntuales en t2 Col 4."
         >
-          <option value="all">Todas</option>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-base">🧪</span>
+              <div>
+                <h4 class="font-extrabold text-gray-900 dark:text-white text-sm">1. pH del Suelo (General)</h4>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400">Zona óptima (6.0 - 6.8 pH) y dispersión por fila</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 text-[11px]">
+                {globalAvgPh} pH
+              </span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+
+          <div class="w-full h-44 relative bg-white dark:bg-gray-800/80 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex items-center justify-center">
+            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+              <!-- Zona Óptima -->
+              <rect x="40" y="53" width="390" height="32" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
+              <text x="45" y="49" fill="#10B981" font-size="8.5" font-weight="bold">Banda Óptima (6.0 - 6.8)</text>
+
+              <!-- Guías -->
+              <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="28" class="fill-gray-400 text-[9px] font-mono">7.5</text>
+              <line x1="40" y1="65" x2="430" y2="65" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="68" class="fill-gray-400 text-[9px] font-mono">6.5</text>
+              <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="108" class="fill-gray-400 text-[9px] font-mono">5.5</text>
+
+              <!-- Curva de Promedios por Fila -->
+              <path d="M 70,75 Q 120,77 170,79 T 270,71 T 370,69" fill="none" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" />
+
+              <!-- Nodos de Fila -->
+              <circle cx="70" cy="75" r="5" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>Fila t0: {filaMetrics[0].avgPh} pH</title></circle>
+              <text x="60" y="65" fill="#1E40AF" class="dark:fill-blue-300 text-[10px] font-bold">{filaMetrics[0].avgPh}</text>
+
+              <circle cx="170" cy="79" r="5" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>Fila t1: {filaMetrics[1].avgPh} pH</title></circle>
+              <text x="160" y="69" fill="#1E40AF" class="dark:fill-blue-300 text-[10px] font-bold">{filaMetrics[1].avgPh}</text>
+
+              <circle cx="270" cy="71" r="5" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>Fila t2: {filaMetrics[2].avgPh} pH</title></circle>
+              <text x="260" y="61" fill="#1E40AF" class="dark:fill-blue-300 text-[10px] font-bold">{filaMetrics[2].avgPh}</text>
+
+              <circle cx="370" cy="69" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>Fila t3: {filaMetrics[3].avgPh} pH</title></circle>
+              <text x="360" y="59" fill="#047857" class="dark:fill-emerald-300 text-[10px] font-bold">{filaMetrics[3].avgPh}</text>
+
+              <!-- Grafos/Dispersión de las 20 plantas (nodos individuales) -->
+              <g opacity="0.6">
+                <!-- t0 -->
+                <circle cx="58" cy="69" r="3" fill="#10B981"><title>t0 Col 1: 6.4 pH</title></circle>
+                <circle cx="64" cy="77" r="3" fill="#10B981"><title>t0 Col 2: 6.2 pH</title></circle>
+                <circle cx="70" cy="65" r="3" fill="#10B981"><title>t0 Col 3: 6.5 pH</title></circle>
+                <circle cx="76" cy="89" r="3" fill="#F59E0B"><title>t0 Col 4: 5.9 pH (Ácido)</title></circle>
+                <circle cx="82" cy="73" r="3" fill="#10B981"><title>t0 Col 5: 6.3 pH</title></circle>
+                <!-- t1 -->
+                <circle cx="158" cy="81" r="3" fill="#10B981"><title>t1 Col 1: 6.1 pH</title></circle>
+                <circle cx="164" cy="61" r="3" fill="#10B981"><title>t1 Col 2: 6.6 pH</title></circle>
+                <circle cx="170" cy="97" r="3" fill="#F59E0B"><title>t1 Col 3: 5.7 pH (Ácido)</title></circle>
+                <circle cx="176" cy="73" r="3" fill="#10B981"><title>t1 Col 4: 6.3 pH</title></circle>
+                <circle cx="182" cy="85" r="3" fill="#10B981"><title>t1 Col 5: 6.0 pH</title></circle>
+                <!-- t2 -->
+                <circle cx="258" cy="37" r="3" fill="#F59E0B"><title>t2 Col 1: 7.2 pH (Alcalino)</title></circle>
+                <circle cx="264" cy="65" r="3" fill="#10B981"><title>t2 Col 2: 6.5 pH</title></circle>
+                <circle cx="270" cy="69" r="3" fill="#10B981"><title>t2 Col 3: 6.4 pH</title></circle>
+                <circle cx="276" cy="109" r="3.5" fill="#EF4444"><title>t2 Col 4: 5.4 pH (Crítico)</title></circle>
+                <circle cx="282" cy="77" r="3" fill="#10B981"><title>t2 Col 5: 6.2 pH</title></circle>
+                <!-- t3 -->
+                <circle cx="358" cy="69" r="3" fill="#10B981"><title>t3 Col 1: 6.4 pH</title></circle>
+                <circle cx="364" cy="73" r="3" fill="#10B981"><title>t3 Col 2: 6.3 pH</title></circle>
+                <circle cx="370" cy="57" r="3" fill="#10B981"><title>t3 Col 3: 6.7 pH</title></circle>
+                <circle cx="376" cy="65" r="3" fill="#10B981"><title>t3 Col 4: 6.5 pH</title></circle>
+                <circle cx="382" cy="81" r="3" fill="#10B981"><title>t3 Col 5: 6.1 pH</title></circle>
+              </g>
+            </svg>
+          </div>
+          <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-2 px-8">
+            <span>Fila t0</span>
+            <span>Fila t1</span>
+            <span>Fila t2</span>
+            <span>Fila t3</span>
+          </div>
+        </div>
+
+        <!-- GRÁFICO 2: Temperatura Interna del Microclima -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/40 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group relative"
+          data-chart-title="2. Temperatura Interna del Invernadero"
+          data-chart-subtitle="Microclima interior por fila y zonas de ventilación"
+          data-chart-icon="🌡️"
+          data-chart-badge={`${globalAvgTin}°C Promedio`}
+          data-chart-info="La temperatura interna promedio es de ${globalAvgTin}°C, situándose dentro de la zona de confort agronómico (23°C - 26°C). Las filas t0 y t3 gozan de excelente ventilación, mientras que la fila t2 presenta acumulación térmica en su extremo."
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-base">🌡️</span>
+              <div>
+                <h4 class="font-extrabold text-gray-900 dark:text-white text-sm">2. Temperatura Interna (°C)</h4>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400">Microclima interior por fila y zonas de ventilación</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 text-[11px]">
+                {globalAvgTin}°C
+              </span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+
+          <div class="w-full h-44 relative bg-white dark:bg-gray-800/80 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex items-center justify-center">
+            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+              <!-- Banda de Confort -->
+              <rect x="40" y="65" width="390" height="30" fill="rgba(245, 158, 11, 0.12)" rx="4"></rect>
+              <text x="45" y="61" fill="#D97706" font-size="8.5" font-weight="bold">Confort Térmico (23°C - 26°C)</text>
+
+              <!-- Guías -->
+              <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="28" class="fill-gray-400 text-[9px] font-mono">30°</text>
+              <line x1="40" y1="65" x2="430" y2="65" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="68" class="fill-gray-400 text-[9px] font-mono">26°</text>
+              <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="108" class="fill-gray-400 text-[9px] font-mono">22°</text>
+
+              <!-- Curva Interna -->
+              <path d="M 70,82 Q 120,77 170,73 T 270,63 T 370,78" fill="none" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" />
+
+              <!-- Nodos -->
+              <circle cx="70" cy="82" r="5" fill="#F59E0B" stroke="#fff" stroke-width="2"><title>t0 Int: {filaMetrics[0].avgTin}°C</title></circle>
+              <text x="60" y="73" fill="#B45309" class="dark:fill-amber-300 text-[10px] font-bold">{filaMetrics[0].avgTin}°</text>
+
+              <circle cx="170" cy="73" r="5" fill="#F59E0B" stroke="#fff" stroke-width="2"><title>t1 Int: {filaMetrics[1].avgTin}°C</title></circle>
+              <text x="160" y="64" fill="#B45309" class="dark:fill-amber-300 text-[10px] font-bold">{filaMetrics[1].avgTin}°</text>
+
+              <circle cx="270" cy="63" r="5" fill="#EF4444" stroke="#fff" stroke-width="2"><title>t2 Int: {filaMetrics[2].avgTin}°C (Zona Cálida)</title></circle>
+              <text x="260" y="53" fill="#DC2626" class="dark:fill-rose-300 text-[10px] font-bold">{filaMetrics[2].avgTin}°</text>
+
+              <circle cx="370" cy="78" r="5" fill="#F59E0B" stroke="#fff" stroke-width="2"><title>t3 Int: {filaMetrics[3].avgTin}°C</title></circle>
+              <text x="360" y="69" fill="#B45309" class="dark:fill-amber-300 text-[10px] font-bold">{filaMetrics[3].avgTin}°</text>
+
+              <!-- Dispersión de plantas -->
+              <g opacity="0.6">
+                <circle cx="276" cy="30" r="3.5" fill="#EF4444"><title>t2 Col 4: 29.5°C (Pico de calor)</title></circle>
+                <circle cx="58" cy="80" r="2.5" fill="#F59E0B"><title>t0 Col 1: 24.5°C</title></circle>
+                <circle cx="164" cy="75" r="2.5" fill="#F59E0B"><title>t1 Col 2: 25.0°C</title></circle>
+                <circle cx="376" cy="77" r="2.5" fill="#F59E0B"><title>t3 Col 4: 24.8°C</title></circle>
+              </g>
+            </svg>
+          </div>
+          <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-2 px-8">
+            <span>Fila t0</span>
+            <span>Fila t1</span>
+            <span>Fila t2</span>
+            <span>Fila t3</span>
+          </div>
+        </div>
+
+        <!-- GRÁFICO 3: Temperatura Ambiente Externa -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/40 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group relative"
+          data-chart-title="3. Temperatura Ambiente Exterior"
+          data-chart-subtitle="Clima exterior registrado en sensores perimetrales"
+          data-chart-icon="☀️"
+          data-chart-badge={`${globalAvgTout}°C Promedio`}
+          data-chart-info="Monitorea las condiciones climáticas del entorno que impactan la cubierta del invernadero. El promedio exterior es de ${globalAvgTout}°C, lo que genera un diferencial térmico protector de +4.6°C al interior."
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 text-base">☀️</span>
+              <div>
+                <h4 class="font-extrabold text-gray-900 dark:text-white text-sm">3. Temperatura Externa (°C)</h4>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400">Clima exterior registrado en sensores perimetrales</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-200 text-[11px]">
+                {globalAvgTout}°C
+              </span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+
+          <div class="w-full h-44 relative bg-white dark:bg-gray-800/80 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex items-center justify-center">
+            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+              <!-- Guías -->
+              <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="28" class="fill-gray-400 text-[9px] font-mono">24°</text>
+              <line x1="40" y1="65" x2="430" y2="65" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="68" class="fill-gray-400 text-[9px] font-mono">21°</text>
+              <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="108" class="fill-gray-400 text-[9px] font-mono">18°</text>
+
+              <!-- Curva Externa -->
+              <path d="M 70,77 Q 120,73 170,70 T 270,64 T 370,73" fill="none" stroke="#0EA5E9" stroke-width="3" stroke-linecap="round" stroke-dasharray="6,3" />
+
+              <!-- Nodos -->
+              <circle cx="70" cy="77" r="5" fill="#0EA5E9" stroke="#fff" stroke-width="2"><title>t0 Ext: {filaMetrics[0].avgTout}°C</title></circle>
+              <text x="60" y="68" fill="#0369A1" class="dark:fill-sky-300 text-[10px] font-bold">{filaMetrics[0].avgTout}°</text>
+
+              <circle cx="170" cy="70" r="5" fill="#0EA5E9" stroke="#fff" stroke-width="2"><title>t1 Ext: {filaMetrics[1].avgTout}°C</title></circle>
+              <text x="160" y="61" fill="#0369A1" class="dark:fill-sky-300 text-[10px] font-bold">{filaMetrics[1].avgTout}°</text>
+
+              <circle cx="270" cy="64" r="5" fill="#0EA5E9" stroke="#fff" stroke-width="2"><title>t2 Ext: {filaMetrics[2].avgTout}°C</title></circle>
+              <text x="260" y="55" fill="#0369A1" class="dark:fill-sky-300 text-[10px] font-bold">{filaMetrics[2].avgTout}°</text>
+
+              <circle cx="370" cy="73" r="5" fill="#0EA5E9" stroke="#fff" stroke-width="2"><title>t3 Ext: {filaMetrics[3].avgTout}°C</title></circle>
+              <text x="360" y="64" fill="#0369A1" class="dark:fill-sky-300 text-[10px] font-bold">{filaMetrics[3].avgTout}°</text>
+
+              <!-- Indicador de amortiguación térmica -->
+              <rect x="150" y="102" width="160" height="20" rx="10" fill="rgba(14, 165, 233, 0.1)"></rect>
+              <text x="162" y="115" fill="#0284C7" font-size="8.5" font-weight="bold">ΔT Efecto Invernadero: +4.6°C</text>
+            </svg>
+          </div>
+          <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-2 px-8">
+            <span>Fila t0</span>
+            <span>Fila t1</span>
+            <span>Fila t2</span>
+            <span>Fila t3</span>
+          </div>
+        </div>
+
+        <!-- GRÁFICO 4: Temperatura del Suelo / Sustrato Radicular -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/40 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group relative"
+          data-chart-title="4. Temperatura Radicular del Suelo"
+          data-chart-subtitle="Condición térmica del sustrato radicular de absorción"
+          data-chart-icon="🌱"
+          data-chart-badge={`${globalAvgTsoil}°C Promedio`}
+          data-chart-info="La temperatura en la rizosfera (zona de raíces) promedia ${globalAvgTsoil}°C, situándose en el rango óptimo (19°C - 22°C) que asegura un flujo radicular óptimo y previene anoxia en las raíces."
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-base">🌱</span>
+              <div>
+                <h4 class="font-extrabold text-gray-900 dark:text-white text-sm">4. Temperatura del Suelo (°C)</h4>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400">Condición térmica del sustrato radicular de absorción</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 text-[11px]">
+                {globalAvgTsoil}°C
+              </span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+
+          <div class="w-full h-44 relative bg-white dark:bg-gray-800/80 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex items-center justify-center">
+            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+              <!-- Banda Óptima Radicular -->
+              <rect x="40" y="65" width="390" height="30" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
+              <text x="45" y="61" fill="#10B981" font-size="8.5" font-weight="bold">Zona Radicular Óptima (19°C - 22°C)</text>
+
+              <!-- Guías -->
+              <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="28" class="fill-gray-400 text-[9px] font-mono">26°</text>
+              <line x1="40" y1="65" x2="430" y2="65" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="68" class="fill-gray-400 text-[9px] font-mono">22°</text>
+              <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="108" class="fill-gray-400 text-[9px] font-mono">18°</text>
+
+              <!-- Curva Suelo -->
+              <path d="M 70,81 Q 120,77 170,73 T 270,64 T 370,77" fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" />
+
+              <!-- Nodos -->
+              <circle cx="70" cy="81" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>t0 Suelo: {filaMetrics[0].avgTsoil}°C</title></circle>
+              <text x="60" y="72" fill="#047857" class="dark:fill-emerald-300 text-[10px] font-bold">{filaMetrics[0].avgTsoil}°</text>
+
+              <circle cx="170" cy="73" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>t1 Suelo: {filaMetrics[1].avgTsoil}°C</title></circle>
+              <text x="160" y="64" fill="#047857" class="dark:fill-emerald-300 text-[10px] font-bold">{filaMetrics[1].avgTsoil}°</text>
+
+              <circle cx="270" cy="64" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>t2 Suelo: {filaMetrics[2].avgTsoil}°C</title></circle>
+              <text x="260" y="55" fill="#047857" class="dark:fill-emerald-300 text-[10px] font-bold">{filaMetrics[2].avgTsoil}°</text>
+
+              <circle cx="370" cy="77" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>t3 Suelo: {filaMetrics[3].avgTsoil}°C</title></circle>
+              <text x="360" y="68" fill="#047857" class="dark:fill-emerald-300 text-[10px] font-bold">{filaMetrics[3].avgTsoil}°</text>
+
+              <!-- Dispersión de plantas -->
+              <g opacity="0.6">
+                <circle cx="276" cy="37" r="3.5" fill="#EF4444"><title>t2 Col 4: 24.8°C (Sobrecalentamiento radicular)</title></circle>
+                <circle cx="58" cy="82" r="2.5" fill="#10B981"><title>t0 Col 1: 20.3°C</title></circle>
+                <circle cx="170" cy="61" r="2.5" fill="#F59E0B"><title>t1 Col 3: 22.4°C</title></circle>
+                <circle cx="376" cy="76" r="2.5" fill="#10B981"><title>t3 Col 4: 20.9°C</title></circle>
+              </g>
+            </svg>
+          </div>
+          <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-2 px-8">
+            <span>Fila t0</span>
+            <span>Fila t1</span>
+            <span>Fila t2</span>
+            <span>Fila t3</span>
+          </div>
+        </div>
+
+        <!-- GRÁFICO 5: Crecimiento Vegetativo & Biomasa (%) -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/40 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group relative"
+          data-chart-title="5. Crecimiento Vegetativo & Biomasa"
+          data-chart-subtitle="Porcentaje de desarrollo foliar y vigor por fila"
+          data-chart-icon="📈"
+          data-chart-badge={`${globalAvgGrowth}% Promedio`}
+          data-chart-info="Indica el porcentaje de desarrollo fenológico. La Fila t3 lidera el avance con 87% (etapa de maduración avanzada), la Fila t0 con 82% (floración vigorosa), t1 con 76% y t2 con 68%."
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 text-base">📈</span>
+              <div>
+                <h4 class="font-extrabold text-gray-900 dark:text-white text-sm">5. Crecimiento Vegetativo (%)</h4>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400">Porcentaje de desarrollo foliar y vigor por fila</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border border-teal-200 text-[11px]">
+                {globalAvgGrowth}%
+              </span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+
+          <div class="w-full h-44 relative bg-white dark:bg-gray-800/80 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex items-center justify-center">
+            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+              <!-- Guías -->
+              <line x1="40" y1="20" x2="430" y2="20" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="23" class="fill-gray-400 text-[9px] font-mono">100%</text>
+              <line x1="40" y1="62" x2="430" y2="62" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="65" class="fill-gray-400 text-[9px] font-mono">50%</text>
+              <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
+              <text x="15" y="108" class="fill-gray-400 text-[9px] font-mono">0%</text>
+
+              <!-- Barras de Crecimiento por Fila -->
+              <!-- t0: 82% -->
+              <rect x="52" y="35" width="36" height="70" rx="6" fill="#14B8A6" opacity="0.85"><title>Fila t0: 82% (Floración)</title></rect>
+              <text x="70" y="28" fill="#0F766E" class="dark:fill-teal-300 text-[10px] font-black text-center" text-anchor="middle">82%</text>
+
+              <!-- t1: 76% -->
+              <rect x="152" y="40" width="36" height="65" rx="6" fill="#14B8A6" opacity="0.85"><title>Fila t1: 76% (Desarrollo)</title></rect>
+              <text x="170" y="33" fill="#0F766E" class="dark:fill-teal-300 text-[10px] font-black text-center" text-anchor="middle">76%</text>
+
+              <!-- t2: 68% -->
+              <rect x="252" y="47" width="36" height="58" rx="6" fill="#0D9488" opacity="0.85"><title>Fila t2: 68% (Llenado inicial)</title></rect>
+              <text x="270" y="40" fill="#0F766E" class="dark:fill-teal-300 text-[10px] font-black text-center" text-anchor="middle">68%</text>
+
+              <!-- t3: 87% -->
+              <rect x="352" y="31" width="36" height="74" rx="6" fill="#10B981" opacity="0.9"><title>Fila t3: 87% (Maduración)</title></rect>
+              <text x="370" y="24" fill="#047857" class="dark:fill-emerald-300 text-[10px] font-black text-center" text-anchor="middle">87%</text>
+
+              <!-- Línea de tendencia -->
+              <path d="M 70,35 Q 120,38 170,40 T 270,47 T 370,31" fill="none" stroke="#047857" stroke-width="2" stroke-dasharray="4,2" />
+            </svg>
+          </div>
+          <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-2 px-8">
+            <span>Fila t0</span>
+            <span>Fila t1</span>
+            <span>Fila t2</span>
+            <span>Fila t3</span>
+          </div>
+        </div>
+
+        <!-- GRÁFICO 6: Sanidad y Productividad de los Cultivos -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/40 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group relative"
+          data-chart-title="6. Sanidad y Productividad Global"
+          data-chart-subtitle="Distribución fitosanitaria y rendimiento de las 20 plantas"
+          data-chart-icon="🛡️"
+          data-chart-badge={`${healthyRatio}% Sanas`}
+          data-chart-info="Evaluación del estado integral del cultivo. El 80% (16 de 20 plantas) se encuentra en estado fitosanitario Excelente o Saludable. En productividad esperada, el 65% proyecta cosechas altas y el 25% medias."
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 text-base">🛡️</span>
+              <div>
+                <h4 class="font-extrabold text-gray-900 dark:text-white text-sm">6. Sanidad y Productividad</h4>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400">Distribución fitosanitaria y rendimiento de las 20 plantas</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 text-[11px]">
+                {healthyRatio}% Sanas
+              </span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+
+          <div class="w-full h-44 relative bg-white dark:bg-gray-800/80 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex flex-col justify-center gap-3">
+            <!-- Sanidad -->
+            <div>
+              <div class="flex justify-between text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+                <span>Estado Sanitario (20 Plantas)</span>
+                <span class="text-emerald-600 dark:text-emerald-400">{healthCounts.Excelente + healthCounts.Saludable} Sanas / {healthCounts.Vulnerable + healthCounts.Crítica} En Alerta</span>
+              </div>
+              <div class="w-full h-3.5 bg-gray-100 dark:bg-gray-700 rounded-full flex overflow-hidden">
+                <div style={`width: ${(healthCounts.Excelente / totalPlants) * 100}%`} class="bg-emerald-500 h-full" title={`Excelente: ${healthCounts.Excelente} plantas`}></div>
+                <div style={`width: ${(healthCounts.Saludable / totalPlants) * 100}%`} class="bg-teal-400 h-full" title={`Saludable: ${healthCounts.Saludable} plantas`}></div>
+                <div style={`width: ${(healthCounts.Vulnerable / totalPlants) * 100}%`} class="bg-amber-400 h-full" title={`Vulnerable: ${healthCounts.Vulnerable} plantas`}></div>
+                <div style={`width: ${(healthCounts.Crítica / totalPlants) * 100}%`} class="bg-rose-500 h-full" title={`Crítica: ${healthCounts.Crítica} planta`}></div>
+              </div>
+              <div class="flex items-center justify-between text-[9px] text-gray-500 font-bold mt-1">
+                <span class="text-emerald-600">● Exc: {healthCounts.Excelente}</span>
+                <span class="text-teal-600">● Sal: {healthCounts.Saludable}</span>
+                <span class="text-amber-600">● Vul: {healthCounts.Vulnerable}</span>
+                <span class="text-rose-600">● Crít: {healthCounts.Crítica}</span>
+              </div>
+            </div>
+
+            <!-- Productividad -->
+            <div>
+              <div class="flex justify-between text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+                <span>Proyección de Productividad</span>
+                <span class="text-indigo-600 dark:text-indigo-400">{prodCounts.Alta} Alta / {prodCounts.Media} Media / {prodCounts.Baja} Baja</span>
+              </div>
+              <div class="w-full h-3.5 bg-gray-100 dark:bg-gray-700 rounded-full flex overflow-hidden">
+                <div style={`width: ${(prodCounts.Alta / totalPlants) * 100}%`} class="bg-indigo-600 h-full" title={`Alta: ${prodCounts.Alta} plantas`}></div>
+                <div style={`width: ${(prodCounts.Media / totalPlants) * 100}%`} class="bg-amber-400 h-full" title={`Media: ${prodCounts.Media} plantas`}></div>
+                <div style={`width: ${(prodCounts.Baja / totalPlants) * 100}%`} class="bg-rose-400 h-full" title={`Baja: ${prodCounts.Baja} plantas`}></div>
+              </div>
+              <div class="flex items-center justify-between text-[9px] text-gray-500 font-bold mt-1">
+                <span class="text-indigo-600">● Alta: {prodCounts.Alta} ({Math.round((prodCounts.Alta / totalPlants) * 100)}%)</span>
+                <span class="text-amber-600">● Media: {prodCounts.Media} ({Math.round((prodCounts.Media / totalPlants) * 100)}%)</span>
+                <span class="text-rose-600">● Baja: {prodCounts.Baja} ({Math.round((prodCounts.Baja / totalPlants) * 100)}%)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center text-[10px] text-gray-500 font-mono mt-2 px-1">
+            <span class="text-emerald-600 font-bold">✓ 80% Índice de Sanidad Global</span>
+            <span class="text-indigo-600 font-bold">65% Alta Capacidad</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. TABLA TIPO EXCEL POR CADA PLANTA (20 FILAS CON MEDICIÓN DE HOY) -->
+  <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl border-2 border-gray-300 dark:border-gray-700 shadow-sm overflow-hidden">
+    
+    <!-- Barra superior de la Tabla Detallada (con botón Minimizar / Ampliar) -->
+    <div class="px-5 py-3.5 bg-gray-50 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2.5">
+        <span class="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-sm">📑</span>
+        <div>
+          <h3 class="font-black text-gray-900 dark:text-white text-sm">
+            Tabla Detallada de Mediciones Agronómicas
+          </h3>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">
+            Registro diario de lecturas individuales por planta y parámetros de monitoreo
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold hidden sm:inline">
+          20 Plantas Registradas
+        </span>
+
+        <button
+          id="btn-export-excel-table"
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs bg-emerald-100/70 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200/70 dark:hover:bg-emerald-800/60 border border-emerald-300 dark:border-emerald-700 transition-all cursor-pointer shadow-2xs"
+          title="Descargar esta tabla organizada en archivo Excel (.xlsx)"
+        >
+          <svg class="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Descargar .xlsx</span>
+        </button>
+
+        <button
+          id="btn-toggle-excel-table"
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-gray-600 border border-emerald-200 dark:border-gray-600 shadow-xs transition-all cursor-pointer"
+        >
+          <span id="excel-toggle-icon">⤢</span>
+          <span id="excel-toggle-text">Ampliar Tabla Completa</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Contenedor Colapsable de la Tabla (Inicia Minimizado) -->
+    <div id="excel-table-collapsible" class="hidden transition-all duration-300">
+    <!-- Filtros de búsqueda en la tabla -->
+    <div class="p-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex flex-wrap items-center gap-2 flex-1">
+        <input
+          id="table-search"
+          type="text"
+          placeholder="Buscar por planta (ej: P-01), fila (t0..t3), columna o responsable..."
+          class="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white min-w-[260px] focus:ring-2 focus:ring-emerald-500 outline-none"
+        />
+
+        <select
+          id="filter-row-select"
+          class="px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white font-bold"
+        >
+          <option value="all">Todas las Filas (t0—t3)</option>
           <option value="t0">Fila t0</option>
           <option value="t1">Fila t1</option>
           <option value="t2">Fila t2</option>
           <option value="t3">Fila t3</option>
         </select>
-      </div>
 
-      <!-- Filtro Sanidad -->
-      <div class="flex items-center gap-1.5">
-        <label for="filter-health" class="text-xs font-bold text-gray-600 dark:text-gray-300">Sanidad:</label>
         <select
-          id="filter-health"
-          class="py-2 px-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          id="filter-health-select"
+          class="px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white font-bold"
         >
-          <option value="all">Todas</option>
+          <option value="all">Cualquier Sanidad</option>
           <option value="Excelente">Excelente</option>
           <option value="Saludable">Saludable</option>
           <option value="Vulnerable">Vulnerable</option>
           <option value="Crítica">Crítica</option>
         </select>
       </div>
-    </div>
-  </div>
 
-  <!-- TABLA AGRONÓMICA TIPO EXCEL (FILAS t0, t1... Y COLUMNAS Col 1, Col 2...) -->
-  <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl border-2 border-gray-300 dark:border-gray-700 shadow-sm overflow-hidden">
-    
-    <!-- Barra superior de la hoja de cálculo -->
-    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-800/80 border-b border-gray-300 dark:border-gray-700 flex items-center justify-between text-xs font-mono text-gray-600 dark:text-gray-300">
-      <div class="flex items-center gap-2">
-        <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold text-[10px]">EXCEL GRID</span>
-        <span class="font-bold">Invernadero_AquaSens_Registro.xlsx</span>
-      </div>
-      <div class="flex items-center gap-3 text-[11px]">
-        <span>Filas: <strong>t0 — t3</strong></span>
-        <span>•</span>
-        <span>Columnas: <strong>Col 1 — Col 5</strong></span>
-      </div>
+      <span class="text-xs text-gray-500 font-bold">
+        💡 Haz clic en cualquier fila para abrir su analítica y gráficos
+      </span>
     </div>
 
+    <!-- Contenedor con Scroll Horizontal de la Tabla -->
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse min-w-[1050px]">
         <thead>
-          <!-- Fila de Encabezados con Letras de Columna tipo Excel (A, B, C...) -->
+          <!-- Letras de columnas estilo Excel -->
           <tr class="bg-gray-200/80 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-mono text-[10px] text-center select-none border-b border-gray-300 dark:border-gray-600">
             <th class="w-10 py-1 border-r border-gray-300 dark:border-gray-600">#</th>
             <th class="py-1 border-r border-gray-300 dark:border-gray-600">A</th>
@@ -213,138 +858,142 @@ function getHealthBadge(sanidad: string) {
             <th class="py-1">J</th>
           </tr>
 
-          <!-- Encabezados Reales con separación y estilo Excel -->
+          <!-- Encabezados de Datos -->
           <tr class="bg-gray-100 dark:bg-gray-800/80 border-b-2 border-gray-300 dark:border-gray-600 text-xs font-black uppercase text-gray-700 dark:text-gray-200 select-none">
             <th class="py-3 px-2 text-center border-r border-gray-300 dark:border-gray-600 bg-gray-200/60 dark:bg-gray-700/60 w-10">
               N°
             </th>
             <th class="py-3 px-4 border-r border-gray-300 dark:border-gray-600">
-              <span class="inline-flex items-center gap-1.5">📍 Ubicación (Fila / Col)</span>
+              📍 Planta & Ubicación
             </th>
             <th class="py-3 px-4 border-r border-gray-300 dark:border-gray-600">
-              <span class="inline-flex items-center gap-1.5">📅 Fecha & Hora</span>
+              📅 Toma de Hoy
             </th>
             <th class="py-3 px-3 text-center border-r border-gray-300 dark:border-gray-600">
-              <span class="inline-flex items-center gap-1">🧪 pH Suelo</span>
+              🧪 pH Suelo
             </th>
             <th class="py-3 px-3 text-center border-r border-gray-300 dark:border-gray-600">
-              <span class="inline-flex items-center gap-1">🌡️ T. Interna</span>
+              🌡️ T. Interna
             </th>
             <th class="py-3 px-3 text-center border-r border-gray-300 dark:border-gray-600">
-              <span class="inline-flex items-center gap-1">☀️ T. Externa</span>
+              ☀️ T. Externa
             </th>
             <th class="py-3 px-3 text-center border-r border-gray-300 dark:border-gray-600">
-              <span class="inline-flex items-center gap-1">🌱 T. Suelo</span>
+              🌱 T. Suelo
             </th>
             <th class="py-3 px-4 border-r border-gray-300 dark:border-gray-600">
-              <span class="inline-flex items-center gap-1">📈 Crecimiento</span>
+              📈 Crecimiento
             </th>
-            <th class="py-3 px-3 text-center border-r border-gray-300 dark:border-gray-600">Productividad</th>
-            <th class="py-3 px-3 text-center border-r border-gray-300 dark:border-gray-600">Sanidad</th>
-            <th class="py-3 px-4">Responsable (Toma)</th>
+            <th class="py-3 px-3 text-center border-r border-gray-300 dark:border-gray-600">
+              Productividad
+            </th>
+            <th class="py-3 px-3 text-center border-r border-gray-300 dark:border-gray-600">
+              Sanidad
+            </th>
+            <th class="py-3 px-4">
+              Responsable
+            </th>
           </tr>
         </thead>
-        <tbody id="metrics-table-body" class="divide-y divide-gray-200 dark:divide-gray-700 text-xs sm:text-sm font-medium">
-          {metrics.map((row, idx) => {
-            const ph = getPhBadge(row.phSuelo);
-            const prodClass = getProdBadge(row.productividad);
-            const health = getHealthBadge(row.sanidad);
+
+        <tbody id="plants-table-body" class="divide-y divide-gray-200 dark:divide-gray-700 text-xs sm:text-sm font-medium">
+          {plants.map((p, idx) => {
+            const m = p.latestMetric;
+            const ph = getPhBadge(m.phSuelo);
+            const prodClass = getProdBadge(m.productividad);
+            const health = getHealthBadge(m.sanidad);
 
             return (
-              <tr 
-                class="hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors metric-row cursor-pointer"
-                data-id={row.id}
-                data-fila={row.fila}
-                data-columna={row.columna}
-                data-fecha={row.fecha}
-                data-hora={row.hora}
-                data-timestamp={row.timestampTexto}
-                data-ph={row.phSuelo}
-                data-tin={row.tempInterna}
-                data-tout={row.tempExterna}
-                data-tsoil={row.tempSuelo}
-                data-growth={row.crecimiento}
-                data-fase={row.faseCrecimiento}
-                data-prod={row.productividad}
-                data-health={row.sanidad}
-                data-resp={row.responsable}
-                data-rol={row.responsableRol}
-                data-obs={row.observaciones}
+              <tr
+                class="plant-table-row hover:bg-indigo-50/70 dark:hover:bg-indigo-950/30 transition-colors cursor-pointer"
+                data-fila={p.fila}
+                data-columna={p.columna}
+                data-plantid={p.plantId}
+                data-health={m.sanidad}
+                data-prod={m.productividad}
+                data-resp={m.responsable}
+                data-ph={m.phSuelo}
+                data-tin={m.tempInterna}
+                data-tout={m.tempExterna}
+                data-tsoil={m.tempSuelo}
+                data-growth={m.crecimiento}
+                data-fase={m.faseCrecimiento}
+                data-obs={m.observaciones || ''}
+                data-hora={m.hora}
+                data-fecha={m.fecha}
+                title={`Haz clic para abrir analítica de ${p.plantId}`}
               >
-                <!-- Índice de fila estilo Excel -->
+                <!-- N° de fila Excel -->
                 <td class="py-3 px-2 text-center font-mono text-xs text-gray-400 bg-gray-50/80 dark:bg-gray-800/80 border-r border-gray-300 dark:border-gray-600 select-none">
                   {idx + 1}
                 </td>
 
-                <!-- Columna A: Fila y Columna -->
+                <!-- Columna A: Planta & Ubicación -->
                 <td class="py-3 px-4 border-r border-gray-200 dark:border-gray-700">
                   <div class="flex items-center gap-2">
-                    <span class="px-2 py-1 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 font-mono font-black text-xs">
-                      {row.fila}
+                    <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono font-black text-xs shadow-xs">
+                      {p.plantId}
                     </span>
                     <span class="font-bold text-gray-900 dark:text-white font-mono text-xs">
-                      {row.columna}
+                      {p.fila} • {p.columna}
                     </span>
                   </div>
                 </td>
 
-                <!-- Columna B: Fecha y Hora -->
+                <!-- Columna B: Fecha y Hora de hoy -->
                 <td class="py-3 px-4 border-r border-gray-200 dark:border-gray-700">
                   <span class="font-semibold text-gray-900 dark:text-white block text-xs">
-                    {row.fecha}
+                    {m.fecha}
                   </span>
-                  <span class="text-[11px] text-gray-500 dark:text-gray-400">
-                    {row.hora}
+                  <span class="text-[11px] text-gray-500 dark:text-gray-400 font-mono">
+                    {m.hora}
                   </span>
                 </td>
 
                 <!-- Columna C: pH Suelo -->
                 <td class="py-3 px-3 text-center border-r border-gray-200 dark:border-gray-700">
                   <span class={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black border ${ph.class}`}>
-                    <span>{row.phSuelo.toFixed(1)}</span>
+                    <span>{m.phSuelo.toFixed(1)}</span>
                     <span class="text-[9px] opacity-75">pH</span>
                   </span>
                 </td>
 
-                <!-- Columna D: Temp Interna -->
+                <!-- Columna D: T. Interna -->
                 <td class="py-3 px-3 text-center font-bold text-amber-700 dark:text-amber-300 border-r border-gray-200 dark:border-gray-700">
                   <span class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 font-mono">
-                    {row.tempInterna.toFixed(1)}°C
+                    {m.tempInterna.toFixed(1)}°C
                   </span>
                 </td>
 
-                <!-- Columna E: Temp Externa -->
+                <!-- Columna E: T. Externa -->
                 <td class="py-3 px-3 text-center text-blue-700 dark:text-blue-300 border-r border-gray-200 dark:border-gray-700">
                   <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 font-mono text-xs font-bold">
-                    {row.tempExterna.toFixed(1)}°C
+                    {m.tempExterna.toFixed(1)}°C
                   </span>
                 </td>
 
-                <!-- Columna F: Temp Suelo -->
+                <!-- Columna F: T. Suelo -->
                 <td class="py-3 px-3 text-center text-emerald-700 dark:text-emerald-300 border-r border-gray-200 dark:border-gray-700">
                   <span class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 font-mono text-xs font-bold">
-                    {row.tempSuelo.toFixed(1)}°C
+                    {m.tempSuelo.toFixed(1)}°C
                   </span>
                 </td>
 
                 <!-- Columna G: Crecimiento -->
                 <td class="py-3 px-4 border-r border-gray-200 dark:border-gray-700 min-w-[140px]">
                   <div class="flex items-center justify-between text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-                    <span class="text-[11px] truncate max-w-[90px]">{row.faseCrecimiento}</span>
-                    <span class="text-emerald-600 dark:text-emerald-400 font-mono">{row.crecimiento}%</span>
+                    <span class="text-[11px] truncate max-w-[80px]">{m.faseCrecimiento}</span>
+                    <span class="text-emerald-600 dark:text-emerald-400 font-mono">{m.crecimiento}%</span>
                   </div>
                   <div class="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      class="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full" 
-                      style={`width: ${row.crecimiento}%`}
-                    ></div>
+                    <div class="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full" style={`width: ${m.crecimiento}%`}></div>
                   </div>
                 </td>
 
                 <!-- Columna H: Productividad -->
                 <td class="py-3 px-3 text-center border-r border-gray-200 dark:border-gray-700">
                   <span class={`inline-block px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${prodClass}`}>
-                    {row.productividad}
+                    {m.productividad}
                   </span>
                 </td>
 
@@ -352,22 +1001,22 @@ function getHealthBadge(sanidad: string) {
                 <td class="py-3 px-3 text-center border-r border-gray-200 dark:border-gray-700">
                   <span class={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${health.class}`}>
                     <span>{health.icon}</span>
-                    <span>{row.sanidad}</span>
+                    <span>{m.sanidad}</span>
                   </span>
                 </td>
 
                 <!-- Columna J: Responsable -->
                 <td class="py-3 px-4">
                   <div class="flex items-center gap-2">
-                    <div class={`w-7 h-7 rounded-full ${row.avatarColor} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0`}>
-                      {row.responsable.split(" ").map(n => n[0]).slice(0, 2).join("")}
+                    <div class={`w-7 h-7 rounded-full ${m.avatarColor} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0`}>
+                      {m.responsable.split(" ").map(n => n[0]).slice(0, 2).join("")}
                     </div>
                     <div>
                       <span class="font-bold text-gray-900 dark:text-white text-xs block">
-                        {row.responsable}
+                        {m.responsable}
                       </span>
                       <span class="text-[10px] text-gray-500 dark:text-gray-400 block font-normal">
-                        {row.responsableRol}
+                        {m.responsableRol}
                       </span>
                     </div>
                   </div>
@@ -379,587 +1028,1248 @@ function getHealthBadge(sanidad: string) {
       </table>
     </div>
 
-    <!-- Estado vacío de búsqueda -->
-    <div id="empty-state" class="hidden p-10 text-center">
-      <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gray-100 dark:bg-gray-700 text-gray-400 flex items-center justify-center text-2xl">
-        🔍
-      </div>
-      <h3 class="text-sm font-bold text-gray-900 dark:text-white">Sin coincidencias para la fecha o búsqueda</h3>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Prueba con otra fecha o haz clic en "✕" para ver todos los registros.</p>
-    </div>
-
-    <!-- Pie de tabla estilo Excel -->
-    <div class="px-4 py-2.5 bg-gray-100 dark:bg-gray-800/80 border-t border-gray-300 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400 font-mono">
+    <!-- Pie de tabla Excel -->
+    <div class="px-4 py-2.5 bg-gray-100 dark:bg-gray-800/90 border-t border-gray-300 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400 font-mono">
       <div class="flex items-center gap-2">
         <span>Mostrando</span>
-        <span id="showing-count" class="font-bold text-gray-900 dark:text-white">{metrics.length}</span>
-        <span>de</span>
-        <span id="total-count" class="font-bold text-gray-900 dark:text-white">{metrics.length}</span>
-        <span>filas</span>
+        <span id="plants-showing-count" class="font-bold text-gray-900 dark:text-white">20</span>
+        <span>de 20 plantas activas</span>
       </div>
       <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-        <span>Invernadero AquaSens Activo</span>
+        <span>Todas las posiciones de cultivo registradas</span>
       </div>
     </div>
-  </div>
-
-  <!-- SECCIÓN PROFESIONAL: GRÁFICOS Y GRAFOS DEDICADOS POR MÉTRICA -->
-  <div id="analytics-charts-panel" class="transition-all duration-300 mb-8 space-y-6">
-    
-    <div class="flex items-center justify-between">
-      <h2 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-        <span>📈</span> Gráficos de Comportamiento por Métrica
-      </h2>
-      <span class="text-xs text-gray-500 dark:text-gray-400">
-        Tendencias temporales y espaciales del Invernadero
-      </span>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      
-      <!-- GRÁFICO 1: pH del Suelo -->
-      <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <span class="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-lg">🧪</span>
-            <div>
-              <h3 class="font-extrabold text-gray-900 dark:text-white text-sm">pH del Suelo</h3>
-              <p class="text-[11px] text-gray-500 dark:text-gray-400">Rango agronómico óptimo: 6.0 a 6.8 pH</p>
-            </div>
-          </div>
-          <span class="text-xs font-black px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-            Promedio: 6.2 pH
-          </span>
-        </div>
-
-        <!-- SVG Dinámico del Gráfico de pH -->
-        <div class="w-full h-44 relative bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex items-center justify-center">
-          <svg class="w-full h-full overflow-visible" viewBox="0 0 500 120">
-            <!-- Banda Óptima (Sombreado Verde 6.0 - 6.8) -->
-            <rect x="40" y="32" width="440" height="38" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
-            <text x="45" y="44" fill="#10B981" font-size="9" font-weight="bold">Zona Óptima (6.0 - 6.8)</text>
-
-            <!-- Líneas de cuadrícula horizontal -->
-            <line x1="40" y1="20" x2="480" y2="20" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
-            <text x="15" y="23" class="fill-gray-400 text-[9px] font-mono">7.5</text>
-            
-            <line x1="40" y1="50" x2="480" y2="50" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
-            <text x="15" y="53" class="fill-gray-400 text-[9px] font-mono">6.5</text>
-            
-            <line x1="40" y1="80" x2="480" y2="80" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
-            <text x="15" y="83" class="fill-gray-400 text-[9px] font-mono">5.5</text>
-
-            <line x1="40" y1="105" x2="480" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
-            <text x="15" y="108" class="fill-gray-400 text-[9px] font-mono">5.0</text>
-
-            <!-- Curva de valores pH: 6.4 (53), 6.2 (59), 5.7 (74), 7.2 (29), 6.5 (50) -->
-            <path 
-              d="M 60,53 Q 130,59 150,59 T 240,74 T 320,29 T 400,50" 
-              fill="none" 
-              stroke="#3B82F6" 
-              stroke-width="3" 
-              stroke-linecap="round"
-            />
-
-            <!-- Puntos de datos -->
-            <g class="cursor-pointer">
-              <circle cx="60" cy="53" r="5" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>t0 Col 1: 6.4 pH</title></circle>
-              <text x="50" y="43" fill="#1E40AF" class="dark:fill-blue-300 text-[10px] font-bold">6.4</text>
-
-              <circle cx="150" cy="59" r="5" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>t0 Col 2: 6.2 pH</title></circle>
-              <text x="140" y="49" fill="#1E40AF" class="dark:fill-blue-300 text-[10px] font-bold">6.2</text>
-
-              <circle cx="240" cy="74" r="5" fill="#F59E0B" stroke="#fff" stroke-width="2"><title>t1 Col 3: 5.7 pH</title></circle>
-              <text x="230" y="90" fill="#D97706" class="dark:fill-amber-300 text-[10px] font-bold">5.7</text>
-
-              <circle cx="320" cy="29" r="5" fill="#F59E0B" stroke="#fff" stroke-width="2"><title>t2 Col 1: 7.2 pH</title></circle>
-              <text x="310" y="21" fill="#D97706" class="dark:fill-amber-300 text-[10px] font-bold">7.2</text>
-
-              <circle cx="400" cy="50" r="5" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>t3 Col 4: 6.5 pH</title></circle>
-              <text x="390" y="40" fill="#1E40AF" class="dark:fill-blue-300 text-[10px] font-bold">6.5</text>
-            </g>
-          </svg>
-        </div>
-        <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-2 px-8">
-          <span>Fila t0 • C1</span>
-          <span>Fila t0 • C2</span>
-          <span>Fila t1 • C3</span>
-          <span>Fila t2 • C1</span>
-          <span>Fila t3 • C4</span>
-        </div>
-      </div>
-
-      <!-- GRÁFICO 2: Comparativa Térmica Triple (Interna vs Externa vs Suelo) -->
-      <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <span class="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-lg">🌡️</span>
-            <div>
-              <h3 class="font-extrabold text-gray-900 dark:text-white text-sm">Temperaturas del Invernadero</h3>
-              <p class="text-[11px] text-gray-500 dark:text-gray-400">Microclima interno vs ambiente exterior vs suelo radicular</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-3 text-[10px] font-bold">
-            <span class="flex items-center gap-1 text-amber-600 dark:text-amber-400"><span class="w-2.5 h-1 bg-amber-500 rounded"></span> Interna</span>
-            <span class="flex items-center gap-1 text-blue-600 dark:text-blue-400"><span class="w-2.5 h-1 bg-blue-500 rounded"></span> Externa</span>
-            <span class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><span class="w-2.5 h-1 bg-emerald-500 rounded"></span> Suelo</span>
-          </div>
-        </div>
-
-        <!-- SVG Gráfico Térmico -->
-        <div class="w-full h-44 relative bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700 flex items-center justify-center">
-          <svg class="w-full h-full overflow-visible" viewBox="0 0 500 120">
-            <!-- Guías horizontales -->
-            <line x1="40" y1="20" x2="480" y2="20" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
-            <text x="15" y="23" class="fill-gray-400 text-[9px] font-mono">32°</text>
-            <line x1="40" y1="55" x2="480" y2="55" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
-            <text x="15" y="58" class="fill-gray-400 text-[9px] font-mono">25°</text>
-            <line x1="40" y1="90" x2="480" y2="90" stroke="currentColor" stroke-dasharray="3,3" class="text-gray-300 dark:text-gray-700" stroke-width="1" />
-            <text x="15" y="93" class="fill-gray-400 text-[9px] font-mono">18°</text>
-
-            <!-- Línea Temp Interna (Ámbar) -->
-            <path d="M 60,58 Q 130,62 150,62 T 240,45 T 320,38 T 400,55" fill="none" stroke="#F59E0B" stroke-width="2.5" />
-            <!-- Línea Temp Externa (Azul) -->
-            <path d="M 60,78 Q 130,82 150,82 T 240,70 T 320,71 T 400,77" fill="none" stroke="#3B82F6" stroke-width="2" stroke-dasharray="4,2" />
-            <!-- Línea Temp Suelo (Verde) -->
-            <path d="M 60,76 Q 130,80 150,80 T 240,65 T 320,60 T 400,73" fill="none" stroke="#10B981" stroke-width="2" />
-
-            <!-- Puntos -->
-            <circle cx="60" cy="58" r="4" fill="#F59E0B"><title>Int: 24.5°C</title></circle>
-            <circle cx="150" cy="62" r="4" fill="#F59E0B"><title>Int: 23.8°C</title></circle>
-            <circle cx="240" cy="45" r="4" fill="#F59E0B"><title>Int: 27.2°C</title></circle>
-            <circle cx="320" cy="38" r="4" fill="#F59E0B"><title>Int: 28.6°C</title></circle>
-            <circle cx="400" cy="55" r="4" fill="#F59E0B"><title>Int: 25.0°C</title></circle>
-          </svg>
-        </div>
-        <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-2 px-8">
-          <span>t0 • C1</span>
-          <span>t0 • C2</span>
-          <span>t1 • C3</span>
-          <span>t2 • C1</span>
-          <span>t3 • C4</span>
-        </div>
-      </div>
-
-      <!-- GRÁFICO 3: Crecimiento Vegetativo (%) -->
-      <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <span class="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-lg">📈</span>
-            <div>
-              <h3 class="font-extrabold text-gray-900 dark:text-white text-sm">Evolución de Crecimiento</h3>
-              <p class="text-[11px] text-gray-500 dark:text-gray-400">Porcentaje de desarrollo por lote y fila del invernadero</p>
-            </div>
-          </div>
-          <span class="text-xs font-black text-emerald-600 dark:text-emerald-400">
-            Promedio: 76%
-          </span>
-        </div>
-
-        <div class="space-y-2.5 my-2">
-          {metrics.map((m) => (
-            <div class="flex items-center gap-3 text-xs">
-              <span class="w-20 font-bold text-gray-700 dark:text-gray-300 truncate font-mono text-[11px]">
-                Fila {m.fila} • {m.columna}
-              </span>
-              <div class="flex-1 bg-gray-100 dark:bg-gray-700 h-3 rounded-full overflow-hidden relative">
-                <div 
-                  class="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full transition-all duration-500" 
-                  style={`width: ${m.crecimiento}%`}
-                ></div>
-              </div>
-              <span class="w-12 text-right font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                {m.crecimiento}%
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <!-- GRÁFICO 4: Sanidad y Productividad -->
-      <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <span class="p-2 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 text-lg">🛡️</span>
-            <div>
-              <h3 class="font-extrabold text-gray-900 dark:text-white text-sm">Balance de Sanidad y Productividad</h3>
-              <p class="text-[11px] text-gray-500 dark:text-gray-400">Distribución de vigor fitosanitario en las plantas</p>
-            </div>
-          </div>
-          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-            6 Puntos Registrados
-          </span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 my-2">
-          <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700 text-center">
-            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 block mb-1">Productividad</span>
-            <div class="flex justify-center items-center gap-2 mt-2">
-              <div class="text-center">
-                <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">50%</span>
-                <span class="text-[9px] font-bold text-gray-500 uppercase">Alta (3)</span>
-              </div>
-              <div class="h-8 w-px bg-gray-200 dark:bg-gray-600"></div>
-              <div class="text-center">
-                <span class="text-xl font-black text-amber-600 dark:text-amber-400 block">17%</span>
-                <span class="text-[9px] font-bold text-gray-500 uppercase">Media (1)</span>
-              </div>
-              <div class="h-8 w-px bg-gray-200 dark:bg-gray-600"></div>
-              <div class="text-center">
-                <span class="text-xl font-black text-rose-600 dark:text-rose-400 block">33%</span>
-                <span class="text-[9px] font-bold text-gray-500 uppercase">Baja (2)</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700 text-center">
-            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 block mb-1">Sanidad Vegetal</span>
-            <div class="flex justify-center items-center gap-2 mt-2">
-              <div class="text-center">
-                <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">67%</span>
-                <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Sano 🟢</span>
-              </div>
-              <div class="h-8 w-px bg-gray-200 dark:bg-gray-600"></div>
-              <div class="text-center">
-                <span class="text-xl font-black text-amber-600 dark:text-amber-400 block">17%</span>
-                <span class="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase">Alerta 🟡</span>
-              </div>
-              <div class="h-8 w-px bg-gray-200 dark:bg-gray-600"></div>
-              <div class="text-center">
-                <span class="text-xl font-black text-rose-600 dark:text-rose-400 block">16%</span>
-                <span class="text-[9px] font-bold text-rose-600 dark:text-rose-400 uppercase">Crítico 🔴</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-xs text-emerald-800 dark:text-emerald-300 font-medium flex items-center gap-2">
-          <span>💡</span>
-          <span>Filas <strong>t0</strong> y <strong>t3</strong> presentan el mejor rendimiento productivo y óptimo cuajado.</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- MODAL: REGISTRAR NUEVA MEDICIÓN (RESPONSABLE DETECTADO AUTOMÁTICAMENTE) -->
-  <div id="modal-add" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-xl w-full max-h-[90vh] overflow-y-auto p-6">
-      
-      <!-- Modal Header -->
-      <div class="flex justify-between items-start mb-5 pb-3 border-b border-gray-100 dark:border-gray-700">
-        <div>
-          <h3 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-            <span>📝</span> Registrar Nueva Medición de Campo
-          </h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            Invernadero AquaSens (Invernadero Único)
-          </p>
-        </div>
-        <button id="btn-close-modal" type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-white text-2xl font-bold p-1 cursor-pointer">&times;</button>
-      </div>
-
-      <!-- Tarjeta de Responsable Detectado Automáticamente por Sesión -->
-      <div class="mb-4 p-3.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
-            {currentUserName.split(" ").map(n => n[0]).slice(0, 2).join("")}
-          </div>
-          <div>
-            <span class="text-[10px] uppercase font-black tracking-wider text-indigo-600 dark:text-indigo-400 block">
-              Persona Responsable (Detectada por Login)
-            </span>
-            <span id="session-user-name" class="font-extrabold text-gray-900 dark:text-white text-sm">
-              {currentUserName}
-            </span>
-            <span id="session-user-role" class="text-[11px] text-gray-500 dark:text-gray-400 ml-2">
-              ({currentUserRole})
-            </span>
-          </div>
-        </div>
-        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-200/60 dark:bg-indigo-800/60 text-indigo-800 dark:text-indigo-200">
-          Autenticado
-        </span>
-      </div>
-
-      <!-- Formulario de toma de datos -->
-      <form id="form-new-metric" class="space-y-4">
-        
-        <!-- Selección de Fila y Columna -->
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="input-fila" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-              Fila del Invernadero *
-            </label>
-            <select id="input-fila" required class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 font-mono">
-              <option value="t0">Fila t0</option>
-              <option value="t1">Fila t1</option>
-              <option value="t2">Fila t2</option>
-              <option value="t3">Fila t3</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="input-columna" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-              Columna de Plantas *
-            </label>
-            <select id="input-columna" required class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 font-mono">
-              <option value="Col 1">Columna 1 (Col 1)</option>
-              <option value="Col 2">Columna 2 (Col 2)</option>
-              <option value="Col 3">Columna 3 (Col 3)</option>
-              <option value="Col 4">Columna 4 (Col 4)</option>
-              <option value="Col 5">Columna 5 (Col 5)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Variables de Suelo y Ambiente -->
-        <div class="p-3.5 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2.5">
-          <span class="text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider block">
-            Variables de Suelo y Microclima
-          </span>
-
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div>
-              <label for="input-ph" class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
-                🧪 pH Suelo
-              </label>
-              <input id="input-ph" type="number" step="0.1" min="0" max="14" required value="6.4" class="w-full px-2 py-1.5 text-sm font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center" />
-            </div>
-
-            <div>
-              <label for="input-tin" class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
-                🌡️ T. Interna (°C)
-              </label>
-              <input id="input-tin" type="number" step="0.1" required value="24.0" class="w-full px-2 py-1.5 text-sm font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center" />
-            </div>
-
-            <div>
-              <label for="input-tout" class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
-                ☀️ T. Externa (°C)
-              </label>
-              <input id="input-tout" type="number" step="0.1" required value="20.0" class="w-full px-2 py-1.5 text-sm font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center" />
-            </div>
-
-            <div>
-              <label for="input-tsoil" class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
-                🌱 T. Suelo (°C)
-              </label>
-              <input id="input-tsoil" type="number" step="0.1" required value="20.5" class="w-full px-2 py-1.5 text-sm font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Crecimiento, Productividad y Sanidad -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label for="input-growth" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-              📈 Crecimiento (%)
-            </label>
-            <input id="input-growth" type="number" min="0" max="100" required value="80" class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white" />
-          </div>
-
-          <div>
-            <label for="input-prod" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-              Productividad
-            </label>
-            <select id="input-prod" class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
-              <option value="Alta">Alta</option>
-              <option value="Media">Media</option>
-              <option value="Baja">Baja</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="input-health" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-              Sanidad Vegetal
-            </label>
-            <select id="input-health" class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
-              <option value="Excelente">Excelente</option>
-              <option value="Saludable">Saludable</option>
-              <option value="Vulnerable">Vulnerable</option>
-              <option value="Crítica">Crítica</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Observaciones -->
-        <div>
-          <label for="input-obs" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-            Notas u Observaciones
-          </label>
-          <textarea 
-            id="input-obs" 
-            rows="2" 
-            placeholder="Anotaciones de la toma de datos..." 
-            class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
-          ></textarea>
-        </div>
-
-        <!-- Botones Modal -->
-        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-          <button 
-            id="btn-cancel-modal" 
-            type="button" 
-            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer"
-          >
-            Cancelar
-          </button>
-          <button 
-            type="submit" 
-            class="px-5 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-md cursor-pointer"
-          >
-            Guardar Medición
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: FICHA DE DETALLE -->
-  <div id="modal-detail" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-md w-full p-6">
-      <div class="flex justify-between items-start mb-4 pb-3 border-b border-gray-100 dark:border-gray-700">
-        <div>
-          <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300">
-            Invernadero AquaSens (Único)
-          </span>
-          <h3 id="detail-pos" class="text-lg font-black text-gray-900 dark:text-white mt-1">Fila t0 • Col 1</h3>
-          <p id="detail-date" class="text-xs text-gray-500 dark:text-gray-400">2026-09-03 - 09:30 AM</p>
-        </div>
-        <button id="btn-close-detail" type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-white text-2xl font-bold p-1 cursor-pointer">&times;</button>
-      </div>
-
-      <div class="space-y-3 text-xs">
-        <div class="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-900/20 flex justify-between items-center">
-          <span class="font-bold text-gray-700 dark:text-gray-300">🧪 pH del Suelo</span>
-          <span id="detail-ph" class="text-sm font-black text-blue-700 dark:text-blue-300">6.4 pH</span>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20">
-            <span class="text-[10px] text-gray-500 block">T. Interna</span>
-            <span id="detail-tin" class="text-xs font-black text-amber-700 dark:text-amber-300">24.5°C</span>
-          </div>
-          <div class="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-            <span class="text-[10px] text-gray-500 block">T. Externa</span>
-            <span id="detail-tout" class="text-xs font-black text-blue-700 dark:text-blue-300">20.1°C</span>
-          </div>
-          <div class="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
-            <span class="text-[10px] text-gray-500 block">T. Suelo</span>
-            <span id="detail-tsoil" class="text-xs font-black text-emerald-700 dark:text-emerald-300">20.3°C</span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700/40">
-            <span class="text-[10px] text-gray-500 block">Crecimiento</span>
-            <span id="detail-growth" class="text-sm font-black text-emerald-600 dark:text-emerald-400">85%</span>
-          </div>
-          <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700/40">
-            <span class="text-[10px] text-gray-500 block">Productividad / Sanidad</span>
-            <span id="detail-health" class="text-xs font-bold text-indigo-600 dark:text-indigo-400">Alta • 🟢 Excelente</span>
-          </div>
-        </div>
-
-        <div class="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700">
-          <span class="text-[10px] text-gray-400 font-bold uppercase block">Responsable de Medición</span>
-          <span id="detail-resp" class="font-bold text-gray-900 dark:text-white text-xs">Luis Manuel Florez</span>
-        </div>
-
-        <div class="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700/30">
-          <span class="text-[10px] text-gray-400 font-bold block mb-0.5">Notas de Campo</span>
-          <p id="detail-obs" class="text-gray-700 dark:text-gray-300 italic text-xs"></p>
-        </div>
-      </div>
     </div>
   </div>
 
 </div>
 
+<!-- 4. MODAL EMERGENTE: MEDICIÓN Y GRÁFICOS INDIVIDUALES DE LA PLANTA -->
+<div id="plant-metrics-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden p-3 sm:p-6 transition-all duration-300">
+  <!-- Backdrop con efecto blur -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" id="plant-modal-backdrop"></div>
+  
+  <!-- Contenedor del Modal -->
+  <div class="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-4xl max-h-[92vh] overflow-y-auto p-5 sm:p-7 z-10 space-y-6">
+    
+    <!-- Botón Cerrar (X) -->
+    <button id="btn-close-plant-modal" type="button" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full p-2 transition-colors cursor-pointer" title="Cerrar modal">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+
+    <!-- Encabezado de la Planta -->
+    <div class="flex items-center gap-4 pr-10 border-b border-gray-100 dark:border-gray-700 pb-4">
+      <div id="modal-plant-icon" class="text-4xl sm:text-5xl p-3 bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 rounded-2xl flex items-center justify-center">
+        🪴
+      </div>
+      <div>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <h3 id="modal-plant-title" class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+            Planta P-01 (Fila t0 • Col 1)
+          </h3>
+          <span id="modal-plant-health" class="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
+            🟢 Excelente
+          </span>
+          <span id="modal-plant-phase" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+            Floración
+          </span>
+        </div>
+        <p id="modal-plant-subtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Medición de hoy registrada a las <strong id="modal-plant-time">09:30 AM</strong> • Responsable: <strong id="modal-plant-resp">Luis Manuel Florez</strong>
+        </p>
+      </div>
+    </div>
+
+    <!-- Tarjetas de Mediciones de Hoy de la Planta -->
+    <div>
+      <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2.5 flex items-center gap-1.5">
+        <span>📋</span> Medición del Día Actual
+      </h4>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40">
+          <span class="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 block mb-0.5">🧪 pH Suelo</span>
+          <span id="modal-kpi-ph" class="text-xl font-black text-blue-900 dark:text-blue-100 font-mono">6.4</span>
+          <span id="modal-kpi-ph-desc" class="block text-[10px] font-bold text-emerald-600 mt-0.5">Óptimo</span>
+        </div>
+
+        <div class="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40">
+          <span class="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400 block mb-0.5">🌡️ T. Interna</span>
+          <span id="modal-kpi-tin" class="text-xl font-black text-amber-900 dark:text-amber-100 font-mono">24.5°C</span>
+          <span class="block text-[10px] text-gray-500 mt-0.5">Ambiente</span>
+        </div>
+
+        <div class="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/40">
+          <span class="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 block mb-0.5">🌱 T. Suelo</span>
+          <span id="modal-kpi-tsoil" class="text-xl font-black text-emerald-900 dark:text-emerald-100 font-mono">20.3°C</span>
+          <span class="block text-[10px] text-gray-500 mt-0.5">Radicular</span>
+        </div>
+
+        <div class="p-3 rounded-xl bg-sky-50/70 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800/40">
+          <span class="text-[10px] font-bold uppercase text-sky-600 dark:text-sky-400 block mb-0.5">☀️ T. Externa</span>
+          <span id="modal-kpi-tout" class="text-xl font-black text-sky-900 dark:text-sky-100 font-mono">20.1°C</span>
+          <span class="block text-[10px] text-gray-500 mt-0.5">Exterior</span>
+        </div>
+
+        <div class="p-3 rounded-xl bg-teal-50/70 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800/40">
+          <span class="text-[10px] font-bold uppercase text-teal-600 dark:text-teal-400 block mb-0.5">📈 Crecimiento</span>
+          <span id="modal-kpi-growth" class="text-xl font-black text-teal-900 dark:text-teal-100 font-mono">88%</span>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden mt-1">
+            <div id="modal-kpi-growth-bar" class="bg-teal-500 h-full rounded-full" style="width: 88%"></div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/40">
+          <span class="text-[10px] font-bold uppercase text-purple-600 dark:text-purple-400 block mb-0.5">⚡ Productividad</span>
+          <span id="modal-kpi-prod" class="text-xl font-black text-purple-900 dark:text-purple-100">Alta</span>
+          <span class="block text-[10px] text-gray-500 mt-0.5">Rendimiento</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS INDIVIDUALES DE ESTA PLANTA -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+          <span>📈</span> Gráficos Individuales de Esta Planta (Histórico de Tomas)
+        </h4>
+        <span class="text-[11px] text-gray-400 font-mono">4 registros temporales</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <!-- Gráfico 1: pH Individual -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/50 p-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group"
+          data-chart-title="Histórico de pH del Suelo"
+          data-chart-subtitle="Evolución de pH de la planta en los últimos 4 registros"
+          data-chart-icon="🧪"
+          data-chart-badge="pH Suelo"
+          data-chart-info="Muestra la estabilidad del pH radicular de esta planta. Las fluctuaciones bruscas pueden indicar acumulación de sales o desbalances en la fertirrigación."
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+              <span>🧪</span> Histórico de pH
+            </span>
+            <div class="flex items-center gap-1">
+              <span class="text-[9px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">6.0 - 6.8 Óptimo</span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+          <div class="w-full h-32 relative flex items-center justify-center">
+            <svg id="modal-svg-ph" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+          </div>
+          <div class="flex justify-between text-[9px] font-mono text-gray-400 mt-1 px-1">
+            <span>Hace 3d</span>
+            <span>Hace 2d</span>
+            <span>Ayer</span>
+            <span class="text-indigo-600 dark:text-indigo-400 font-bold">Hoy</span>
+          </div>
+        </div>
+
+        <!-- Gráfico 2: Temp Interna Individual -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/50 p-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group"
+          data-chart-title="Temperatura Interna (Microclima)"
+          data-chart-subtitle="Registro térmico ambiental en la posición de esta planta"
+          data-chart-icon="🌡️"
+          data-chart-badge="Temp. Interna"
+          data-chart-info="Monitorea el microclima foliar de esta planta. Valores entre 23°C y 26°C aseguran máxima eficiencia estomática y transpiración controlada."
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+              <span>🌡️</span> Temp. Interna (°C)
+            </span>
+            <div class="flex items-center gap-1">
+              <span class="text-[9px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/40 px-2 py-0.5 rounded-full">23° - 26°C Confort</span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+          <div class="w-full h-32 relative flex items-center justify-center">
+            <svg id="modal-svg-tin" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+          </div>
+          <div class="flex justify-between text-[9px] font-mono text-gray-400 mt-1 px-1">
+            <span>Hace 3d</span>
+            <span>Hace 2d</span>
+            <span>Ayer</span>
+            <span class="text-amber-600 font-bold">Hoy</span>
+          </div>
+        </div>
+
+        <!-- Gráfico 3: Temp Externa Individual -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/50 p-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group"
+          data-chart-title="Temperatura Externa Ambiental"
+          data-chart-subtitle="Temperatura exterior registrada durante la toma"
+          data-chart-icon="☀️"
+          data-chart-badge="Temp. Externa"
+          data-chart-info="Permite correlacionar cómo la radiación solar y la ventilación perimetral influyen en la temperatura ambiente de esta planta."
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+              <span>☀️</span> Temp. Externa (°C)
+            </span>
+            <div class="flex items-center gap-1">
+              <span class="text-[9px] font-bold text-sky-600 bg-sky-50 dark:bg-sky-900/40 px-2 py-0.5 rounded-full">Ambiente</span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+          <div class="w-full h-32 relative flex items-center justify-center">
+            <svg id="modal-svg-tout" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+          </div>
+          <div class="flex justify-between text-[9px] font-mono text-gray-400 mt-1 px-1">
+            <span>Hace 3d</span>
+            <span>Hace 2d</span>
+            <span>Ayer</span>
+            <span class="text-sky-600 font-bold">Hoy</span>
+          </div>
+        </div>
+
+        <!-- Gráfico 4: Temp Suelo Individual -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/50 p-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group"
+          data-chart-title="Temperatura Radicular del Suelo"
+          data-chart-subtitle="Condición térmica del cepellón y sustrato radicular"
+          data-chart-icon="🌱"
+          data-chart-badge="Temp. Suelo"
+          data-chart-info="La temperatura radicular ideal es de 19°C a 22°C. Un sustrato templado permite una asimilación vigorosa de calcio, potasio y agua."
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+              <span>🌱</span> Temp. Suelo (°C)
+            </span>
+            <div class="flex items-center gap-1">
+              <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full">19° - 22°C Óptimo</span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+          <div class="w-full h-32 relative flex items-center justify-center">
+            <svg id="modal-svg-tsoil" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+          </div>
+          <div class="flex justify-between text-[9px] font-mono text-gray-400 mt-1 px-1">
+            <span>Hace 3d</span>
+            <span>Hace 2d</span>
+            <span>Ayer</span>
+            <span class="text-emerald-600 font-bold">Hoy</span>
+          </div>
+        </div>
+
+        <!-- Gráfico 5: Crecimiento Individual -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/50 p-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group"
+          data-chart-title="Curva de Crecimiento & Vigor"
+          data-chart-subtitle="Progreso acumulado de desarrollo foliar y elongación"
+          data-chart-icon="📈"
+          data-chart-badge="Crecimiento"
+          data-chart-info="Indica la tasa de crecimiento diario y acumulación de biomasa de la planta en su ciclo fenológico actual."
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+              <span>📈</span> Crecimiento (%)
+            </span>
+            <div class="flex items-center gap-1">
+              <span id="modal-growth-gain" class="text-[9px] font-bold text-teal-600 font-mono">+8% ciclo</span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+          <div class="w-full h-32 relative flex items-center justify-center">
+            <svg id="modal-svg-growth" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+          </div>
+          <div class="flex justify-between text-[9px] font-mono text-gray-400 mt-1 px-1">
+            <span>Hace 3d</span>
+            <span>Hace 2d</span>
+            <span>Ayer</span>
+            <span class="text-teal-600 font-bold">Hoy</span>
+          </div>
+        </div>
+
+        <!-- Gráfico 6: Sanidad & Productividad Individual -->
+        <div class="chart-card-maximizable bg-gray-50 dark:bg-gray-900/50 p-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all group"
+          data-chart-title="Estado Sanitario & Productividad"
+          data-chart-subtitle="Historial fitosanitario y proyección de cosecha de la planta"
+          data-chart-icon="⚡"
+          data-chart-badge="Sanidad & Vigor"
+          data-chart-info="Refleja el estado fitosanitario y la productividad proyectada en cada toma de datos de campo para esta planta."
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+              <span>⚡</span> Sanidad & Vigor
+            </span>
+            <div class="flex items-center gap-1">
+              <span id="modal-health-badge-chart" class="text-[9px] font-bold text-purple-600 bg-purple-50 dark:bg-purple-900/40 px-2 py-0.5 rounded-full">Monitoreo</span>
+              <span class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold" title="Click para maximizar">⤢</span>
+            </div>
+          </div>
+          <div class="w-full h-32 relative flex items-center justify-center">
+            <svg id="modal-svg-health" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+          </div>
+          <div class="flex justify-between text-[9px] font-mono text-gray-400 mt-1 px-1">
+            <span>Hace 3d</span>
+            <span>Hace 2d</span>
+            <span>Ayer</span>
+            <span class="text-purple-600 font-bold">Hoy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notas de Campo de la Planta -->
+    <div class="p-3.5 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-200 dark:border-gray-700 text-xs">
+      <span class="font-bold text-gray-700 dark:text-gray-300 block mb-0.5">📝 Observaciones de Campo Registradas:</span>
+      <p id="modal-plant-obs" class="text-gray-600 dark:text-gray-400 italic">
+        Fila t0 Col 1 en óptimas condiciones fitosanitarias. Fruto cuajando vigorosamente.
+      </p>
+    </div>
+
+    <!-- Botones del Modal -->
+    <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+      <button
+        id="btn-measure-this-plant"
+        type="button"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-xs cursor-pointer"
+      >
+        <span>✏️</span>
+        <span>Registrar Nueva Medición para Esta Planta</span>
+      </button>
+
+      <button
+        id="btn-close-plant-modal-bottom"
+        type="button"
+        class="px-4 py-2 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+      >
+        Cerrar
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 4.1 MODAL DE MAXIMIZACIÓN DE GRÁFICO (LIGHTBOX FULLSCREEN) -->
+<div id="chart-maximize-modal" class="fixed inset-0 z-[70] flex items-center justify-center hidden p-3 sm:p-6 transition-all duration-300">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer" id="chart-max-backdrop"></div>
+
+  <div class="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-4xl max-h-[94vh] overflow-y-auto p-5 sm:p-7 z-10 space-y-4">
+    
+    <!-- Barra Superior -->
+    <div class="flex items-start justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
+      <div class="flex items-center gap-3">
+        <span id="max-chart-icon" class="text-3xl p-2.5 bg-indigo-50 dark:bg-indigo-900/40 rounded-2xl border border-indigo-100 dark:border-indigo-800 flex items-center justify-center">📊</span>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h3 id="max-chart-title" class="text-lg sm:text-xl font-black text-gray-900 dark:text-white tracking-tight">
+              Vista Maximizada de Gráfico
+            </h3>
+            <span id="max-chart-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300">
+              Métrica
+            </span>
+          </div>
+          <p id="max-chart-subtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            Detalle ampliado de la medición y análisis agronómico
+          </p>
+        </div>
+      </div>
+
+      <button id="btn-close-chart-max" type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full p-2 transition-colors cursor-pointer" title="Cerrar vista ampliada">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Contenedor del Gráfico Ampliado -->
+    <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+      <div id="max-chart-svg-container" class="w-full h-72 sm:h-80 flex items-center justify-center">
+        <!-- SVG ampliado inyectado dinámicamente -->
+      </div>
+      <div id="max-chart-footer" class="flex justify-between text-xs font-mono text-gray-500 dark:text-gray-400 mt-3 px-6 border-t border-gray-200/60 dark:border-gray-700 pt-2.5">
+        <!-- Etiquetas del eje temporal o espacial -->
+      </div>
+    </div>
+
+    <!-- Explicación agronómica / Interpretación -->
+    <div class="p-3.5 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-xl text-xs text-gray-700 dark:text-gray-300 flex items-start gap-2.5">
+      <span class="text-base">💡</span>
+      <div id="max-chart-info-text">
+        Interpretación agronómica de la medición en el invernadero.
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-1">
+      <button id="btn-close-chart-max-bottom" type="button" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+        Volver
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 5. MODAL: REGISTRAR NUEVA MEDICIÓN (FORMULARIO) -->
+<div id="modal-add" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-xl w-full max-h-[90vh] overflow-y-auto p-6">
+    
+    <div class="flex justify-between items-start mb-5 pb-3 border-b border-gray-100 dark:border-gray-700">
+      <div>
+        <h3 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+          <span>📝</span> Registrar Nueva Medición de Campo
+        </h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          Actualizará la medición de hoy para la planta indicada.
+        </p>
+      </div>
+      <button id="btn-close-modal" type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-white text-2xl font-bold p-1 cursor-pointer">&times;</button>
+    </div>
+
+    <!-- Tarjeta de Responsable Detectado Automáticamente -->
+    <div class="mb-4 p-3.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+          {currentUserName.split(" ").map(n => n[0]).slice(0, 2).join("")}
+        </div>
+        <div>
+          <span class="text-[10px] uppercase font-black tracking-wider text-indigo-600 dark:text-indigo-400 block">
+            Persona Responsable (Detectada por Login)
+          </span>
+          <span id="session-user-name" class="font-extrabold text-gray-900 dark:text-white text-sm">
+            {currentUserName}
+          </span>
+          <span id="session-user-role" class="text-[11px] text-gray-500 dark:text-gray-400 ml-2">
+            ({currentUserRole})
+          </span>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-200/60 dark:bg-indigo-800/60 text-indigo-800 dark:text-indigo-200">
+        Autenticado
+      </span>
+    </div>
+
+    <form id="form-new-metric" class="space-y-4">
+      <!-- Fila y Columna -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="input-fila" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+            Fila del Invernadero (t0 a t3) *
+          </label>
+          <select id="input-fila" required class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 font-mono">
+            <option value="t0">Fila t0</option>
+            <option value="t1">Fila t1</option>
+            <option value="t2">Fila t2</option>
+            <option value="t3">Fila t3</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="input-columna" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+            Columna (1 a 5) *
+          </label>
+          <select id="input-columna" required class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 font-mono">
+            <option value="Col 1">Columna 1 (Col 1)</option>
+            <option value="Col 2">Columna 2 (Col 2)</option>
+            <option value="Col 3">Columna 3 (Col 3)</option>
+            <option value="Col 4">Columna 4 (Col 4)</option>
+            <option value="Col 5">Columna 5 (Col 5)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Suelo y Clima -->
+      <div class="p-3.5 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2.5">
+        <span class="text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider block">
+          Variables de Suelo y Microclima
+        </span>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div>
+            <label for="input-ph" class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+              🧪 pH Suelo
+            </label>
+            <input id="input-ph" type="number" step="0.1" min="0" max="14" required value="6.4" class="w-full px-2 py-1.5 text-sm font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center" />
+          </div>
+
+          <div>
+            <label for="input-tin" class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+              🌡️ T. Interna (°C)
+            </label>
+            <input id="input-tin" type="number" step="0.1" required value="24.5" class="w-full px-2 py-1.5 text-sm font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center" />
+          </div>
+
+          <div>
+            <label for="input-tout" class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+              ☀️ T. Externa (°C)
+            </label>
+            <input id="input-tout" type="number" step="0.1" required value="20.0" class="w-full px-2 py-1.5 text-sm font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center" />
+          </div>
+
+          <div>
+            <label for="input-tsoil" class="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+              🌱 T. Suelo (°C)
+            </label>
+            <input id="input-tsoil" type="number" step="0.1" required value="20.5" class="w-full px-2 py-1.5 text-sm font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Crecimiento, Productividad y Sanidad -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label for="input-growth" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+            📈 Crecimiento (%)
+          </label>
+          <input id="input-growth" type="number" min="0" max="100" required value="85" class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white" />
+        </div>
+
+        <div>
+          <label for="input-prod" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+            Productividad
+          </label>
+          <select id="input-prod" class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="input-health" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+            Sanidad Vegetal
+          </label>
+          <select id="input-health" class="w-full px-3 py-2 text-sm font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
+            <option value="Excelente">Excelente 🟢</option>
+            <option value="Saludable">Saludable 🟢</option>
+            <option value="Vulnerable">Vulnerable 🟡</option>
+            <option value="Crítica">Crítica 🔴</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div>
+        <label for="input-obs" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+          Notas u Observaciones
+        </label>
+        <textarea 
+          id="input-obs" 
+          rows="2" 
+          placeholder="Anotaciones de la toma de datos..." 
+          class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+        ></textarea>
+      </div>
+
+      <!-- Botones Modal -->
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+        <button 
+          id="btn-cancel-modal" 
+          type="button" 
+          class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button 
+          type="submit" 
+          class="px-5 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-md cursor-pointer"
+        >
+          Guardar Medición
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- SCRIPT CLIENTE -->
 <script>
-  // Elementos DOM
-  const tableBody = document.getElementById('metrics-table-body');
-  const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
-  const filterDate = document.getElementById('filter-date') as HTMLInputElement | null;
-  const btnClearDate = document.getElementById('btn-clear-date');
-  const filterFila = document.getElementById('filter-fila') as HTMLSelectElement | null;
-  const filterHealth = document.getElementById('filter-health') as HTMLSelectElement | null;
-  const emptyState = document.getElementById('empty-state');
-  const showingCount = document.getElementById('showing-count');
-  const totalCount = document.getElementById('total-count');
+  // Cargar estado inicial de plantas desde el script embebido
+  let plantsState: any[] = [];
+  try {
+    const rawData = document.getElementById('plants-data-source')?.textContent;
+    if (rawData) plantsState = JSON.parse(rawData);
+  } catch (err) {
+    console.error("Error al cargar datos de plantas:", err);
+  }
 
-  // Toggle de Gráficos
-  const btnToggleCharts = document.getElementById('btn-toggle-charts');
-  const chartsPanel = document.getElementById('analytics-charts-panel');
-  const chartsToggleText = document.getElementById('charts-toggle-text');
-  let chartsVisible = true;
+  // Elementos del Modal de Planta Individual
+  const plantModal = document.getElementById('plant-metrics-modal');
+  const plantModalBackdrop = document.getElementById('plant-modal-backdrop');
+  const btnClosePlantModal = document.getElementById('btn-close-plant-modal');
+  const btnClosePlantModalBottom = document.getElementById('btn-close-plant-modal-bottom');
+  const btnMeasureThisPlant = document.getElementById('btn-measure-this-plant');
 
-  btnToggleCharts?.addEventListener('click', () => {
-    chartsVisible = !chartsVisible;
-    if (chartsPanel) {
-      chartsPanel.classList.toggle('hidden', !chartsVisible);
+  const modalPlantIcon = document.getElementById('modal-plant-icon');
+  const modalPlantTitle = document.getElementById('modal-plant-title');
+  const modalPlantSubtitle = document.getElementById('modal-plant-subtitle');
+  const modalPlantHealth = document.getElementById('modal-plant-health');
+  const modalPlantPhase = document.getElementById('modal-plant-phase');
+  const modalPlantTime = document.getElementById('modal-plant-time');
+  const modalPlantResp = document.getElementById('modal-plant-resp');
+  const modalPlantObs = document.getElementById('modal-plant-obs');
+
+  const modalKpiPh = document.getElementById('modal-kpi-ph');
+  const modalKpiPhDesc = document.getElementById('modal-kpi-ph-desc');
+  const modalKpiTin = document.getElementById('modal-kpi-tin');
+  const modalKpiTsoil = document.getElementById('modal-kpi-tsoil');
+  const modalKpiTout = document.getElementById('modal-kpi-tout');
+  const modalKpiGrowth = document.getElementById('modal-kpi-growth');
+  const modalKpiGrowthBar = document.getElementById('modal-kpi-growth-bar');
+  const modalKpiProd = document.getElementById('modal-kpi-prod');
+  const modalGrowthGain = document.getElementById('modal-growth-gain');
+
+  const modalSvgPh = document.getElementById('modal-svg-ph');
+  const modalSvgTin = document.getElementById('modal-svg-tin');
+  const modalSvgTout = document.getElementById('modal-svg-tout');
+  const modalSvgTsoil = document.getElementById('modal-svg-tsoil');
+  const modalSvgGrowth = document.getElementById('modal-svg-growth');
+  const modalSvgHealth = document.getElementById('modal-svg-health');
+  const modalHealthBadgeChart = document.getElementById('modal-health-badge-chart');
+
+  let currentOpenPlant: any = null;
+
+  // Función para cerrar el modal de planta
+  function closePlantModal() {
+    plantModal?.classList.add('hidden');
+  }
+
+  btnClosePlantModal?.addEventListener('click', closePlantModal);
+  btnClosePlantModalBottom?.addEventListener('click', closePlantModal);
+  plantModalBackdrop?.addEventListener('click', closePlantModal);
+
+  // Renderizar Gráfico 1: pH Individual (SVG)
+  function renderSvgPh(history: any[]) {
+    if (!modalSvgPh || !history || history.length === 0) return;
+    const minPh = 5.0;
+    const maxPh = 8.0;
+    const h = 100;
+    const w = 280;
+    const pad = 24;
+
+    const getY = (val: number) => h - pad - ((val - minPh) / (maxPh - minPh)) * (h - pad * 2);
+    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
+
+    const yOptTop = getY(6.8);
+    const yOptBottom = getY(6.0);
+    const optHeight = Math.abs(yOptBottom - yOptTop);
+
+    let pathD = '';
+    const points: any[] = [];
+
+    history.forEach((rec, idx) => {
+      const x = getX(idx);
+      const y = getY(rec.phSuelo);
+      points.push({ x, y, val: rec.phSuelo });
+      if (idx === 0) pathD += `M ${x},${y}`;
+      else pathD += ` L ${x},${y}`;
+    });
+
+    let circlesSvg = '';
+    points.forEach((pt) => {
+      const fillColor = pt.val >= 6.0 && pt.val <= 6.8 ? '#10B981' : pt.val >= 5.5 && pt.val <= 7.2 ? '#F59E0B' : '#EF4444';
+      circlesSvg += `
+        <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="${fillColor}" stroke="#ffffff" stroke-width="2">
+          <title>${pt.val} pH</title>
+        </circle>
+        <text x="${pt.x}" y="${pt.y - 6}" fill="#374151" class="dark:fill-gray-200" font-size="8.5" font-weight="bold" text-anchor="middle">
+          ${pt.val}
+        </text>
+      `;
+    });
+
+    modalSvgPh.innerHTML = `
+      <rect x="${pad}" y="${yOptTop}" width="${w - pad * 2}" height="${optHeight}" fill="rgba(16, 185, 129, 0.15)" rx="3" />
+      <text x="${pad + 4}" y="${yOptTop + 8}" fill="#10B981" font-size="7" font-weight="bold">Óptimo (6.0 - 6.8)</text>
+      
+      <line x1="${pad}" y1="${getY(7.5)}" x2="${w - pad}" y2="${getY(7.5)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <line x1="${pad}" y1="${getY(6.5)}" x2="${w - pad}" y2="${getY(6.5)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <line x1="${pad}" y1="${getY(5.5)}" x2="${w - pad}" y2="${getY(5.5)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+
+      <path d="${pathD}" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      ${circlesSvg}
+    `;
+  }
+
+  // Renderizar Gráfico 2: Temperatura Interna Individual
+  function renderSvgTin(history: any[]) {
+    if (!modalSvgTin || !history || history.length === 0) return;
+    const minT = 20;
+    const maxT = 32;
+    const h = 100;
+    const w = 280;
+    const pad = 24;
+
+    const getY = (val: number) => h - pad - ((val - minT) / (maxT - minT)) * (h - pad * 2);
+    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
+
+    const yConfTop = getY(26);
+    const yConfBot = getY(23);
+    const confHeight = Math.abs(yConfBot - yConfTop);
+
+    let pathD = '';
+    const points: any[] = [];
+
+    history.forEach((rec, idx) => {
+      const x = getX(idx);
+      const y = getY(rec.tempInterna);
+      points.push({ x, y, val: rec.tempInterna });
+      if (idx === 0) pathD += `M ${x},${y}`;
+      else pathD += ` L ${x},${y}`;
+    });
+
+    let circlesSvg = '';
+    points.forEach((pt) => {
+      circlesSvg += `
+        <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="#F59E0B" stroke="#ffffff" stroke-width="2">
+          <title>${pt.val}°C</title>
+        </circle>
+        <text x="${pt.x}" y="${pt.y - 6}" fill="#B45309" class="dark:fill-amber-300" font-size="8.5" font-weight="bold" text-anchor="middle">
+          ${pt.val}°
+        </text>
+      `;
+    });
+
+    modalSvgTin.innerHTML = `
+      <rect x="${pad}" y="${yConfTop}" width="${w - pad * 2}" height="${confHeight}" fill="rgba(245, 158, 11, 0.12)" rx="3" />
+      <text x="${pad + 4}" y="${yConfTop + 8}" fill="#D97706" font-size="7" font-weight="bold">Confort (23° - 26°C)</text>
+      
+      <line x1="${pad}" y1="${getY(30)}" x2="${w - pad}" y2="${getY(30)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <line x1="${pad}" y1="${getY(26)}" x2="${w - pad}" y2="${getY(26)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <line x1="${pad}" y1="${getY(22)}" x2="${w - pad}" y2="${getY(22)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+
+      <path d="${pathD}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      ${circlesSvg}
+    `;
+  }
+
+  // Renderizar Gráfico 3: Temperatura Externa Individual
+  function renderSvgTout(history: any[]) {
+    if (!modalSvgTout || !history || history.length === 0) return;
+    const minT = 16;
+    const maxT = 26;
+    const h = 100;
+    const w = 280;
+    const pad = 24;
+
+    const getY = (val: number) => h - pad - ((val - minT) / (maxT - minT)) * (h - pad * 2);
+    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
+
+    let pathD = '';
+    const points: any[] = [];
+
+    history.forEach((rec, idx) => {
+      const x = getX(idx);
+      const y = getY(rec.tempExterna);
+      points.push({ x, y, val: rec.tempExterna });
+      if (idx === 0) pathD += `M ${x},${y}`;
+      else pathD += ` L ${x},${y}`;
+    });
+
+    let circlesSvg = '';
+    points.forEach((pt) => {
+      circlesSvg += `
+        <circle cx="${pt.x}" cy="${pt.y}" r="3.5" fill="#0EA5E9" stroke="#ffffff" stroke-width="2">
+          <title>${pt.val}°C</title>
+        </circle>
+        <text x="${pt.x}" y="${pt.y - 6}" fill="#0369A1" class="dark:fill-sky-300" font-size="8.5" font-weight="bold" text-anchor="middle">
+          ${pt.val}°
+        </text>
+      `;
+    });
+
+    modalSvgTout.innerHTML = `
+      <line x1="${pad}" y1="${getY(24)}" x2="${w - pad}" y2="${getY(24)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <line x1="${pad}" y1="${getY(20)}" x2="${w - pad}" y2="${getY(20)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+
+      <path d="${pathD}" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-dasharray="4,2" stroke-linecap="round" stroke-linejoin="round" />
+      ${circlesSvg}
+    `;
+  }
+
+  // Renderizar Gráfico 4: Temperatura Suelo Individual
+  function renderSvgTsoil(history: any[]) {
+    if (!modalSvgTsoil || !history || history.length === 0) return;
+    const minT = 16;
+    const maxT = 28;
+    const h = 100;
+    const w = 280;
+    const pad = 24;
+
+    const getY = (val: number) => h - pad - ((val - minT) / (maxT - minT)) * (h - pad * 2);
+    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
+
+    const yOptTop = getY(22);
+    const yOptBot = getY(19);
+    const optHeight = Math.abs(yOptBot - yOptTop);
+
+    let pathD = '';
+    const points: any[] = [];
+
+    history.forEach((rec, idx) => {
+      const x = getX(idx);
+      const y = getY(rec.tempSuelo);
+      points.push({ x, y, val: rec.tempSuelo });
+      if (idx === 0) pathD += `M ${x},${y}`;
+      else pathD += ` L ${x},${y}`;
+    });
+
+    let circlesSvg = '';
+    points.forEach((pt) => {
+      const isGood = pt.val >= 19 && pt.val <= 22.5;
+      circlesSvg += `
+        <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="${isGood ? '#10B981' : '#EF4444'}" stroke="#ffffff" stroke-width="2">
+          <title>${pt.val}°C</title>
+        </circle>
+        <text x="${pt.x}" y="${pt.y - 6}" fill="#047857" class="dark:fill-emerald-300" font-size="8.5" font-weight="bold" text-anchor="middle">
+          ${pt.val}°
+        </text>
+      `;
+    });
+
+    modalSvgTsoil.innerHTML = `
+      <rect x="${pad}" y="${yOptTop}" width="${w - pad * 2}" height="${optHeight}" fill="rgba(16, 185, 129, 0.12)" rx="3" />
+      <text x="${pad + 4}" y="${yOptTop + 8}" fill="#10B981" font-size="7" font-weight="bold">Radicular Óptimo (19° - 22°C)</text>
+
+      <line x1="${pad}" y1="${getY(26)}" x2="${w - pad}" y2="${getY(26)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <line x1="${pad}" y1="${getY(22)}" x2="${w - pad}" y2="${getY(22)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <line x1="${pad}" y1="${getY(18)}" x2="${w - pad}" y2="${getY(18)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+
+      <path d="${pathD}" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      ${circlesSvg}
+    `;
+  }
+
+  // Renderizar Gráfico 5: Crecimiento Individual
+  function renderSvgGrowth(history: any[]) {
+    if (!modalSvgGrowth || !history || history.length === 0) return;
+    const minG = 0;
+    const maxG = 100;
+    const h = 100;
+    const w = 280;
+    const pad = 24;
+
+    const getY = (val: number) => h - pad - ((val - minG) / (maxG - minG)) * (h - pad * 2);
+    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
+
+    let pathLine = '';
+    let pathArea = '';
+
+    history.forEach((rec, idx) => {
+      const x = getX(idx);
+      const y = getY(rec.crecimiento);
+
+      if (idx === 0) {
+        pathLine += `M ${x},${y}`;
+        pathArea += `M ${x},${h - pad} L ${x},${y}`;
+      } else {
+        pathLine += ` L ${x},${y}`;
+        pathArea += ` L ${x},${y}`;
+      }
+    });
+
+    const lastX = getX(history.length - 1);
+    pathArea += ` L ${lastX},${h - pad} Z`;
+
+    const firstG = history[0].crecimiento;
+    const lastG = history[history.length - 1].crecimiento;
+    const diff = lastG - firstG;
+    if (modalGrowthGain) {
+      modalGrowthGain.textContent = `${diff >= 0 ? '+' : ''}${diff}% este ciclo`;
     }
-    if (chartsToggleText) {
-      chartsToggleText.textContent = chartsVisible ? 'Ocultar Gráficas' : 'Mostrar Gráficas';
+
+    modalSvgGrowth.innerHTML = `
+      <defs>
+        <linearGradient id="modalGrowthGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#14B8A6" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+
+      <line x1="${pad}" y1="${getY(80)}" x2="${w - pad}" y2="${getY(80)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <text x="4" y="${getY(80) + 3}" fill="#9CA3AF" font-size="7.5">80%</text>
+      <line x1="${pad}" y1="${getY(50)}" x2="${w - pad}" y2="${getY(50)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <text x="4" y="${getY(50) + 3}" fill="#9CA3AF" font-size="7.5">50%</text>
+      <line x1="${pad}" y1="${getY(20)}" x2="${w - pad}" y2="${getY(20)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
+      <text x="4" y="${getY(20) + 3}" fill="#9CA3AF" font-size="7.5">20%</text>
+
+      <path d="${pathArea}" fill="url(#modalGrowthGrad)" />
+      <path d="${pathLine}" fill="none" stroke="#0D9488" stroke-width="2.5" stroke-linecap="round" />
+
+      <circle cx="${lastX}" cy="${getY(lastG)}" r="4.5" fill="#0D9488" stroke="#fff" stroke-width="2">
+        <title>Crecimiento actual: ${lastG}%</title>
+      </circle>
+      <text x="${lastX}" y="${getY(lastG) - 6}" fill="#0D9488" font-size="8.5" font-weight="bold" text-anchor="middle">
+        ${lastG}%
+      </text>
+    `;
+  }
+
+  // Renderizar Gráfico 6: Sanidad & Productividad Individual
+  function renderSvgHealth(history: any[]) {
+    if (!modalSvgHealth || !history || history.length === 0) return;
+    const h = 100;
+    const w = 280;
+    const pad = 24;
+
+    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
+
+    let barsSvg = '';
+    history.forEach((rec, idx) => {
+      const x = getX(idx);
+      const isGood = rec.sanidad === 'Excelente' || rec.sanidad === 'Saludable';
+      const isCrit = rec.sanidad === 'Crítica';
+      const color = isCrit ? '#EF4444' : isGood ? '#10B981' : '#F59E0B';
+      const prodHeight = rec.productividad === 'Alta' ? 48 : rec.productividad === 'Media' ? 32 : 16;
+      const y = h - pad - prodHeight;
+
+      barsSvg += `
+        <rect x="${x - 9}" y="${y}" width="18" height="${prodHeight}" rx="4" fill="${color}" opacity="0.85">
+          <title>${rec.fecha}: ${rec.sanidad} • Prod ${rec.productividad}</title>
+        </rect>
+        <text x="${x}" y="${y - 4}" fill="${color}" font-size="8" font-weight="bold" text-anchor="middle">
+          ${rec.productividad}
+        </text>
+      `;
+    });
+
+    const last = history[history.length - 1];
+    if (modalHealthBadgeChart) {
+      modalHealthBadgeChart.textContent = `${last.sanidad} • ${last.productividad}`;
+    }
+
+    modalSvgHealth.innerHTML = `
+      <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#E5E7EB" stroke-width="1.5" />
+      ${barsSvg}
+    `;
+  }
+
+  // FUNCIÓN PRINCIPAL: ABRIR MODAL CON DATOS Y GRÁFICOS DE LA PLANTA
+  function openPlantModal(fila: string, columna: string) {
+    const found = plantsState.find(p => p.fila === fila && p.columna === columna);
+    if (!found) return;
+    currentOpenPlant = found;
+    const m = found.latestMetric;
+
+    // Poblar textos de cabecera
+    if (modalPlantTitle) modalPlantTitle.textContent = `Planta ${found.plantId} (Fila ${found.fila} • ${found.columna})`;
+    if (modalPlantSubtitle) {
+      modalPlantSubtitle.innerHTML = `Medición de hoy registrada a las <strong id="modal-plant-time">${m.hora}</strong> (${m.fecha}) • Responsable: <strong id="modal-plant-resp">${m.responsable}</strong>`;
+    }
+
+    const isCritical = m.sanidad === 'Crítica';
+    const isWarning = m.sanidad === 'Vulnerable';
+    const icon = isCritical ? '🥀' : isWarning ? '🌿' : '🪴';
+    if (modalPlantIcon) modalPlantIcon.textContent = icon;
+
+    if (modalPlantHealth) {
+      modalPlantHealth.textContent = `${isCritical ? '🔴' : isWarning ? '🟡' : '🟢'} ${m.sanidad}`;
+      modalPlantHealth.className = `px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+        isCritical 
+          ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
+          : isWarning
+            ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
+            : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
+      }`;
+    }
+
+    if (modalPlantPhase) modalPlantPhase.textContent = m.faseCrecimiento;
+    if (modalPlantObs) modalPlantObs.textContent = m.observaciones || 'Sin observaciones adicionales registradas hoy.';
+
+    // Poblar KPIs numéricos
+    if (modalKpiPh) modalKpiPh.textContent = m.phSuelo.toFixed(1);
+    if (modalKpiPhDesc) {
+      const isPhOpt = m.phSuelo >= 6.0 && m.phSuelo <= 6.8;
+      modalKpiPhDesc.textContent = isPhOpt ? 'Óptimo (6.0-6.8)' : m.phSuelo < 6.0 ? 'Ácido (<6.0)' : 'Alcalino (>6.8)';
+      modalKpiPhDesc.className = `block text-[10px] font-bold mt-0.5 ${isPhOpt ? 'text-emerald-600' : 'text-amber-600'}`;
+    }
+
+    if (modalKpiTin) modalKpiTin.textContent = `${m.tempInterna.toFixed(1)}°C`;
+    if (modalKpiTsoil) modalKpiTsoil.textContent = `${m.tempSuelo.toFixed(1)}°C`;
+    if (modalKpiTout) modalKpiTout.textContent = `${m.tempExterna.toFixed(1)}°C`;
+    if (modalKpiGrowth) modalKpiGrowth.textContent = `${m.crecimiento}%`;
+    if (modalKpiGrowthBar) modalKpiGrowthBar.style.width = `${m.crecimiento}%`;
+    if (modalKpiProd) modalKpiProd.textContent = m.productividad;
+
+    // Mostrar modal
+    plantModal?.classList.remove('hidden');
+
+    // Renderizar los 6 gráficos SVG vectoriales individuales
+    renderSvgPh(found.history);
+    renderSvgTin(found.history);
+    renderSvgTout(found.history);
+    renderSvgTsoil(found.history);
+    renderSvgGrowth(found.history);
+    renderSvgHealth(found.history);
+  }
+
+  // Elementos del Modal de Maximización de Gráfico (Lightbox Fullscreen)
+  const chartMaxModal = document.getElementById('chart-maximize-modal');
+  const chartMaxBackdrop = document.getElementById('chart-max-backdrop');
+  const btnCloseChartMax = document.getElementById('btn-close-chart-max');
+  const btnCloseChartMaxBottom = document.getElementById('btn-close-chart-max-bottom');
+  const maxChartIcon = document.getElementById('max-chart-icon');
+  const maxChartTitle = document.getElementById('max-chart-title');
+  const maxChartSubtitle = document.getElementById('max-chart-subtitle');
+  const maxChartBadge = document.getElementById('max-chart-badge');
+  const maxChartSvgContainer = document.getElementById('max-chart-svg-container');
+  const maxChartFooter = document.getElementById('max-chart-footer');
+  const maxChartInfoText = document.getElementById('max-chart-info-text');
+
+  function closeChartMax() {
+    chartMaxModal?.classList.add('hidden');
+  }
+
+  btnCloseChartMax?.addEventListener('click', closeChartMax);
+  btnCloseChartMaxBottom?.addEventListener('click', closeChartMax);
+  chartMaxBackdrop?.addEventListener('click', closeChartMax);
+
+  function openChartMaxFromCard(card: HTMLElement) {
+    const title = card.dataset.chartTitle || 'Gráfico Agronómico';
+    const subtitle = card.dataset.chartSubtitle || 'Visualización detallada de la medición';
+    const icon = card.dataset.chartIcon || '📊';
+    const badge = card.dataset.chartBadge || 'Métrica';
+    const info = card.dataset.chartInfo || 'Detalle agronómico ampliado de los parámetros evaluados.';
+
+    if (maxChartTitle) maxChartTitle.textContent = title;
+    if (maxChartSubtitle) maxChartSubtitle.textContent = subtitle;
+    if (maxChartIcon) maxChartIcon.textContent = icon;
+    if (maxChartBadge) maxChartBadge.textContent = badge;
+    if (maxChartInfoText) maxChartInfoText.textContent = info;
+
+    const svg = card.querySelector('svg');
+    if (svg && maxChartSvgContainer) {
+      const clone = svg.cloneNode(true) as SVGElement;
+      clone.removeAttribute('id');
+      clone.setAttribute('class', 'w-full h-full max-h-[320px] overflow-visible');
+      maxChartSvgContainer.innerHTML = '';
+      maxChartSvgContainer.appendChild(clone);
+    }
+
+    const footerDiv = card.querySelector('.flex.justify-between:last-child');
+    if (footerDiv && maxChartFooter) {
+      maxChartFooter.innerHTML = footerDiv.innerHTML;
+    }
+
+    chartMaxModal?.classList.remove('hidden');
+  }
+
+  // Delegar clics para maximizar en cualquier tarjeta con clase .chart-card-maximizable
+  document.querySelectorAll<HTMLElement>('.chart-card-maximizable').forEach((card) => {
+    card.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button') && !target.closest('.chart-card-maximizable')) return;
+      openChartMaxFromCard(card);
+    });
+  });
+
+  // Manejo de tecla Escape para ambos modales
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (chartMaxModal && !chartMaxModal.classList.contains('hidden')) {
+        closeChartMax();
+        e.stopPropagation();
+      } else if (plantModal && !plantModal.classList.contains('hidden')) {
+        closePlantModal();
+      }
     }
   });
 
-  // Filtrado integral (Buscador general, Fecha exacta, Fila y Sanidad)
-  function filterTable() {
-    if (!tableBody) return;
-    const query = searchInput?.value.toLowerCase().trim() || '';
-    const dateQuery = filterDate?.value || '';
-    const filaQuery = filterFila?.value || 'all';
-    const healthQuery = filterHealth?.value || 'all';
+  // Vincular clics en la cuadrícula de botones del Selector Rápido
+  document.querySelectorAll<HTMLButtonElement>('.plant-card-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const fila = btn.dataset.fila;
+      const col = btn.dataset.columna;
+      if (fila && col) openPlantModal(fila, col);
+    });
+  });
 
-    const rows = tableBody.querySelectorAll<HTMLTableRowElement>('.metric-row');
+  // Vincular clics en las filas de la tabla Excel
+  document.querySelectorAll<HTMLTableRowElement>('.plant-table-row').forEach((row) => {
+    row.addEventListener('click', () => {
+      const fila = row.dataset.fila;
+      const col = row.dataset.columna;
+      if (fila && col) openPlantModal(fila, col);
+    });
+  });
+
+  // Botón dentro del modal de planta para medir directamente esa planta
+  btnMeasureThisPlant?.addEventListener('click', () => {
+    if (currentOpenPlant) {
+      closePlantModal();
+      const inputFila = document.getElementById('input-fila') as HTMLSelectElement | null;
+      const inputCol = document.getElementById('input-columna') as HTMLSelectElement | null;
+      if (inputFila) inputFila.value = currentOpenPlant.fila;
+      if (inputCol) inputCol.value = currentOpenPlant.columna;
+      modalAdd?.classList.remove('hidden');
+    }
+  });
+
+  // Toggle de Gráficos Globales (Minimizar / Ampliar)
+  const btnToggleCharts = document.getElementById('btn-toggle-charts');
+  const btnToggleChartsInline = document.getElementById('btn-toggle-charts-inline');
+  const generalChartsCollapsible = document.getElementById('general-charts-collapsible');
+  const chartsToggleText = document.getElementById('charts-toggle-text');
+  const chartsInlineToggleIcon = document.getElementById('charts-inline-toggle-icon');
+  const chartsInlineToggleText = document.getElementById('charts-inline-toggle-text');
+  let generalChartsVisible = false;
+
+  function toggleGeneralCharts() {
+    generalChartsVisible = !generalChartsVisible;
+    generalChartsCollapsible?.classList.toggle('hidden', !generalChartsVisible);
+
+    if (chartsToggleText) {
+      chartsToggleText.textContent = generalChartsVisible ? 'Minimizar Gráficas Globales' : 'Ver Gráficas Globales';
+    }
+    if (chartsInlineToggleIcon) {
+      chartsInlineToggleIcon.textContent = generalChartsVisible ? '⌃' : '⤢';
+    }
+    if (chartsInlineToggleText) {
+      chartsInlineToggleText.textContent = generalChartsVisible ? 'Minimizar Gráficos' : 'Ampliar Gráficos Globales';
+    }
+
+    if (generalChartsVisible) {
+      generalChartsCollapsible?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  btnToggleCharts?.addEventListener('click', toggleGeneralCharts);
+  btnToggleChartsInline?.addEventListener('click', toggleGeneralCharts);
+
+  // Toggle Minimizar / Ampliar Tabla Excel
+  const btnToggleExcelTable = document.getElementById('btn-toggle-excel-table');
+  const btnToggleTableTop = document.getElementById('btn-toggle-table-top');
+  const excelTableCollapsible = document.getElementById('excel-table-collapsible');
+  const excelToggleIcon = document.getElementById('excel-toggle-icon');
+  const excelToggleText = document.getElementById('excel-toggle-text');
+  const topTableToggleText = document.getElementById('top-table-toggle-text');
+  let tableExpanded = false;
+
+  function toggleExcelTable() {
+    tableExpanded = !tableExpanded;
+    excelTableCollapsible?.classList.toggle('hidden', !tableExpanded);
+
+    if (excelToggleIcon) excelToggleIcon.textContent = tableExpanded ? '⌃' : '⤢';
+    if (excelToggleText) excelToggleText.textContent = tableExpanded ? 'Minimizar Tabla' : 'Ampliar Tabla Completa';
+    if (topTableToggleText) topTableToggleText.textContent = tableExpanded ? 'Minimizar Tabla Excel' : 'Ampliar Tabla Excel';
+
+    if (tableExpanded) {
+      excelTableCollapsible?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  btnToggleExcelTable?.addEventListener('click', toggleExcelTable);
+  btnToggleTableTop?.addEventListener('click', toggleExcelTable);
+
+  // Filtrado de la Tabla
+  const tableSearch = document.getElementById('table-search') as HTMLInputElement | null;
+  const filterRowSelect = document.getElementById('filter-row-select') as HTMLSelectElement | null;
+  const filterHealthSelect = document.getElementById('filter-health-select') as HTMLSelectElement | null;
+  const showingCount = document.getElementById('plants-showing-count');
+
+  function filterTable() {
+    const q = tableSearch?.value.toLowerCase().trim() || '';
+    const rowFilter = filterRowSelect?.value || 'all';
+    const healthFilter = filterHealthSelect?.value || 'all';
+
+    const rows = document.querySelectorAll<HTMLTableRowElement>('.plant-table-row');
     let visible = 0;
 
-    rows.forEach((row) => {
-      const fila = row.dataset.fila?.toLowerCase() || '';
-      const columna = row.dataset.columna?.toLowerCase() || '';
-      const fecha = row.dataset.fecha || '';
-      const resp = row.dataset.resp?.toLowerCase() || '';
-      const health = row.dataset.health || '';
+    rows.forEach((r) => {
+      const fila = r.dataset.fila || '';
+      const col = r.dataset.columna || '';
+      const id = r.dataset.plantid?.toLowerCase() || '';
+      const resp = r.dataset.resp?.toLowerCase() || '';
+      const health = r.dataset.health || '';
 
-      const matchesText = !query || fila.includes(query) || columna.includes(query) || resp.includes(query) || fecha.includes(query);
-      const matchesDate = !dateQuery || fecha === dateQuery;
-      const matchesFila = filaQuery === 'all' || fila === filaQuery.toLowerCase();
-      const matchesHealth = healthQuery === 'all' || health === healthQuery;
+      const matchText = !q || id.includes(q) || fila.toLowerCase().includes(q) || col.toLowerCase().includes(q) || resp.includes(q);
+      const matchRow = rowFilter === 'all' || fila === rowFilter;
+      const matchHealth = healthFilter === 'all' || health === healthFilter;
 
-      if (matchesText && matchesDate && matchesFila && matchesHealth) {
-        row.style.display = '';
+      if (matchText && matchRow && matchHealth) {
+        r.style.display = '';
         visible++;
       } else {
-        row.style.display = 'none';
+        r.style.display = 'none';
       }
     });
 
     if (showingCount) showingCount.textContent = visible.toString();
-    if (emptyState) emptyState.classList.toggle('hidden', visible > 0);
   }
 
-  searchInput?.addEventListener('input', filterTable);
-  filterDate?.addEventListener('change', filterTable);
-  btnClearDate?.addEventListener('click', () => {
-    if (filterDate) filterDate.value = '';
-    filterTable();
-  });
-  filterFila?.addEventListener('change', filterTable);
-  filterHealth?.addEventListener('change', filterTable);
+  tableSearch?.addEventListener('input', filterTable);
+  filterRowSelect?.addEventListener('change', filterTable);
+  filterHealthSelect?.addEventListener('change', filterTable);
 
-  // Inicializar filtro de fecha a hoy si no está seteado
-  if (filterDate && !filterDate.value) {
-    filterDate.value = new Date().toISOString().slice(0, 10);
-  }
-  
-  // Ejecutar filtro al cargar
-  setTimeout(filterTable, 10);
+  // Exportar Excel Nativo (.xlsx) Organizado y Formateado
+  const handleExportExcel = async (btn: HTMLElement | null) => {
+    const originalContent = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.style.pointerEvents = 'none';
+      btn.innerHTML = `
+        <svg class="animate-spin w-4 h-4 text-emerald-700 dark:text-emerald-300" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Generando Excel...</span>
+      `;
+    }
 
-  // Modales
+    try {
+      const response = await fetch('/api/export-excel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plants: plantsState })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error en servidor (${response.status})`);
+      }
+
+      const blob = await response.blob();
+      const nowStr = new Date().toISOString().slice(0, 10);
+      const filename = `AquaSens_Mediciones_Invernadero_${nowStr}.xlsx`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      if (btn) {
+        btn.innerHTML = `
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>¡Excel Descargado!</span>
+        `;
+        setTimeout(() => {
+          btn.innerHTML = originalContent;
+          btn.style.pointerEvents = '';
+        }, 2200);
+      }
+    } catch (err) {
+      console.error('Error al exportar Excel:', err);
+      // Fallback a CSV formateado con UTF-8 BOM y punto y coma (;) para compatibilidad en Excel español
+      let csv = "PlantaID;Invernadero;Fila;Columna;Fecha;Hora;pH Suelo;Temp Interna (°C);Temp Externa (°C);Temp Suelo (°C);Crecimiento (%);Productividad;Sanidad;Responsable;Observaciones\n";
+      plantsState.forEach((p) => {
+        const m = p.latestMetric;
+        csv += `"${p.plantId}";"Invernadero AquaSens";"${p.fila}";"${p.columna}";"${m.fecha}";"${m.hora}";${m.phSuelo};${m.tempInterna};${m.tempExterna};${m.tempSuelo};${m.crecimiento}%;"${m.productividad}";"${m.sanidad}";"${m.responsable}";"${m.observaciones || ''}"\n`;
+      });
+
+      const bom = "\uFEFF";
+      const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AquaSens_Mediciones_Invernadero_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      if (btn) {
+        btn.innerHTML = originalContent;
+        btn.style.pointerEvents = '';
+      }
+    }
+  };
+
+  const btnExportTop = document.getElementById('btn-export-csv');
+  btnExportTop?.addEventListener('click', () => handleExportExcel(btnExportTop));
+
+  const btnExportTable = document.getElementById('btn-export-excel-table');
+  btnExportTable?.addEventListener('click', () => handleExportExcel(btnExportTable));
+
+  // Modal Nueva Medición Formulario
   const modalAdd = document.getElementById('modal-add');
   const btnOpenModal = document.getElementById('btn-open-modal');
   const btnCloseModal = document.getElementById('btn-close-modal');
@@ -967,14 +2277,12 @@ function getHealthBadge(sanidad: string) {
   const formNewMetric = document.getElementById('form-new-metric') as HTMLFormElement | null;
 
   btnOpenModal?.addEventListener('click', () => modalAdd?.classList.remove('hidden'));
-  const closeModal = () => modalAdd?.classList.add('hidden');
-  btnCloseModal?.addEventListener('click', closeModal);
-  btnCancelModal?.addEventListener('click', closeModal);
+  const closeModalForm = () => modalAdd?.classList.add('hidden');
+  btnCloseModal?.addEventListener('click', closeModalForm);
+  btnCancelModal?.addEventListener('click', closeModalForm);
 
-  // Registro de Nueva Medición (Usa sesión activa)
   formNewMetric?.addEventListener('submit', (e) => {
     e.preventDefault();
-
     const fila = (document.getElementById('input-fila') as HTMLSelectElement).value;
     const columna = (document.getElementById('input-columna') as HTMLSelectElement).value;
     const ph = parseFloat((document.getElementById('input-ph') as HTMLInputElement).value);
@@ -982,190 +2290,75 @@ function getHealthBadge(sanidad: string) {
     const tout = parseFloat((document.getElementById('input-tout') as HTMLInputElement).value);
     const tsoil = parseFloat((document.getElementById('input-tsoil') as HTMLInputElement).value);
     const growth = parseInt((document.getElementById('input-growth') as HTMLInputElement).value, 10);
-    const prod = (document.getElementById('input-prod') as HTMLSelectElement).value;
-    const health = (document.getElementById('input-health') as HTMLSelectElement).value;
-    const obs = (document.getElementById('input-obs') as HTMLTextAreaElement).value || 'Registro recién ingresado.';
+    const prod = (document.getElementById('input-prod') as HTMLSelectElement).value as any;
+    const health = (document.getElementById('input-health') as HTMLSelectElement).value as any;
+    const obs = (document.getElementById('input-obs') as HTMLTextAreaElement).value || 'Nueva toma de datos.';
 
-    // Responsable detectado por sesión
     const respName = document.getElementById('session-user-name')?.textContent?.trim() || "Usuario Activo";
     const respRole = document.getElementById('session-user-role')?.textContent?.trim() || "Personal de Campo";
 
     const todayStr = new Date().toISOString().slice(0, 10);
     const timeStr = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
 
-    // Determinar estilo de pH
-    let phClass = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-300";
-    if (ph < 6.0 || ph > 6.8) {
-      phClass = (ph >= 5.5 && ph <= 7.2) 
-        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-amber-300"
-        : "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300";
-    }
-
-    const prodClass = prod === 'Alta' 
-      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-300"
-      : prod === 'Media'
-        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-amber-300"
-        : "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300";
-
-    const healthIcon = (health === 'Excelente' || health === 'Saludable') ? '🟢' : health === 'Vulnerable' ? '🟡' : '🔴';
-    const healthClass = (health === 'Excelente' || health === 'Saludable')
-      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200"
-      : health === 'Vulnerable'
-        ? "bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200"
-        : "bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200";
-
-    const newTr = document.createElement('tr');
-    newTr.className = "hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors metric-row cursor-pointer";
-    newTr.dataset.id = `MET-${Date.now()}`;
-    newTr.dataset.fila = fila;
-    newTr.dataset.columna = columna;
-    newTr.dataset.fecha = todayStr;
-    newTr.dataset.hora = timeStr;
-    newTr.dataset.timestamp = `Hoy, ${timeStr}`;
-    newTr.dataset.ph = ph.toString();
-    newTr.dataset.tin = tin.toString();
-    newTr.dataset.tout = tout.toString();
-    newTr.dataset.tsoil = tsoil.toString();
-    newTr.dataset.growth = growth.toString();
-    newTr.dataset.fase = "En seguimiento";
-    newTr.dataset.prod = prod;
-    newTr.dataset.health = health;
-    newTr.dataset.resp = respName;
-    newTr.dataset.rol = respRole;
-    newTr.dataset.obs = obs;
-
-    newTr.innerHTML = `
-      <td class="py-3 px-2 text-center font-mono text-xs text-emerald-600 font-bold bg-emerald-50/50 dark:bg-emerald-950/30 border-r border-gray-300 dark:border-gray-600 select-none">
-        NUEVO
-      </td>
-      <td class="py-3 px-4 border-r border-gray-200 dark:border-gray-700">
-        <div class="flex items-center gap-2">
-          <span class="px-2 py-1 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 font-mono font-black text-xs">
-            ${fila}
-          </span>
-          <span class="font-bold text-gray-900 dark:text-white font-mono text-xs">
-            ${columna}
-          </span>
-        </div>
-      </td>
-      <td class="py-3 px-4 border-r border-gray-200 dark:border-gray-700">
-        <span class="font-semibold text-gray-900 dark:text-white block text-xs">${todayStr}</span>
-        <span class="text-[11px] text-gray-500 dark:text-gray-400">${timeStr}</span>
-      </td>
-      <td class="py-3 px-3 text-center border-r border-gray-200 dark:border-gray-700">
-        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black border ${phClass}">
-          <span>${ph.toFixed(1)}</span>
-          <span class="text-[9px] opacity-75">pH</span>
-        </span>
-      </td>
-      <td class="py-3 px-3 text-center font-bold text-amber-700 dark:text-amber-300 border-r border-gray-200 dark:border-gray-700">
-        <span class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 font-mono">${tin.toFixed(1)}°C</span>
-      </td>
-      <td class="py-3 px-3 text-center text-blue-700 dark:text-blue-300 border-r border-gray-200 dark:border-gray-700">
-        <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 font-mono text-xs font-bold">${tout.toFixed(1)}°C</span>
-      </td>
-      <td class="py-3 px-3 text-center text-emerald-700 dark:text-emerald-300 border-r border-gray-200 dark:border-gray-700">
-        <span class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 font-mono text-xs font-bold">${tsoil.toFixed(1)}°C</span>
-      </td>
-      <td class="py-3 px-4 border-r border-gray-200 dark:border-gray-700 min-w-[140px]">
-        <div class="flex items-center justify-between text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-          <span class="text-[11px]">En seguimiento</span>
-          <span class="text-emerald-600 dark:text-emerald-400 font-mono">${growth}%</span>
-        </div>
-        <div class="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
-          <div class="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full" style="width: ${growth}%"></div>
-        </div>
-      </td>
-      <td class="py-3 px-3 text-center border-r border-gray-200 dark:border-gray-700">
-        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${prodClass}">${prod}</span>
-      </td>
-      <td class="py-3 px-3 text-center border-r border-gray-200 dark:border-gray-700">
-        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${healthClass}">
-          <span>${healthIcon}</span>
-          <span>${health}</span>
-        </span>
-      </td>
-      <td class="py-3 px-4">
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-full bg-indigo-600 text-white font-black text-[11px] flex items-center justify-center flex-shrink-0">
-            ${respName.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()}
-          </div>
-          <div>
-            <span class="font-bold text-gray-900 dark:text-white text-xs block">${respName}</span>
-            <span class="text-[10px] text-gray-500 dark:text-gray-400 block font-normal">${respRole}</span>
-          </div>
-        </div>
-      </td>
-    `;
-
-    tableBody?.prepend(newTr);
-
-    if (totalCount && showingCount) {
-      const c = parseInt(totalCount.textContent || '0', 10) + 1;
-      totalCount.textContent = c.toString();
-      showingCount.textContent = c.toString();
-    }
-
-    bindClicks();
-    closeModal();
-    formNewMetric?.reset();
-  });
-
-  // Modal detalle
-  const modalDetail = document.getElementById('modal-detail');
-  const btnCloseDetail = document.getElementById('btn-close-detail');
-  btnCloseDetail?.addEventListener('click', () => modalDetail?.classList.add('hidden'));
-
-  function bindClicks() {
-    const rows = document.querySelectorAll<HTMLTableRowElement>('.metric-row');
-    rows.forEach((r) => {
-      r.onclick = () => {
-        const d = r.dataset;
-        const pos = document.getElementById('detail-pos');
-        const date = document.getElementById('detail-date');
-        const ph = document.getElementById('detail-ph');
-        const tin = document.getElementById('detail-tin');
-        const tout = document.getElementById('detail-tout');
-        const tsoil = document.getElementById('detail-tsoil');
-        const growth = document.getElementById('detail-growth');
-        const health = document.getElementById('detail-health');
-        const resp = document.getElementById('detail-resp');
-        const obs = document.getElementById('detail-obs');
-
-        if (pos) pos.textContent = `Fila ${d.fila} • ${d.columna}`;
-        if (date) date.textContent = `${d.fecha} — ${d.hora}`;
-        if (ph) ph.textContent = `${parseFloat(d.ph || '0').toFixed(1)} pH`;
-        if (tin) tin.textContent = `${parseFloat(d.tin || '0').toFixed(1)}°C`;
-        if (tout) tout.textContent = `${parseFloat(d.tout || '0').toFixed(1)}°C`;
-        if (tsoil) tsoil.textContent = `${parseFloat(d.tsoil || '0').toFixed(1)}°C`;
-        if (growth) growth.textContent = `${d.growth}%`;
-        if (health) health.textContent = `${d.prod} • ${d.health}`;
-        if (resp) resp.textContent = `${d.resp} (${d.rol || 'Personal'})`;
-        if (obs) obs.textContent = d.obs || 'Sin observaciones registradas.';
-
-        modalDetail?.classList.remove('hidden');
+    const targetPlant = plantsState.find(p => p.fila === fila && p.columna === columna);
+    if (targetPlant) {
+      const newRecord = {
+        id: `MET-${fila}-${columna.replace(' ', '')}-${Date.now()}`,
+        invernadero: 'Invernadero AquaSens',
+        fila: fila as any,
+        columna: columna as any,
+        plantId: targetPlant.plantId,
+        fecha: todayStr,
+        hora: timeStr,
+        timestampTexto: `Hoy, ${timeStr}`,
+        phSuelo: ph,
+        tempInterna: tin,
+        tempExterna: tout,
+        tempSuelo: tsoil,
+        crecimiento: growth,
+        faseCrecimiento: targetPlant.latestMetric.faseCrecimiento,
+        productividad: prod,
+        sanidad: health,
+        responsable: respName,
+        responsableRol: respRole,
+        avatarColor: targetPlant.latestMetric.avatarColor,
+        observaciones: obs
       };
-    });
-  }
-  bindClicks();
 
-  // Exportar Excel CSV
-  document.getElementById('btn-export-csv')?.addEventListener('click', () => {
-    const rows = document.querySelectorAll<HTMLTableRowElement>('.metric-row');
-    let csv = "Invernadero,Fila,Columna,Fecha,Hora,pHSuelo,TempInterna,TempExterna,TempSuelo,Crecimiento,Productividad,Sanidad,Responsable,Observaciones\n";
-    rows.forEach((r) => {
-      if (r.style.display !== 'none') {
-        const d = r.dataset;
-        csv += `"Invernadero AquaSens","${d.fila}","${d.columna}","${d.fecha}","${d.hora}",${d.ph},${d.tin},${d.tout},${d.tsoil},${d.growth}%,"${d.prod}","${d.health}","${d.resp}","${d.obs}"\n`;
+      targetPlant.latestMetric = newRecord;
+      targetPlant.history.push(newRecord);
+
+      // Actualizar fila de la tabla
+      const row = Array.from(document.querySelectorAll<HTMLTableRowElement>('.plant-table-row'))
+        .find(r => r.dataset.fila === fila && r.dataset.columna === columna);
+
+      if (row) {
+        row.dataset.ph = ph.toString();
+        row.dataset.tin = tin.toString();
+        row.dataset.tout = tout.toString();
+        row.dataset.tsoil = tsoil.toString();
+        row.dataset.growth = growth.toString();
+        row.dataset.prod = prod;
+        row.dataset.health = health;
+        row.dataset.resp = respName;
+        row.dataset.hora = timeStr;
+        row.dataset.fecha = todayStr;
+        row.dataset.obs = obs;
+
+        const cells = row.querySelectorAll('td');
+        if (cells[2]) cells[2].innerHTML = `<span class="font-semibold text-gray-900 dark:text-white block text-xs">${todayStr}</span><span class="text-[11px] text-gray-500 font-mono">${timeStr}</span>`;
+        if (cells[3]) cells[3].innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black border bg-emerald-100 text-emerald-800 border-emerald-300"><span>${ph.toFixed(1)}</span><span class="text-[9px] opacity-75">pH</span></span>`;
+        if (cells[4]) cells[4].innerHTML = `<span class="px-2 py-0.5 rounded bg-amber-50 font-mono font-bold text-amber-700">${tin.toFixed(1)}°C</span>`;
+        if (cells[5]) cells[5].innerHTML = `<span class="px-2 py-0.5 rounded bg-blue-50 font-mono font-bold text-blue-700">${tout.toFixed(1)}°C</span>`;
+        if (cells[6]) cells[6].innerHTML = `<span class="px-2 py-0.5 rounded bg-emerald-50 font-mono font-bold text-emerald-700">${tsoil.toFixed(1)}°C</span>`;
+        if (cells[7]) cells[7].innerHTML = `<div class="flex items-center justify-between text-xs font-bold text-gray-700 mb-1"><span>${targetPlant.latestMetric.faseCrecimiento}</span><span class="text-emerald-600 font-mono">${growth}%</span></div><div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full" style="width: ${growth}%"></div></div>`;
       }
-    });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `AquaSens_Metricas_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+      // Reabrir modal de la planta con los datos actualizados
+      openPlantModal(fila, columna);
+    }
+
+    closeModalForm();
+    formNewMetric?.reset();
   });
 </script>
