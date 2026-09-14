@@ -1,1 +1,2446 @@
-<div>Historial en construcción</div>
+---
+// src/frontend/components/Historial.astro
+// Panel de Historial Agronómico Cronológico para Invernadero AquaSens.
+// Permite consultar mediciones por fecha específica, importar archivos (Excel/CSV)
+// o sincronizar directamente con Google Sheets / Google Docs.
+
+import {
+  getAllMetrics,
+  getAllPlantsGrid,
+  type MetricRecord,
+  type PlantMatrixItem,
+  FILAS,
+  COLUMNAS,
+} from "../../backend/services/metricsData";
+
+interface Props {
+  currentUserName?: string;
+  currentUserRole?: string;
+}
+
+const {
+  currentUserName = "Administrador",
+  currentUserRole = "Líder de Cultivo",
+} = Astro.props;
+
+// Dataset base inicial de mediciones
+const allRecords: MetricRecord[] = getAllMetrics();
+const allPlants: PlantMatrixItem[] = getAllPlantsGrid();
+
+// Extraer fechas únicas ordenadas de más reciente a más antigua
+const uniqueDates = Array.from(new Set(allRecords.map((r) => r.fecha))).sort(
+  (a, b) => b.localeCompare(a),
+);
+const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
+---
+
+<!-- Serialización segura de datos base para el cliente -->
+<script
+  id="history-initial-records"
+  type="application/json"
+  set:html={JSON.stringify(allRecords)}
+/>
+<script
+  id="history-plants-grid"
+  type="application/json"
+  set:html={JSON.stringify(allPlants)}
+/>
+
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
+  <!-- ENCABEZADO PRINCIPAL -->
+  <div
+    class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors"
+  >
+    <div class="flex items-start sm:items-center gap-4">
+      <div
+        class="p-3.5 bg-gradient-to-br from-indigo-600 via-indigo-700 to-emerald-600 text-white rounded-2xl shadow-lg shadow-indigo-600/20 shrink-0"
+      >
+        <svg
+          class="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <div>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <h1
+            class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight"
+          >
+            Historial Cronológico de Mediciones
+          </h1>
+          <span
+            class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800"
+          >
+            Registro Multidía
+          </span>
+        </div>
+        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Consulta, audita y compara las tomas de datos de cada día para las 20
+          plantas del invernadero.
+        </p>
+        <p
+          class="text-[11px] sm:text-xs text-gray-400 dark:text-gray-500 mt-0.5"
+        >
+          Sesión activa: <strong
+            class="text-gray-700 dark:text-gray-300 font-semibold"
+            >{currentUserName}</strong
+          > ({currentUserRole})
+        </p>
+      </div>
+    </div>
+
+    <!-- BOTONES DE INTEGRACIÓN Y ACCIÓN -->
+    <div class="flex flex-wrap items-center gap-2.5">
+      <!-- Conectar Google Sheets -->
+      <button
+        id="btn-open-sheets-modal"
+        type="button"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 shadow-xs transition-all cursor-pointer transform hover:-translate-y-0.5"
+        title="Conectar y sincronizar automáticamente con Google Sheets / Google Docs"
+      >
+        <svg
+          class="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+          ></path>
+        </svg>
+        <span>Conectar Google Sheets</span>
+        <span
+          id="sheets-badge-dot"
+          class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      </button>
+
+      <!-- Subir Archivo Excel / CSV -->
+      <button
+        id="btn-open-upload-modal"
+        type="button"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 shadow-xs transition-all cursor-pointer transform hover:-translate-y-0.5"
+        title="Subir archivo Excel (.xlsx) o CSV con las mediciones tomadas en campo"
+      >
+        <svg
+          class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+          ></path>
+        </svg>
+        <span>Subir Archivo (.csv / .xlsx)</span>
+      </button>
+
+      <!-- Exportar Historial -->
+      <button
+        id="btn-export-history"
+        type="button"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 shadow-xs transition-all cursor-pointer"
+        title="Exportar base de datos histórica en formato Excel o CSV"
+      >
+        <svg
+          class="w-4 h-4 text-gray-600 dark:text-gray-300"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          ></path>
+        </svg>
+        <span>Descargar Excel</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- BARRA DE ESTADO DE SINCRONIZACIÓN -->
+  <div
+    id="sync-banner"
+    class="hidden flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-xs text-emerald-900 dark:text-emerald-200 shadow-xs transition-all"
+  >
+    <div class="flex items-center gap-2.5">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+      <div>
+        <span class="font-bold">Google Sheets Vinculado:</span>
+        <span
+          id="sync-banner-text"
+          class="text-emerald-700 dark:text-emerald-300 ml-1"
+          >Sincronización activa en tiempo real.</span
+        >
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="sync-last-update" class="text-[11px] opacity-80"
+        >Última sync: Hace momentos</span
+      >
+      <button
+        id="btn-sync-now-banner"
+        class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer transition-all shadow-xs"
+      >
+        Sincronizar ahora
+      </button>
+    </div>
+  </div>
+
+  <!-- 1. BARRA INTUITIVA DE FILTRO DE FECHA Y CRITERIOS -->
+  <div
+    class="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4"
+  >
+    <!-- Fila 1: Selector de Fecha Principal y Chips Rápidos -->
+    <div
+      class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-700/80"
+    >
+      <!-- Selector de Fecha Calendario -->
+      <div class="flex flex-wrap items-center gap-3">
+        <label
+          for="history-date-picker"
+          class="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5"
+        >
+          <span class="text-base">📅</span> Seleccionar Día:
+        </label>
+        <div class="relative">
+          <input
+            id="history-date-picker"
+            type="date"
+            value={latestDate}
+            class="px-4 py-2 text-xs sm:text-sm font-bold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-xs transition-all"
+          />
+        </div>
+        <span
+          class="text-[11px] text-gray-400 dark:text-gray-500 hidden sm:inline"
+        >
+          (Escoge cualquier día para ver sus mediciones)
+        </span>
+      </div>
+
+      <!-- Chips Rápidos de Selección -->
+      <div class="flex flex-wrap items-center gap-2" id="date-quick-chips">
+        <!-- Renderizado dinámico de chips rápidos: Hoy, Ayer, Hace 2 días, etc. -->
+      </div>
+    </div>
+
+    <!-- Fila 2: Filtros Secundarios (Fila, Planta, Sanidad, Búsqueda) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+      <!-- Filtro Fila -->
+      <div>
+        <label
+          for="filter-fila"
+          class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+        >
+          Filtrar por Fila
+        </label>
+        <select
+          id="filter-fila"
+          class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+        >
+          <option value="all">Todas las Filas (t0 a t3)</option>
+          <option value="t0">Fila t0</option>
+          <option value="t1">Fila t1</option>
+          <option value="t2">Fila t2</option>
+          <option value="t3">Fila t3</option>
+        </select>
+      </div>
+
+      <!-- Filtro Planta -->
+      <div>
+        <label
+          for="filter-planta"
+          class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+        >
+          Filtrar por Planta
+        </label>
+        <select
+          id="filter-planta"
+          class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+        >
+          <option value="all">Todas las 20 Plantas</option>
+          {
+            allPlants.map((p) => (
+              <option value={p.plantId}>
+                {p.plantId} ({p.fila} - {p.columna})
+              </option>
+            ))
+          }
+        </select>
+      </div>
+
+      <!-- Filtro Sanidad -->
+      <div>
+        <label
+          for="filter-sanidad"
+          class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+        >
+          Estado Fitosanitario
+        </label>
+        <select
+          id="filter-sanidad"
+          class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+        >
+          <option value="all">Todos los Estados</option>
+          <option value="Excelente">Excelente 🟢</option>
+          <option value="Saludable">Saludable 🟢</option>
+          <option value="Vulnerable">Vulnerable 🟡</option>
+          <option value="Crítica">Crítica 🔴</option>
+        </select>
+      </div>
+
+      <!-- Buscador de Texto Libre -->
+      <div>
+        <label
+          for="search-query"
+          class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+        >
+          Búsqueda Rápida
+        </label>
+        <div class="relative">
+          <input
+            id="search-query"
+            type="text"
+            placeholder="Responsable, nota o código..."
+            class="w-full pl-8 pr-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500"
+          />
+          <span class="absolute left-2.5 top-2.5 text-gray-400 text-xs">🔍</span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. RESUMEN EJECUTIVO DEL DÍA SELECCIONADO -->
+  <div
+    class="bg-gradient-to-br from-indigo-900 via-indigo-800 to-emerald-900 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden"
+  >
+    <!-- Decoración de Fondo -->
+    <div
+      class="absolute -right-10 -bottom-10 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"
+    >
+    </div>
+    <div
+      class="absolute -left-10 -top-10 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"
+    >
+    </div>
+
+    <div
+      class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10"
+    >
+      <div>
+        <div class="flex items-center gap-2">
+          <span
+            class="px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-white/20 text-white backdrop-blur-md"
+          >
+            Ficha de la Fecha
+          </span>
+          <span
+            id="summary-view-mode-badge"
+            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30"
+          >
+            Día Específico
+          </span>
+        </div>
+        <h2
+          id="summary-date-title"
+          class="text-2xl sm:text-3xl font-black tracking-tight mt-1.5 capitalize"
+        >
+          Cargando fecha...
+        </h2>
+        <p
+          id="summary-date-subtitle"
+          class="text-xs sm:text-sm text-indigo-200 mt-0.5"
+        >
+          Consolidado de variables agronómicas tomadas por el equipo de campo.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <span
+            class="text-[11px] uppercase tracking-wider text-indigo-200 block"
+            >Plantas Medidas</span
+          >
+          <span
+            id="summary-coverage-count"
+            class="text-2xl font-black text-white">--/20</span
+          >
+        </div>
+        <div
+          id="summary-health-semaphore"
+          class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl border border-white/15"
+        >
+          🪴
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 Tarjetas de Métricas del Día -->
+    <div
+      class="relative z-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-6"
+    >
+      <!-- pH Promedio -->
+      <div
+        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15"
+      >
+        <div class="flex items-center justify-between">
+          <span
+            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            >pH Suelo</span
+          >
+          <span class="text-base">🧪</span>
+        </div>
+        <div class="mt-1 flex items-baseline gap-1">
+          <span id="kpi-ph" class="text-2xl font-black text-white">--</span>
+          <span class="text-xs text-indigo-200">pH</span>
+        </div>
+        <span
+          id="kpi-ph-badge"
+          class="text-[10px] font-bold text-emerald-300 block mt-1"
+        >
+          Óptimo (6.0 - 6.8)
+        </span>
+      </div>
+
+      <!-- Temp. Interna -->
+      <div
+        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15"
+      >
+        <div class="flex items-center justify-between">
+          <span
+            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            >Temp. Interna</span
+          >
+          <span class="text-base">🌡️</span>
+        </div>
+        <div class="mt-1 flex items-baseline gap-1">
+          <span id="kpi-tin" class="text-2xl font-black text-white">--</span>
+          <span class="text-xs text-indigo-200">°C</span>
+        </div>
+        <span class="text-[10px] text-indigo-200 block mt-1"
+          >Microclima del domo</span
+        >
+      </div>
+
+      <!-- Temp. Suelo -->
+      <div
+        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15"
+      >
+        <div class="flex items-center justify-between">
+          <span
+            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            >Temp. Suelo</span
+          >
+          <span class="text-base">🌱</span>
+        </div>
+        <div class="mt-1 flex items-baseline gap-1">
+          <span id="kpi-tsoil" class="text-2xl font-black text-white">--</span>
+          <span class="text-xs text-indigo-200">°C</span>
+        </div>
+        <span class="text-[10px] text-indigo-200 block mt-1"
+          >Zona radicular</span
+        >
+      </div>
+
+      <!-- Crecimiento -->
+      <div
+        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15"
+      >
+        <div class="flex items-center justify-between">
+          <span
+            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            >Avance Foliar</span
+          >
+          <span class="text-base">📈</span>
+        </div>
+        <div class="mt-1 flex items-baseline gap-1">
+          <span id="kpi-growth" class="text-2xl font-black text-white">--</span>
+          <span class="text-xs text-indigo-200">%</span>
+        </div>
+        <span class="text-[10px] text-emerald-300 block mt-1"
+          >Desarrollo promedio</span
+        >
+      </div>
+
+      <!-- Índice de Salud -->
+      <div
+        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 col-span-2 sm:col-span-1"
+      >
+        <div class="flex items-center justify-between">
+          <span
+            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            >Salud General</span
+          >
+          <span class="text-base">🛡️</span>
+        </div>
+        <div class="mt-1 flex items-baseline gap-1">
+          <span id="kpi-health" class="text-2xl font-black text-white">--</span>
+          <span class="text-xs text-indigo-200">%</span>
+        </div>
+        <span
+          id="kpi-health-plants"
+          class="text-[10px] text-emerald-300 block mt-1"
+        >
+          --/20 Saludables
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MATRIZ VISUAL DE PLANTAS EN EL DÍA SELECCIONADO (4x5) -->
+  <div
+    class="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4"
+  >
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+    >
+      <div>
+        <h3
+          class="text-base sm:text-lg font-black text-gray-900 dark:text-white flex items-center gap-2"
+        >
+          <span>🌿</span> Mapa de Plantas en la Fecha Seleccionada
+        </h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          Haz clic en cualquier planta para ver su <strong
+            >ficha técnica con comparativa vs la medición anterior</strong
+          >.
+        </p>
+      </div>
+
+      <div
+        class="flex items-center gap-3 text-xs font-semibold text-gray-600 dark:text-gray-300"
+      >
+        <span class="flex items-center gap-1.5"
+          ><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Óptimo</span
+        >
+        <span class="flex items-center gap-1.5"
+          ><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Vulnerable</span
+        >
+        <span class="flex items-center gap-1.5"
+          ><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Crítico</span
+        >
+        <span class="flex items-center gap-1.5"
+          ><span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"
+          ></span> Sin Registro</span
+        >
+      </div>
+    </div>
+
+    <!-- Contenedor dinámico de la cuadrícula de 20 plantas -->
+    <div
+      id="history-plant-grid"
+      class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3"
+    >
+      <!-- Inyectado por JavaScript -->
+    </div>
+  </div>
+
+  <!-- 4. LÍNEA TEMPORAL / GRÁFICA DE EVOLUCIÓN HISTÓRICA -->
+  <div
+    class="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4"
+  >
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+    >
+      <div class="flex items-center gap-2.5">
+        <span
+          class="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-sm"
+          >📊</span
+        >
+        <div>
+          <h3
+            class="text-base sm:text-lg font-black text-gray-900 dark:text-white"
+          >
+            Evolución Cronológica Multidía
+          </h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Comparativa de variables de todos los días registrados en el
+            historial
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          id="btn-metric-chart-ph"
+          class="px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white cursor-pointer transition-all shadow-xs"
+        >
+          pH Suelo
+        </button>
+        <button
+          id="btn-metric-chart-temp"
+          class="px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all"
+        >
+          Temperatura
+        </button>
+        <button
+          id="btn-metric-chart-growth"
+          class="px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all"
+        >
+          Crecimiento %
+        </button>
+      </div>
+    </div>
+
+    <!-- Contenedor del Gráfico SVG Responsivo -->
+    <div
+      class="w-full h-56 relative bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/80 flex items-center justify-center"
+    >
+      <svg
+        id="history-evolution-svg"
+        class="w-full h-full overflow-visible"
+        viewBox="0 0 700 180"
+      >
+        <!-- Generado dinámicamente por JavaScript -->
+      </svg>
+    </div>
+  </div>
+
+  <!-- 5. TABLA COMPLETA DE REGISTROS HISTÓRICOS -->
+  <div
+    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+  >
+    <div
+      class="p-5 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+    >
+      <div>
+        <h3
+          class="text-base sm:text-lg font-black text-gray-900 dark:text-white flex items-center gap-2"
+        >
+          <span>📋</span> Registros Detallados de Mediciones
+        </h3>
+        <p
+          id="table-results-counter"
+          class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"
+        >
+          Mostrando mediciones filtradas
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          id="btn-reset-filters"
+          type="button"
+          class="px-3.5 py-1.5 rounded-xl font-bold text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-all cursor-pointer"
+        >
+          Restablecer Filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabla Responsiva -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+        <thead
+          class="bg-gray-50 dark:bg-gray-800/80 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700"
+        >
+          <tr>
+            <th class="px-4 py-3">Fecha y Hora</th>
+            <th class="px-4 py-3">Planta / Fila</th>
+            <th class="px-4 py-3">Fase</th>
+            <th class="px-4 py-3">pH Suelo</th>
+            <th class="px-4 py-3">T. Interna</th>
+            <th class="px-4 py-3">T. Suelo</th>
+            <th class="px-4 py-3">Crecimiento</th>
+            <th class="px-4 py-3">Sanidad</th>
+            <th class="px-4 py-3">Responsable</th>
+            <th class="px-4 py-3">Acción</th>
+          </tr>
+        </thead>
+        <tbody
+          id="history-table-body"
+          class="divide-y divide-gray-100 dark:divide-gray-700/60 font-medium"
+        >
+          <!-- Inyectado por JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Estado vacío -->
+    <div id="table-empty-state" class="hidden p-12 text-center">
+      <span class="text-4xl">🔍</span>
+      <h4 class="text-base font-bold text-gray-800 dark:text-gray-200 mt-2">
+        No se encontraron mediciones
+      </h4>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
+        No hay registros para la fecha o filtros seleccionados. Prueba
+        seleccionando otra fecha, subiendo un archivo Excel/CSV o conectando
+        Google Sheets.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 1: FICHA TÉCNICA DE LA PLANTA         -->
+<!-- ========================================== -->
+<div
+  id="modal-plant-detail"
+  class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+>
+  <div
+    class="bg-white dark:bg-gray-800 w-full max-w-xl rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+  >
+    <!-- Encabezado del Modal -->
+    <div
+      class="p-6 bg-gradient-to-r from-indigo-900 to-emerald-900 text-white flex items-center justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          id="modal-plant-icon"
+          class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl border border-white/20"
+        >
+          🪴
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 id="modal-plant-id" class="text-xl font-black">P-01</h3>
+            <span
+              id="modal-plant-location"
+              class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20"
+              >Fila t0 • Col 1</span
+            >
+          </div>
+          <p id="modal-plant-date" class="text-xs text-indigo-200 mt-0.5">
+            Medición del 2026-09-14, 09:30 AM
+          </p>
+        </div>
+      </div>
+      <button
+        id="modal-plant-close-btn"
+        class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-all"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Cuerpo del Modal -->
+    <div
+      class="p-6 space-y-5 max-h-[75vh] overflow-y-auto text-xs text-gray-600 dark:text-gray-300"
+    >
+      <!-- Fila de Comparación con día previo -->
+      <div
+        id="modal-delta-box"
+        class="p-3.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-2xl"
+      >
+        <span
+          class="text-[11px] font-bold text-indigo-800 dark:text-indigo-300 block mb-1"
+        >
+          📈 Comparativa vs Día Previo:
+        </span>
+        <div
+          id="modal-delta-content"
+          class="grid grid-cols-3 gap-2 text-center text-xs"
+        >
+          <!-- Inyectado dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Variables Agronómicas Principales -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div
+          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 text-center"
+        >
+          <span
+            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block"
+            >pH Suelo</span
+          >
+          <span
+            id="modal-val-ph"
+            class="text-lg font-black text-gray-900 dark:text-white">6.4</span
+          >
+          <span
+            id="modal-badge-ph"
+            class="text-[9px] font-bold text-emerald-600 block mt-0.5"
+            >Óptimo</span
+          >
+        </div>
+        <div
+          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 text-center"
+        >
+          <span
+            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block"
+            >Temp. Interna</span
+          >
+          <span
+            id="modal-val-tin"
+            class="text-lg font-black text-gray-900 dark:text-white"
+            >24.5°C</span
+          >
+          <span class="text-[9px] text-gray-400 block mt-0.5">Microclima</span>
+        </div>
+        <div
+          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 text-center"
+        >
+          <span
+            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block"
+            >Temp. Suelo</span
+          >
+          <span
+            id="modal-val-tsoil"
+            class="text-lg font-black text-gray-900 dark:text-white"
+            >20.3°C</span
+          >
+          <span class="text-[9px] text-gray-400 block mt-0.5">Radicular</span>
+        </div>
+        <div
+          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 text-center"
+        >
+          <span
+            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block"
+            >Crecimiento</span
+          >
+          <span
+            id="modal-val-growth"
+            class="text-lg font-black text-gray-900 dark:text-white">88%</span
+          >
+          <span class="text-[9px] text-indigo-500 block mt-0.5"
+            >Avance foliar</span
+          >
+        </div>
+      </div>
+
+      <!-- Estado Fitosanitario y Productividad -->
+      <div class="grid grid-cols-2 gap-3">
+        <div
+          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600"
+        >
+          <span
+            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1"
+            >Sanidad</span
+          >
+          <span
+            id="modal-badge-sanidad"
+            class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300"
+          >
+            Excelente 🟢
+          </span>
+        </div>
+        <div
+          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600"
+        >
+          <span
+            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1"
+            >Productividad</span
+          >
+          <span
+            id="modal-badge-prod"
+            class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300"
+          >
+            Alta
+          </span>
+        </div>
+      </div>
+
+      <!-- Observaciones y Responsable -->
+      <div
+        class="p-4 bg-gray-50 dark:bg-gray-700/40 rounded-2xl border border-gray-200 dark:border-gray-600 space-y-2"
+      >
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-gray-800 dark:text-gray-200"
+            >Observaciones Técnicas:</span
+          >
+          <span
+            id="modal-val-resp"
+            class="text-xs text-gray-500 dark:text-gray-400"
+            >Registrado por: Administrador</span
+          >
+        </div>
+        <p
+          id="modal-val-obs"
+          class="italic text-gray-600 dark:text-gray-300 text-xs"
+        >
+          Sin observaciones adicionales.
+        </p>
+      </div>
+    </div>
+
+    <!-- Pie del Modal -->
+    <div
+      class="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/95 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
+    >
+      <div
+        class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+      >
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span class="font-medium">Registro agronómico de la fecha</span>
+      </div>
+      <button
+        id="modal-plant-btn-ok"
+        type="button"
+        class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg transition-all cursor-pointer transform hover:-translate-y-0.5"
+      >
+        Entendido
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 2: SUBIR ARCHIVO (EXCEL / CSV)        -->
+<!-- ========================================== -->
+<div
+  id="modal-upload-file"
+  class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+>
+  <div
+    class="bg-white dark:bg-gray-800 w-full max-w-2xl rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+  >
+    <div
+      class="p-6 bg-gradient-to-r from-indigo-700 to-indigo-900 text-white flex items-center justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-white/10 backdrop-blur-md rounded-2xl text-2xl">
+          📥
+        </div>
+        <div>
+          <h3 class="text-lg sm:text-xl font-black">
+            Cargar Archivo de Mediciones
+          </h3>
+          <p class="text-xs text-indigo-200 mt-0.5">
+            Soporta hojas de cálculo (.csv, .xlsx, .txt)
+          </p>
+        </div>
+      </div>
+      <button
+        id="modal-upload-close-btn"
+        class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-all"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div class="p-6 space-y-5 text-xs text-gray-600 dark:text-gray-300">
+      <!-- Zona de Drag and Drop -->
+      <div
+        id="drop-zone"
+        class="border-2 border-dashed border-indigo-300 dark:border-indigo-700 rounded-2xl p-6 sm:p-8 text-center bg-indigo-50/50 dark:bg-indigo-950/20 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-all cursor-pointer"
+      >
+        <span class="text-4xl block mb-2">📁</span>
+        <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">
+          Arrastra tu archivo aquí o <span
+            class="text-indigo-600 dark:text-indigo-400 underline"
+            >haz clic para examinar</span
+          >
+        </h4>
+        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+          Archivos compatibles: .csv, .xlsx (Tamaño máx: 10MB)
+        </p>
+        <input
+          id="file-input"
+          type="file"
+          accept=".csv, .xlsx, .xls, .txt"
+          class="hidden"
+        />
+      </div>
+
+      <!-- Guía y Descarga de Plantilla Oficial -->
+      <div
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-200 dark:border-gray-700"
+      >
+        <div>
+          <h5 class="font-bold text-gray-800 dark:text-gray-200">
+            ¿No tienes el formato exacto?
+          </h5>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">
+            Descarga la plantilla con las 20 plantas preconfiguradas para llenar
+            en campo.
+          </p>
+        </div>
+        <button
+          id="btn-download-template"
+          type="button"
+          class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl cursor-pointer transition-all shrink-0 flex items-center gap-1.5 shadow-xs"
+        >
+          <span>📄</span> Descargar Plantilla (.csv)
+        </button>
+      </div>
+
+      <!-- Vista Previa de Filas Parseadas -->
+      <div id="upload-preview-container" class="hidden space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-gray-800 dark:text-gray-200"
+            >Vista Previa de Datos Detectados:</span
+          >
+          <span id="upload-preview-count" class="text-indigo-600 font-bold"
+            >0 filas listas</span
+          >
+        </div>
+        <div
+          class="max-h-44 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl"
+        >
+          <table class="w-full text-[11px] text-left">
+            <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0 font-bold">
+              <tr>
+                <th class="p-2">Planta</th>
+                <th class="p-2">Fecha</th>
+                <th class="p-2">pH</th>
+                <th class="p-2">Temp Int</th>
+                <th class="p-2">Crec %</th>
+                <th class="p-2">Sanidad</th>
+              </tr>
+            </thead>
+            <tbody
+              id="upload-preview-body"
+              class="divide-y divide-gray-100 dark:divide-gray-700 font-mono"
+            >
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="p-4 bg-gray-50/80 dark:bg-gray-800/95 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2"
+    >
+      <button
+        id="modal-upload-btn-cancel"
+        class="px-4 py-2 rounded-xl text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
+      >
+        Cancelar
+      </button>
+      <button
+        id="modal-upload-btn-confirm"
+        disabled
+        class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold opacity-50 cursor-not-allowed transition-all"
+      >
+        Guardar en Historial
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL 3: CONECTAR GOOGLE SHEETS / DOCS     -->
+<!-- ========================================== -->
+<div
+  id="modal-sheets"
+  class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+>
+  <div
+    class="bg-white dark:bg-gray-800 w-full max-w-xl rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+  >
+    <div
+      class="p-6 bg-gradient-to-r from-emerald-700 to-teal-800 text-white flex items-center justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-white/10 backdrop-blur-md rounded-2xl text-2xl">
+          🔗
+        </div>
+        <div>
+          <h3 class="text-lg sm:text-xl font-black">
+            Conexión con Google Sheets
+          </h3>
+          <p class="text-xs text-emerald-200 mt-0.5">
+            Sincronización en vivo de mediciones de campo
+          </p>
+        </div>
+      </div>
+      <button
+        id="modal-sheets-close-btn"
+        class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-all"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4 text-xs text-gray-600 dark:text-gray-300">
+      <!-- Entrada de URL -->
+      <div>
+        <label
+          for="input-google-sheets-url"
+          class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-1.5"
+        >
+          Enlace de tu Google Sheets:
+        </label>
+        <input
+          id="input-google-sheets-url"
+          type="url"
+          placeholder="https://docs.google.com/spreadsheets/d/.../edit o enlace publicado"
+          class="w-full px-4 py-2.5 text-xs font-mono rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <!-- Pasos sencillos explicados -->
+      <div
+        class="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl space-y-2"
+      >
+        <span
+          class="font-bold text-emerald-900 dark:text-emerald-300 text-xs block"
+        >
+          💡 ¿Cómo obtener el enlace de Google Sheets?
+        </span>
+        <ol
+          class="list-decimal list-inside space-y-1.5 text-[11px] text-emerald-800 dark:text-emerald-300/90 leading-relaxed"
+        >
+          <li>
+            Abre tu hoja de cálculo en <strong
+              >Google Drive / Google Sheets</strong
+            >.
+          </li>
+          <li>
+            Asegúrate de que el documento tenga permiso <strong
+              >"Cualquier persona con el enlace puede ver"</strong
+            > (o ve a <em
+              >Archivo &gt; Compartir &gt; Publicar en la web &gt; Formato CSV</em
+            >).
+          </li>
+          <li>
+            Copia la URL del navegador y pégala arriba. ¡El sistema detectará
+            automáticamente los datos!
+          </li>
+        </ol>
+      </div>
+
+      <!-- Estado de Respuesta de la API -->
+      <div
+        id="sheets-sync-status"
+        class="hidden p-3 rounded-xl text-xs font-medium"
+      >
+      </div>
+    </div>
+
+    <div
+      class="p-4 bg-gray-50/80 dark:bg-gray-800/95 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2"
+    >
+      <button
+        id="modal-sheets-btn-cancel"
+        class="px-4 py-2 rounded-xl text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
+      >
+        Cancelar
+      </button>
+      <button
+        id="modal-sheets-btn-sync"
+        class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer transition-all flex items-center gap-1.5 shadow-xs"
+      >
+        <span id="sheets-sync-spinner" class="hidden animate-spin">⏳</span>
+        <span id="sheets-sync-btn-text">Probar y Sincronizar</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- TOAST NOTIFICACIONES FLOTANTES             -->
+<!-- ========================================== -->
+<div
+  id="history-toast"
+  class="fixed bottom-5 right-5 z-50 hidden bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-gray-700 text-xs font-bold flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-200"
+>
+  <span id="toast-icon">✅</span>
+  <span id="toast-message">Operación completada</span>
+</div>
+
+<!-- ========================================== -->
+<!-- SCRIPT DE CLIENTE CON TODA LA LÓGICA      -->
+<!-- ========================================== -->
+<script>
+  // @ts-nocheck
+  document.addEventListener("DOMContentLoaded", () => {
+    // 1. CARGA DE DATOS BASE SERIALIZADOS
+    const initialRecordsEl = document.getElementById("history-initial-records");
+    const plantsGridEl = document.getElementById("history-plants-grid");
+
+    let baseRecords = [];
+    let plantsList = [];
+
+    try {
+      baseRecords = JSON.parse(initialRecordsEl?.textContent || "[]");
+      plantsList = JSON.parse(plantsGridEl?.textContent || "[]");
+    } catch (e) {
+      console.error("Error parseando datos iniciales:", e);
+    }
+
+    // 2. COMBINAR CON LOCALSTORAGE (Registros importados o sincronizados previamente)
+    const STORAGE_KEY_RECORDS = "aquasens_custom_history_records";
+    const STORAGE_KEY_SHEETS_URL = "aquasens_google_sheet_url";
+    const STORAGE_KEY_LAST_SYNC = "aquasens_last_sync_time";
+
+    function getStoredRecords() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY_RECORDS);
+        return stored ? JSON.parse(stored) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveCustomRecords(newRecords) {
+      try {
+        const existing = getStoredRecords();
+        // Evitar duplicados por id
+        const map = new Map();
+        [...existing, ...newRecords].forEach((r) => map.set(r.id, r));
+        localStorage.setItem(
+          STORAGE_KEY_RECORDS,
+          JSON.stringify(Array.from(map.values())),
+        );
+      } catch (e) {
+        console.error("Error guardando en localStorage:", e);
+      }
+    }
+
+    // Unir todos los registros (base + custom)
+    function getAllCombinedRecords() {
+      const custom = getStoredRecords();
+      const map = new Map();
+      // Primero base, luego custom sobrescribe si coincide ID
+      baseRecords.forEach((r) => map.set(r.id, r));
+      custom.forEach((r) => map.set(r.id, r));
+      return Array.from(map.values());
+    }
+
+    // 3. ESTADO GLOBAL DE LA VISTA
+    const state = {
+      allRecords: getAllCombinedRecords(),
+      selectedDate: "",
+      selectedFila: "all",
+      selectedPlanta: "all",
+      selectedSanidad: "all",
+      searchQuery: "",
+      activeChartMetric: "ph", // 'ph' | 'temp' | 'growth'
+      pendingUploadRows: [],
+    };
+
+    // Obtener lista de fechas únicas ordenadas
+    function getAvailableDates() {
+      const dates = Array.from(new Set(state.allRecords.map((r) => r.fecha)));
+      return dates.sort((a, b) => b.localeCompare(a));
+    }
+
+    // Inicializar fecha seleccionada
+    const availableDates = getAvailableDates();
+    state.selectedDate =
+      availableDates[0] || new Date().toISOString().slice(0, 10);
+
+    // 4. ELEMENTOS DEL DOM
+    const datePicker = document.getElementById("history-date-picker");
+    const quickChipsContainer = document.getElementById("date-quick-chips");
+    const filterFila = document.getElementById("filter-fila");
+    const filterPlanta = document.getElementById("filter-planta");
+    const filterSanidad = document.getElementById("filter-sanidad");
+    const searchInput = document.getElementById("search-query");
+    const btnResetFilters = document.getElementById("btn-reset-filters");
+
+    // KPIs y Resumen
+    const summaryDateTitle = document.getElementById("summary-date-title");
+    const summaryDateSubtitle = document.getElementById(
+      "summary-date-subtitle",
+    );
+    const summaryCoverageCount = document.getElementById(
+      "summary-coverage-count",
+    );
+    const summaryHealthSemaphore = document.getElementById(
+      "summary-health-semaphore",
+    );
+    const kpiPh = document.getElementById("kpi-ph");
+    const kpiPhBadge = document.getElementById("kpi-ph-badge");
+    const kpiTin = document.getElementById("kpi-tin");
+    const kpiTsoil = document.getElementById("kpi-tsoil");
+    const kpiGrowth = document.getElementById("kpi-growth");
+    const kpiHealth = document.getElementById("kpi-health");
+    const kpiHealthPlants = document.getElementById("kpi-health-plants");
+
+    // Matriz y Tabla
+    const plantGridContainer = document.getElementById("history-plant-grid");
+    const tableBody = document.getElementById("history-table-body");
+    const tableEmptyState = document.getElementById("table-empty-state");
+    const tableCounter = document.getElementById("table-results-counter");
+    const evolutionSvg = document.getElementById("history-evolution-svg");
+
+    // Botones de métricas de gráfico
+    const btnChartPh = document.getElementById("btn-metric-chart-ph");
+    const btnChartTemp = document.getElementById("btn-metric-chart-temp");
+    const btnChartGrowth = document.getElementById("btn-metric-chart-growth");
+
+    // Modal Detalle Planta
+    const modalPlant = document.getElementById("modal-plant-detail");
+    const modalPlantCloseBtn = document.getElementById("modal-plant-close-btn");
+    const modalPlantOkBtn = document.getElementById("modal-plant-btn-ok");
+
+    // Modal Cargar Archivo
+    const modalUpload = document.getElementById("modal-upload-file");
+    const btnOpenUpload = document.getElementById("btn-open-upload-modal");
+    const modalUploadCloseBtn = document.getElementById(
+      "modal-upload-close-btn",
+    );
+    const modalUploadCancelBtn = document.getElementById(
+      "modal-upload-btn-cancel",
+    );
+    const modalUploadConfirmBtn = document.getElementById(
+      "modal-upload-btn-confirm",
+    );
+    const dropZone = document.getElementById("drop-zone");
+    const fileInput = document.getElementById("file-input");
+    const uploadPreviewContainer = document.getElementById(
+      "upload-preview-container",
+    );
+    const uploadPreviewBody = document.getElementById("upload-preview-body");
+    const uploadPreviewCount = document.getElementById("upload-preview-count");
+    const btnDownloadTemplate = document.getElementById(
+      "btn-download-template",
+    );
+
+    // Modal Google Sheets
+    const modalSheets = document.getElementById("modal-sheets");
+    const btnOpenSheets = document.getElementById("btn-open-sheets-modal");
+    const modalSheetsCloseBtn = document.getElementById(
+      "modal-sheets-close-btn",
+    );
+    const modalSheetsCancelBtn = document.getElementById(
+      "modal-sheets-btn-cancel",
+    );
+    const modalSheetsSyncBtn = document.getElementById("modal-sheets-btn-sync");
+    const inputSheetsUrl = document.getElementById("input-google-sheets-url");
+    const sheetsSyncStatus = document.getElementById("sheets-sync-status");
+    const sheetsSyncSpinner = document.getElementById("sheets-sync-spinner");
+    const sheetsSyncBtnText = document.getElementById("sheets-sync-btn-text");
+
+    // Banner de Sync
+    const syncBanner = document.getElementById("sync-banner");
+    const syncBannerText = document.getElementById("sync-banner-text");
+    const syncLastUpdate = document.getElementById("sync-last-update");
+    const btnSyncNowBanner = document.getElementById("btn-sync-now-banner");
+
+    // Toast
+    const toastEl = document.getElementById("history-toast");
+    const toastIcon = document.getElementById("toast-icon");
+    const toastMsg = document.getElementById("toast-message");
+
+    function showToast(message, icon = "✅") {
+      if (!toastEl) return;
+      toastIcon.textContent = icon;
+      toastMsg.textContent = message;
+      toastEl.classList.remove("hidden");
+      setTimeout(() => {
+        toastEl.classList.add("hidden");
+      }, 4000);
+    }
+
+    // 5. RENDERIZADO DE CHIPS RÁPIDOS DE FECHA
+    function renderQuickDateChips() {
+      if (!quickChipsContainer) return;
+      const dates = getAvailableDates();
+      quickChipsContainer.innerHTML = "";
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      dates.slice(0, 4).forEach((d, idx) => {
+        let label = d;
+        if (d === todayStr) label = "📍 Hoy";
+        else if (idx === 1 && dates[0] === todayStr) label = "Ayer";
+        else {
+          // Formatear día y mes
+          const parts = d.split("-");
+          if (parts.length === 3) {
+            const dateObj = new Date(
+              parseInt(parts[0]),
+              parseInt(parts[1]) - 1,
+              parseInt(parts[2]),
+            );
+            label = dateObj.toLocaleDateString("es-CO", {
+              day: "numeric",
+              month: "short",
+            });
+          }
+        }
+
+        const isSelected = state.selectedDate === d;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          isSelected
+            ? "bg-indigo-600 text-white shadow-xs"
+            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+        }`;
+        btn.textContent = label;
+        btn.addEventListener("click", () => {
+          state.selectedDate = d;
+          if (datePicker) datePicker.value = d;
+          updateAllViews();
+        });
+        quickChipsContainer.appendChild(btn);
+      });
+
+      // Opción: Ver Todo el Historial (Modo General)
+      const isAllSelected = state.selectedDate === "all";
+      const allBtn = document.createElement("button");
+      allBtn.type = "button";
+      allBtn.className = `px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+        isAllSelected
+          ? "bg-indigo-600 text-white shadow-xs"
+          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+      }`;
+      allBtn.textContent = "🌐 Ver Todo";
+      allBtn.addEventListener("click", () => {
+        state.selectedDate = "all";
+        if (datePicker) datePicker.value = "";
+        updateAllViews();
+      });
+      quickChipsContainer.appendChild(allBtn);
+    }
+
+    // 6. FILTRAR REGISTROS
+    function getFilteredRecords() {
+      return state.allRecords.filter((r) => {
+        // Fecha
+        if (state.selectedDate !== "all" && r.fecha !== state.selectedDate) {
+          return false;
+        }
+        // Fila
+        if (state.selectedFila !== "all" && r.fila !== state.selectedFila) {
+          return false;
+        }
+        // Planta
+        if (
+          state.selectedPlanta !== "all" &&
+          r.plantId !== state.selectedPlanta
+        ) {
+          return false;
+        }
+        // Sanidad
+        if (
+          state.selectedSanidad !== "all" &&
+          r.sanidad !== state.selectedSanidad
+        ) {
+          return false;
+        }
+        // Búsqueda de texto
+        if (state.searchQuery.trim()) {
+          const q = state.searchQuery.toLowerCase();
+          const matchId = r.plantId.toLowerCase().includes(q);
+          const matchResp = r.responsable.toLowerCase().includes(q);
+          const matchObs = (r.observaciones || "").toLowerCase().includes(q);
+          const matchFila = r.fila.toLowerCase().includes(q);
+          if (!matchId && !matchResp && !matchObs && !matchFila) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    // 7. RENDERIZADO DEL RESUMEN EJECUTIVO (KPIs)
+    function renderSummaryKPIs() {
+      const recordsForDate =
+        state.selectedDate === "all"
+          ? state.allRecords
+          : state.allRecords.filter((r) => r.fecha === state.selectedDate);
+
+      // Título de Fecha
+      if (summaryDateTitle) {
+        if (state.selectedDate === "all") {
+          summaryDateTitle.textContent = "Histórico Global Consolidado";
+          if (summaryDateSubtitle)
+            summaryDateSubtitle.textContent = `Analizando ${state.allRecords.length} mediciones a lo largo de ${getAvailableDates().length} días registrados.`;
+        } else {
+          const parts = state.selectedDate.split("-");
+          if (parts.length === 3) {
+            const dateObj = new Date(
+              parseInt(parts[0]),
+              parseInt(parts[1]) - 1,
+              parseInt(parts[2]),
+            );
+            summaryDateTitle.textContent = dateObj.toLocaleDateString("es-CO", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+          } else {
+            summaryDateTitle.textContent = state.selectedDate;
+          }
+          if (summaryDateSubtitle)
+            summaryDateSubtitle.textContent =
+              "Consolidado de variables agronómicas tomadas por el equipo de campo en esta fecha.";
+        }
+      }
+
+      const total = recordsForDate.length;
+      if (total === 0) {
+        if (summaryCoverageCount) summaryCoverageCount.textContent = "0/20";
+        if (kpiPh) kpiPh.textContent = "--";
+        if (kpiTin) kpiTin.textContent = "--";
+        if (kpiTsoil) kpiTsoil.textContent = "--";
+        if (kpiGrowth) kpiGrowth.textContent = "--";
+        if (kpiHealth) kpiHealth.textContent = "--";
+        if (kpiHealthPlants) kpiHealthPlants.textContent = "0/20";
+        return;
+      }
+
+      // Plantas únicas medidas
+      const uniquePlants = new Set(recordsForDate.map((r) => r.plantId));
+      if (summaryCoverageCount)
+        summaryCoverageCount.textContent = `${uniquePlants.size}/20`;
+
+      // Promedios
+      const avgPh = +(
+        recordsForDate.reduce((acc, r) => acc + r.phSuelo, 0) / total
+      ).toFixed(2);
+      const avgTin = +(
+        recordsForDate.reduce((acc, r) => acc + r.tempInterna, 0) / total
+      ).toFixed(1);
+      const avgTsoil = +(
+        recordsForDate.reduce((acc, r) => acc + r.tempSuelo, 0) / total
+      ).toFixed(1);
+      const avgGrowth = Math.round(
+        recordsForDate.reduce((acc, r) => acc + r.crecimiento, 0) / total,
+      );
+
+      const healthyCount = recordsForDate.filter(
+        (r) => r.sanidad === "Excelente" || r.sanidad === "Saludable",
+      ).length;
+      const healthyRatio = Math.round((healthyCount / total) * 100);
+
+      if (kpiPh) kpiPh.textContent = avgPh.toString();
+      if (kpiPhBadge) {
+        if (avgPh >= 6.0 && avgPh <= 6.8) {
+          kpiPhBadge.textContent = "● Rango Óptimo (6.0 - 6.8)";
+          kpiPhBadge.className =
+            "text-[10px] font-bold text-emerald-300 block mt-1";
+        } else if (avgPh >= 5.5 && avgPh <= 7.2) {
+          kpiPhBadge.textContent = "▲ Atención Nutricional";
+          kpiPhBadge.className =
+            "text-[10px] font-bold text-amber-300 block mt-1";
+        } else {
+          kpiPhBadge.textContent = "■ Crítico Fuera de Rango";
+          kpiPhBadge.className =
+            "text-[10px] font-bold text-rose-300 block mt-1";
+        }
+      }
+
+      if (kpiTin) kpiTin.textContent = avgTin.toString();
+      if (kpiTsoil) kpiTsoil.textContent = avgTsoil.toString();
+      if (kpiGrowth) kpiGrowth.textContent = avgGrowth.toString();
+      if (kpiHealth) kpiHealth.textContent = healthyRatio.toString();
+      if (kpiHealthPlants)
+        kpiHealthPlants.textContent = `${healthyCount}/${total} Saludables`;
+
+      if (summaryHealthSemaphore) {
+        if (healthyRatio >= 80) summaryHealthSemaphore.textContent = "🪴";
+        else if (healthyRatio >= 60) summaryHealthSemaphore.textContent = "🌿";
+        else summaryHealthSemaphore.textContent = "🥀";
+      }
+    }
+
+    // 8. RENDERIZADO DE LA MATRIZ DE PLANTAS (4x5) PARA LA FECHA SELECCIONADA
+    function renderPlantGrid() {
+      if (!plantGridContainer) return;
+      plantGridContainer.innerHTML = "";
+
+      // Determinar la fecha objetivo (si es 'all', usar la más reciente)
+      const targetDate =
+        state.selectedDate === "all"
+          ? getAvailableDates()[0] || ""
+          : state.selectedDate;
+
+      const dateRecords = state.allRecords.filter(
+        (r) => r.fecha === targetDate,
+      );
+
+      // Generar 20 posiciones esperadas
+      const expectedPlants = [];
+      const filas = ["t0", "t1", "t2", "t3"];
+      const cols = ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"];
+
+      let pNum = 1;
+      filas.forEach((f) => {
+        cols.forEach((c) => {
+          const numStr = pNum < 10 ? `0${pNum}` : `${pNum}`;
+          expectedPlants.push({
+            fila: f,
+            columna: c,
+            plantId: `P-${numStr}`,
+          });
+          pNum++;
+        });
+      });
+
+      expectedPlants.forEach((expected) => {
+        // Buscar registro para esta planta en esta fecha
+        const metric = dateRecords.find(
+          (r) =>
+            r.plantId === expected.plantId ||
+            (r.fila === expected.fila && r.columna === expected.columna),
+        );
+
+        const card = document.createElement("button");
+        card.type = "button";
+
+        if (metric) {
+          const isCritical = metric.sanidad === "Crítica";
+          const isWarning = metric.sanidad === "Vulnerable";
+          const statusBorder = isCritical
+            ? "border-rose-300 dark:border-rose-800 bg-rose-50/60 dark:bg-rose-950/20 hover:border-rose-500"
+            : isWarning
+              ? "border-amber-300 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/20 hover:border-amber-500"
+              : "border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-950/10 hover:border-emerald-500";
+
+          const dotColor = isCritical
+            ? "bg-rose-500"
+            : isWarning
+              ? "bg-amber-400"
+              : "bg-emerald-500";
+          const plantIcon = isCritical ? "🥀" : isWarning ? "🌿" : "🪴";
+
+          card.className = `text-left p-3 rounded-xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-md cursor-pointer relative group ${statusBorder}`;
+          card.innerHTML = `
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-black font-mono text-gray-600 dark:text-gray-300 uppercase">${metric.plantId} • ${metric.fila}</span>
+              <span class="w-2.5 h-2.5 rounded-full ${dotColor}"></span>
+            </div>
+            <div class="flex items-center justify-between my-1">
+              <span class="text-2xl group-hover:scale-115 transition-transform">${plantIcon}</span>
+              <div class="text-right">
+                <span class="text-xs font-mono font-bold text-gray-800 dark:text-gray-200 block">${metric.columna}</span>
+                <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">${metric.crecimiento}%</span>
+              </div>
+            </div>
+            <div class="mt-2 flex items-center justify-between text-[9px] font-mono text-gray-500 dark:text-gray-400 border-t border-gray-200/70 dark:border-gray-700/70 pt-1.5">
+              <span>🧪 ${metric.phSuelo.toFixed(1)} pH</span>
+              <span>🌡️ ${metric.tempInterna.toFixed(1)}°C</span>
+            </div>
+            <div class="mt-1 text-center">
+              <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 group-hover:underline flex items-center justify-center gap-0.5">
+                <span>Ver Ficha</span> →
+              </span>
+            </div>
+          `;
+
+          card.addEventListener("click", () => {
+            openPlantDetailModal(metric);
+          });
+        } else {
+          // Sin registro para este día
+          card.className =
+            "text-left p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/40 opacity-60 cursor-default";
+          card.innerHTML = `
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-black font-mono text-gray-400 uppercase">${expected.plantId} • ${expected.fila}</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+            </div>
+            <div class="flex items-center justify-between my-2 text-center text-gray-400 text-xs py-1">
+              <span class="text-lg">⚪</span>
+              <span class="text-[10px]">Sin registro</span>
+            </div>
+            <div class="mt-2 text-[9px] font-mono text-gray-400 border-t border-gray-200/50 dark:border-gray-700/50 pt-1 text-center">
+              ${expected.columna}
+            </div>
+          `;
+        }
+
+        plantGridContainer.appendChild(card);
+      });
+    }
+
+    // 9. RENDERIZADO DEL GRÁFICO DE EVOLUCIÓN HISTÓRICA (SVG)
+    function renderEvolutionChart() {
+      if (!evolutionSvg) return;
+      evolutionSvg.innerHTML = "";
+
+      const dates = getAvailableDates().reverse(); // antiguo a reciente para la gráfica
+      if (dates.length < 1) return;
+
+      const metricType = state.activeChartMetric; // 'ph' | 'temp' | 'growth'
+
+      // Calcular promedio por fecha
+      const dataPoints = dates.map((d) => {
+        const records = state.allRecords.filter((r) => r.fecha === d);
+        if (records.length === 0) return { date: d, value: 0 };
+        let sum = 0;
+        if (metricType === "ph")
+          sum = records.reduce((a, b) => a + b.phSuelo, 0);
+        else if (metricType === "temp")
+          sum = records.reduce((a, b) => a + b.tempInterna, 0);
+        else sum = records.reduce((a, b) => a + b.crecimiento, 0);
+        return {
+          date: d,
+          value: +(sum / records.length).toFixed(1),
+        };
+      });
+
+      const width = 700;
+      const height = 180;
+      const paddingX = 60;
+      const paddingY = 30;
+
+      // Escalas min y max según métrica
+      let minVal = metricType === "ph" ? 5.0 : metricType === "temp" ? 18.0 : 0;
+      let maxVal =
+        metricType === "ph" ? 7.5 : metricType === "temp" ? 32.0 : 100;
+
+      const valRange = maxVal - minVal || 1;
+      const stepX = (width - paddingX * 2) / Math.max(1, dataPoints.length - 1);
+
+      const points = dataPoints.map((dp, i) => {
+        const x = paddingX + i * stepX;
+        const normalized = (dp.value - minVal) / valRange;
+        const y = height - paddingY - normalized * (height - paddingY * 2);
+        return { x, y, dp };
+      });
+
+      // Fondo de líneas de cuadrícula
+      for (let g = 0; g <= 4; g++) {
+        const lineY = paddingY + (g * (height - paddingY * 2)) / 4;
+        const gridVal = (maxVal - (g * valRange) / 4).toFixed(1);
+
+        const line = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "line",
+        );
+        line.setAttribute("x1", paddingX.toString());
+        line.setAttribute("y1", lineY.toString());
+        line.setAttribute("x2", (width - paddingX).toString());
+        line.setAttribute("y2", lineY.toString());
+        line.setAttribute("stroke", "#4B5563");
+        line.setAttribute("stroke-opacity", "0.2");
+        line.setAttribute("stroke-dasharray", "4 4");
+        evolutionSvg.appendChild(line);
+
+        const text = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text",
+        );
+        text.setAttribute("x", (paddingX - 10).toString());
+        text.setAttribute("y", (lineY + 4).toString());
+        text.setAttribute("text-anchor", "end");
+        text.setAttribute("fill", "#9CA3AF");
+        text.setAttribute("font-size", "10");
+        text.setAttribute("font-family", "monospace");
+        text.textContent =
+          gridVal +
+          (metricType === "ph" ? " pH" : metricType === "temp" ? "°" : "%");
+        evolutionSvg.appendChild(text);
+      }
+
+      // Trazar línea de tendencia
+      if (points.length > 1) {
+        let pathD = `M ${points[0].x} ${points[0].y}`;
+        for (let p = 1; p < points.length; p++) {
+          pathD += ` L ${points[p].x} ${points[p].y}`;
+        }
+
+        const path = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path",
+        );
+        path.setAttribute("d", pathD);
+        path.setAttribute("fill", "none");
+        path.setAttribute(
+          "stroke",
+          metricType === "ph"
+            ? "#3B82F6"
+            : metricType === "temp"
+              ? "#F59E0B"
+              : "#10B981",
+        );
+        path.setAttribute("stroke-width", "3");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        evolutionSvg.appendChild(path);
+      }
+
+      // Puntos y etiquetas de fecha
+      points.forEach((pt) => {
+        const isSelected = pt.dp.date === state.selectedDate;
+
+        // Círculo
+        const circle = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle",
+        );
+        circle.setAttribute("cx", pt.x.toString());
+        circle.setAttribute("cy", pt.y.toString());
+        circle.setAttribute("r", isSelected ? "6" : "4");
+        circle.setAttribute("fill", isSelected ? "#4F46E5" : "#FFFFFF");
+        circle.setAttribute(
+          "stroke",
+          metricType === "ph"
+            ? "#3B82F6"
+            : metricType === "temp"
+              ? "#F59E0B"
+              : "#10B981",
+        );
+        circle.setAttribute("stroke-width", "2");
+        circle.setAttribute(
+          "class",
+          "cursor-pointer hover:scale-125 transition-transform",
+        );
+
+        circle.addEventListener("click", () => {
+          state.selectedDate = pt.dp.date;
+          if (datePicker) datePicker.value = pt.dp.date;
+          updateAllViews();
+        });
+
+        evolutionSvg.appendChild(circle);
+
+        // Valor arriba del punto
+        const valText = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text",
+        );
+        valText.setAttribute("x", pt.x.toString());
+        valText.setAttribute("y", (pt.y - 10).toString());
+        valText.setAttribute("text-anchor", "middle");
+        valText.setAttribute("fill", isSelected ? "#4F46E5" : "#D1D5DB");
+        valText.setAttribute("font-size", "10");
+        valText.setAttribute("font-weight", "bold");
+        valText.textContent = pt.dp.value.toString();
+        evolutionSvg.appendChild(valText);
+
+        // Etiqueta de fecha abajo
+        const dateText = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text",
+        );
+        dateText.setAttribute("x", pt.x.toString());
+        dateText.setAttribute("y", (height - 10).toString());
+        dateText.setAttribute("text-anchor", "middle");
+        dateText.setAttribute("fill", isSelected ? "#4F46E5" : "#9CA3AF");
+        dateText.setAttribute("font-size", "10");
+        dateText.setAttribute("font-weight", isSelected ? "bold" : "normal");
+
+        const parts = pt.dp.date.split("-");
+        dateText.textContent =
+          parts.length === 3 ? `${parts[2]}/${parts[1]}` : pt.dp.date;
+        evolutionSvg.appendChild(dateText);
+      });
+    }
+
+    // 10. RENDERIZADO DE LA TABLA DE REGISTROS
+    function renderTable() {
+      if (!tableBody) return;
+      tableBody.innerHTML = "";
+
+      const filtered = getFilteredRecords();
+
+      if (tableCounter) {
+        tableCounter.textContent = `Mostrando ${filtered.length} de ${state.allRecords.length} mediciones registradas.`;
+      }
+
+      if (filtered.length === 0) {
+        if (tableEmptyState) tableEmptyState.classList.remove("hidden");
+        return;
+      }
+
+      if (tableEmptyState) tableEmptyState.classList.add("hidden");
+
+      filtered.forEach((record) => {
+        const tr = document.createElement("tr");
+        tr.className =
+          "hover:bg-gray-50/80 dark:hover:bg-gray-700/40 transition-colors";
+
+        const phBadgeColor =
+          record.phSuelo >= 6.0 && record.phSuelo <= 6.8
+            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300"
+            : record.phSuelo >= 5.5 && record.phSuelo <= 7.2
+              ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300"
+              : "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300";
+
+        const sanidadBadge =
+          record.sanidad === "Excelente" || record.sanidad === "Saludable"
+            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200"
+            : record.sanidad === "Vulnerable"
+              ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200"
+              : "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200";
+
+        tr.innerHTML = `
+          <td class="px-4 py-3 whitespace-nowrap font-mono">
+            <span class="font-bold text-gray-900 dark:text-white block">${record.fecha}</span>
+            <span class="text-[10px] text-gray-400">${record.hora}</span>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            <span class="font-black text-indigo-600 dark:text-indigo-400 block">${record.plantId}</span>
+            <span class="text-[10px] text-gray-500 dark:text-gray-400">${record.fila} • ${record.columna}</span>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+            ${record.faseCrecimiento}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap font-mono">
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border ${phBadgeColor}">
+              ${record.phSuelo.toFixed(2)} pH
+            </span>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap font-mono font-bold text-gray-800 dark:text-gray-200">
+            ${record.tempInterna.toFixed(1)}°C
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap font-mono text-gray-600 dark:text-gray-400">
+            ${record.tempSuelo.toFixed(1)}°C
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">${record.crecimiento}%</span>
+              <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: ${record.crecimiento}%"></div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${sanidadBadge}">
+              ${record.sanidad}
+            </span>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+            <div class="flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full ${record.avatarColor || "bg-indigo-600"} text-white text-[9px] font-bold flex items-center justify-center">
+                ${record.responsable.charAt(0)}
+              </span>
+              <span class="text-xs truncate max-w-[120px]" title="${record.responsable}">${record.responsable}</span>
+            </div>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap text-right">
+            <button
+              type="button"
+              class="btn-row-detail px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all cursor-pointer"
+            >
+              Detalle
+            </button>
+          </td>
+        `;
+
+        const btnDetail = tr.querySelector(".btn-row-detail");
+        btnDetail?.addEventListener("click", () => {
+          openPlantDetailModal(record);
+        });
+
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // 11. MODAL DETALLE DE PLANTA
+    function openPlantDetailModal(metric) {
+      if (!modalPlant) return;
+
+      const modalIcon = document.getElementById("modal-plant-icon");
+      const modalId = document.getElementById("modal-plant-id");
+      const modalLocation = document.getElementById("modal-plant-location");
+      const modalDate = document.getElementById("modal-plant-date");
+
+      const modalValPh = document.getElementById("modal-val-ph");
+      const modalBadgePh = document.getElementById("modal-badge-ph");
+      const modalValTin = document.getElementById("modal-val-tin");
+      const modalValTsoil = document.getElementById("modal-val-tsoil");
+      const modalValGrowth = document.getElementById("modal-val-growth");
+      const modalBadgeSanidad = document.getElementById("modal-badge-sanidad");
+      const modalBadgeProd = document.getElementById("modal-badge-prod");
+      const modalValResp = document.getElementById("modal-val-resp");
+      const modalValObs = document.getElementById("modal-val-obs");
+      const modalDeltaContent = document.getElementById("modal-delta-content");
+
+      if (modalId) modalId.textContent = metric.plantId;
+      if (modalLocation)
+        modalLocation.textContent = `Fila ${metric.fila} • ${metric.columna}`;
+      if (modalDate)
+        modalDate.textContent = `Medición registrada: ${metric.fecha}, ${metric.hora}`;
+
+      if (modalValPh)
+        modalValPh.textContent = `${metric.phSuelo.toFixed(2)} pH`;
+      if (modalValTin)
+        modalValTin.textContent = `${metric.tempInterna.toFixed(1)}°C`;
+      if (modalValTsoil)
+        modalValTsoil.textContent = `${metric.tempSuelo.toFixed(1)}°C`;
+      if (modalValGrowth) modalValGrowth.textContent = `${metric.crecimiento}%`;
+
+      if (modalBadgePh) {
+        if (metric.phSuelo >= 6.0 && metric.phSuelo <= 6.8) {
+          modalBadgePh.textContent = "Óptimo (6.0 - 6.8)";
+          modalBadgePh.className =
+            "text-[9px] font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5";
+        } else {
+          modalBadgePh.textContent = "Requiere Atención";
+          modalBadgePh.className =
+            "text-[9px] font-bold text-amber-600 dark:text-amber-400 block mt-0.5";
+        }
+      }
+
+      if (modalBadgeSanidad) {
+        modalBadgeSanidad.textContent = `${metric.sanidad}`;
+      }
+
+      if (modalBadgeProd) {
+        modalBadgeProd.textContent = `Productividad: ${metric.productividad}`;
+      }
+
+      if (modalValResp)
+        modalValResp.textContent = `Registrado por: ${metric.responsable}`;
+      if (modalValObs)
+        modalValObs.textContent =
+          metric.observaciones || "Condiciones agronómicas normales.";
+
+      // Calcular comparación con la medición anterior de esta misma planta
+      const plantHistory = state.allRecords
+        .filter((r) => r.plantId === metric.plantId && r.fecha < metric.fecha)
+        .sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+      if (modalDeltaContent) {
+        if (plantHistory.length > 0) {
+          const prev = plantHistory[0];
+          const deltaPh = +(metric.phSuelo - prev.phSuelo).toFixed(2);
+          const deltaTin = +(metric.tempInterna - prev.tempInterna).toFixed(1);
+          const deltaGrowth = metric.crecimiento - prev.crecimiento;
+
+          modalDeltaContent.innerHTML = `
+            <div>
+              <span class="text-gray-500 dark:text-gray-400 block">pH Suelo</span>
+              <span class="font-bold ${deltaPh > 0 ? "text-amber-600" : "text-emerald-600"}">${deltaPh > 0 ? "+" : ""}${deltaPh}</span>
+            </div>
+            <div>
+              <span class="text-gray-500 dark:text-gray-400 block">Temp Interna</span>
+              <span class="font-bold ${deltaTin > 0 ? "text-amber-600" : "text-blue-600"}">${deltaTin > 0 ? "+" : ""}${deltaTin}°C</span>
+            </div>
+            <div>
+              <span class="text-gray-500 dark:text-gray-400 block">Crecimiento</span>
+              <span class="font-bold text-emerald-600">${deltaGrowth >= 0 ? "+" : ""}${deltaGrowth}%</span>
+            </div>
+          `;
+        } else {
+          modalDeltaContent.innerHTML = `
+            <div class="col-span-3 text-gray-500 dark:text-gray-400 italic">
+              Esta es la primera toma registrada para esta planta en el historial.
+            </div>
+          `;
+        }
+      }
+
+      modalPlant.classList.remove("hidden");
+    }
+
+    modalPlantCloseBtn?.addEventListener("click", () =>
+      modalPlant?.classList.add("hidden"),
+    );
+    modalPlantOkBtn?.addEventListener("click", () =>
+      modalPlant?.classList.add("hidden"),
+    );
+
+    // 12. ACTUALIZAR TODAS LAS VISTAS
+    function updateAllViews() {
+      renderQuickDateChips();
+      renderSummaryKPIs();
+      renderPlantGrid();
+      renderEvolutionChart();
+      renderTable();
+    }
+
+    // Eventos de Filtro
+    datePicker?.addEventListener("change", (e) => {
+      state.selectedDate = e.target.value;
+      updateAllViews();
+    });
+
+    filterFila?.addEventListener("change", (e) => {
+      state.selectedFila = e.target.value;
+      renderTable();
+    });
+
+    filterPlanta?.addEventListener("change", (e) => {
+      state.selectedPlanta = e.target.value;
+      renderTable();
+    });
+
+    filterSanidad?.addEventListener("change", (e) => {
+      state.selectedSanidad = e.target.value;
+      renderTable();
+    });
+
+    searchInput?.addEventListener("input", (e) => {
+      state.searchQuery = e.target.value;
+      renderTable();
+    });
+
+    btnResetFilters?.addEventListener("click", () => {
+      state.selectedFila = "all";
+      state.selectedPlanta = "all";
+      state.selectedSanidad = "all";
+      state.searchQuery = "";
+      if (filterFila) filterFila.value = "all";
+      if (filterPlanta) filterPlanta.value = "all";
+      if (filterSanidad) filterSanidad.value = "all";
+      if (searchInput) searchInput.value = "";
+      renderTable();
+    });
+
+    // Cambiar métrica de la gráfica
+    btnChartPh?.addEventListener("click", () => {
+      state.activeChartMetric = "ph";
+      btnChartPh.className =
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white cursor-pointer transition-all shadow-xs";
+      btnChartTemp.className =
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+      btnChartGrowth.className =
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+      renderEvolutionChart();
+    });
+
+    btnChartTemp?.addEventListener("click", () => {
+      state.activeChartMetric = "temp";
+      btnChartTemp.className =
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white cursor-pointer transition-all shadow-xs";
+      btnChartPh.className =
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+      btnChartGrowth.className =
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+      renderEvolutionChart();
+    });
+
+    btnChartGrowth?.addEventListener("click", () => {
+      state.activeChartMetric = "growth";
+      btnChartGrowth.className =
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white cursor-pointer transition-all shadow-xs";
+      btnChartPh.className =
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+      btnChartTemp.className =
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+      renderEvolutionChart();
+    });
+
+    // 13. LOGICA DEL MODAL CARGAR ARCHIVO
+    btnOpenUpload?.addEventListener("click", () => {
+      modalUpload?.classList.remove("hidden");
+      state.pendingUploadRows = [];
+      if (uploadPreviewContainer)
+        uploadPreviewContainer.classList.add("hidden");
+      if (modalUploadConfirmBtn) {
+        modalUploadConfirmBtn.disabled = true;
+        modalUploadConfirmBtn.classList.add("opacity-50", "cursor-not-allowed");
+      }
+    });
+
+    modalUploadCloseBtn?.addEventListener("click", () =>
+      modalUpload?.classList.add("hidden"),
+    );
+    modalUploadCancelBtn?.addEventListener("click", () =>
+      modalUpload?.classList.add("hidden"),
+    );
+
+    dropZone?.addEventListener("click", () => fileInput?.click());
+
+    dropZone?.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("border-indigo-600", "bg-indigo-100/50");
+    });
+
+    dropZone?.addEventListener("dragleave", () => {
+      dropZone.classList.remove("border-indigo-600", "bg-indigo-100/50");
+    });
+
+    dropZone?.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("border-indigo-600", "bg-indigo-100/50");
+      if (e.dataTransfer?.files?.length) {
+        processUploadedFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput?.addEventListener("change", (e) => {
+      if (e.target.files?.length) {
+        processUploadedFile(e.target.files[0]);
+      }
+    });
+
+    // Parser local para archivos subidos por el usuario
+    function processUploadedFile(file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target?.result;
+        if (typeof text !== "string") return;
+
+        const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+        if (lines.length < 2) {
+          showToast("El archivo no contiene filas de datos válidas", "⚠️");
+          return;
+        }
+
+        const delimiter = lines[0].includes(";") ? ";" : ",";
+        const headers = lines[0]
+          .split(delimiter)
+          .map((h) => h.trim().toLowerCase());
+
+        const parsed = [];
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i]
+            .split(delimiter)
+            .map((c) => c.trim().replace(/^"|"$/g, ""));
+          if (cols.length < 3) continue;
+
+          // Intento de mapeo flexible
+          const plantId = cols[0] || `P-01`;
+          const fecha =
+            cols[1] && /^\d{4}-\d{2}-\d{2}$/.test(cols[1]) ? cols[1] : todayStr;
+          const ph = parseFloat(cols[2]?.replace(",", ".")) || 6.4;
+          const tin = parseFloat(cols[3]?.replace(",", ".")) || 24.5;
+          const growth = parseInt(cols[4], 10) || 80;
+          const sanidad = cols[5] || "Saludable";
+
+          // Deduzco fila y columna del ID de planta
+          const pNum = parseInt(plantId.replace(/\D/g, ""), 10) || 1;
+          const fIdx = Math.min(3, Math.floor((pNum - 1) / 5));
+          const cIdx = Math.min(4, (pNum - 1) % 5);
+          const fila = ["t0", "t1", "t2", "t3"][fIdx];
+          const col = ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"][cIdx];
+
+          parsed.push({
+            id: `MET-UPLOAD-${fila}-${col.replace(" ", "")}-${fecha}-${i}`,
+            invernadero: "Invernadero AquaSens",
+            fila,
+            columna: col,
+            plantId,
+            fecha,
+            hora: "09:00 AM",
+            timestampTexto: `${fecha}, 09:00 AM`,
+            phSuelo: ph,
+            tempInterna: tin,
+            tempExterna: 20.0,
+            tempSuelo: 20.2,
+            crecimiento: growth,
+            faseCrecimiento: "Desarrollo Vegetativo",
+            productividad: "Alta",
+            sanidad: sanidad,
+            responsable: "Operario de Archivo",
+            responsableRol: "Carga Manual",
+            avatarColor: "bg-indigo-600",
+            observaciones: "Registro importado desde archivo local.",
+          });
+        }
+
+        if (parsed.length === 0) {
+          showToast("No se pudieron interpretar las filas del archivo", "⚠️");
+          return;
+        }
+
+        state.pendingUploadRows = parsed;
+
+        // Mostrar vista previa
+        if (uploadPreviewContainer && uploadPreviewBody && uploadPreviewCount) {
+          uploadPreviewCount.textContent = `${parsed.length} filas detectadas`;
+          uploadPreviewBody.innerHTML = "";
+          parsed.slice(0, 10).forEach((r) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td class="p-2 font-bold">${r.plantId}</td>
+              <td class="p-2">${r.fecha}</td>
+              <td class="p-2">${r.phSuelo}</td>
+              <td class="p-2">${r.tempInterna}°C</td>
+              <td class="p-2">${r.crecimiento}%</td>
+              <td class="p-2">${r.sanidad}</td>
+            `;
+            uploadPreviewBody.appendChild(row);
+          });
+          uploadPreviewContainer.classList.remove("hidden");
+        }
+
+        if (modalUploadConfirmBtn) {
+          modalUploadConfirmBtn.disabled = false;
+          modalUploadConfirmBtn.classList.remove(
+            "opacity-50",
+            "cursor-not-allowed",
+          );
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    modalUploadConfirmBtn?.addEventListener("click", () => {
+      if (state.pendingUploadRows.length === 0) return;
+
+      saveCustomRecords(state.pendingUploadRows);
+      state.allRecords = getAllCombinedRecords();
+
+      // Cambiar a la fecha de las filas subidas
+      const importedDate =
+        state.pendingUploadRows[0]?.fecha || state.selectedDate;
+      state.selectedDate = importedDate;
+      if (datePicker) datePicker.value = importedDate;
+
+      modalUpload?.classList.add("hidden");
+      updateAllViews();
+      showToast(
+        `¡Se guardaron ${state.pendingUploadRows.length} registros exitosamente!`,
+      );
+    });
+
+    // Descargar plantilla CSV de campo
+    btnDownloadTemplate?.addEventListener("click", () => {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      let csvContent =
+        "Planta,Fecha,pH_Suelo,Temp_Interna,Crecimiento_Porcentaje,Sanidad,Responsable,Observaciones\n";
+
+      for (let p = 1; p <= 20; p++) {
+        const id = `P-${p < 10 ? "0" + p : p}`;
+        csvContent += `${id},${todayStr},6.4,24.5,80,Saludable,Operario Campo,Condicion normal\n`;
+      }
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `Plantilla_Mediciones_Invernadero_${todayStr}.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast(
+        "Plantilla descargada. Llena los datos y súbela cuando desees.",
+        "📄",
+      );
+    });
+
+    // 14. LOGICA DEL MODAL GOOGLE SHEETS
+    btnOpenSheets?.addEventListener("click", () => {
+      modalSheets?.classList.remove("hidden");
+      const savedUrl = localStorage.getItem(STORAGE_KEY_SHEETS_URL);
+      if (savedUrl && inputSheetsUrl) {
+        inputSheetsUrl.value = savedUrl;
+      }
+      if (sheetsSyncStatus) sheetsSyncStatus.classList.add("hidden");
+    });
+
+    modalSheetsCloseBtn?.addEventListener("click", () =>
+      modalSheets?.classList.add("hidden"),
+    );
+    modalSheetsCancelBtn?.addEventListener("click", () =>
+      modalSheets?.classList.add("hidden"),
+    );
+
+    async function syncGoogleSheets(urlToSync) {
+      if (!urlToSync) return;
+
+      if (sheetsSyncSpinner) sheetsSyncSpinner.classList.remove("hidden");
+      if (sheetsSyncBtnText) sheetsSyncBtnText.textContent = "Sincronizando...";
+      if (modalSheetsSyncBtn) modalSheetsSyncBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/sync-sheets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: urlToSync }),
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.records?.length > 0) {
+          saveCustomRecords(data.records);
+          state.allRecords = getAllCombinedRecords();
+
+          localStorage.setItem(STORAGE_KEY_SHEETS_URL, urlToSync);
+          const nowStr = new Date().toLocaleTimeString("es-CO", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          localStorage.setItem(STORAGE_KEY_LAST_SYNC, nowStr);
+
+          // Actualizar banner
+          checkSyncBanner();
+
+          // Seleccionar fecha de los registros sincronizados
+          const lastRecordDate = data.records[0]?.fecha;
+          if (lastRecordDate) {
+            state.selectedDate = lastRecordDate;
+            if (datePicker) datePicker.value = lastRecordDate;
+          }
+
+          updateAllViews();
+
+          if (sheetsSyncStatus) {
+            sheetsSyncStatus.className =
+              "p-3 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+            sheetsSyncStatus.textContent = `✅ ${data.message}`;
+            sheetsSyncStatus.classList.remove("hidden");
+          }
+
+          setTimeout(() => {
+            modalSheets?.classList.add("hidden");
+            showToast(
+              `¡Sincronizadas ${data.count} mediciones de Google Sheets!`,
+              "🔗",
+            );
+          }, 1200);
+        } else {
+          if (sheetsSyncStatus) {
+            sheetsSyncStatus.className =
+              "p-3 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
+            sheetsSyncStatus.textContent = `❌ Error: ${data.error || "No se pudieron sincronizar los datos."}`;
+            sheetsSyncStatus.classList.remove("hidden");
+          }
+        }
+      } catch (err) {
+        if (sheetsSyncStatus) {
+          sheetsSyncStatus.className =
+            "p-3 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
+          sheetsSyncStatus.textContent = `❌ Error de red: ${err.message}`;
+          sheetsSyncStatus.classList.remove("hidden");
+        }
+      } finally {
+        if (sheetsSyncSpinner) sheetsSyncSpinner.classList.add("hidden");
+        if (sheetsSyncBtnText)
+          sheetsSyncBtnText.textContent = "Probar y Sincronizar";
+        if (modalSheetsSyncBtn) modalSheetsSyncBtn.disabled = false;
+      }
+    }
+
+    modalSheetsSyncBtn?.addEventListener("click", () => {
+      const url = inputSheetsUrl?.value?.trim();
+      if (!url) {
+        if (sheetsSyncStatus) {
+          sheetsSyncStatus.className =
+            "p-3 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
+          sheetsSyncStatus.textContent =
+            "⚠️ Ingresa la URL de tu Google Sheets antes de sincronizar.";
+          sheetsSyncStatus.classList.remove("hidden");
+        }
+        return;
+      }
+      syncGoogleSheets(url);
+    });
+
+    // Banner Sync
+    function checkSyncBanner() {
+      const savedUrl = localStorage.getItem(STORAGE_KEY_SHEETS_URL);
+      const lastSync = localStorage.getItem(STORAGE_KEY_LAST_SYNC);
+      if (savedUrl && syncBanner) {
+        syncBanner.classList.remove("hidden");
+        syncBanner.classList.add("flex");
+        if (syncLastUpdate && lastSync) {
+          syncLastUpdate.textContent = `Última sincronización: Hoy a las ${lastSync}`;
+        }
+      }
+    }
+
+    btnSyncNowBanner?.addEventListener("click", () => {
+      const savedUrl = localStorage.getItem(STORAGE_KEY_SHEETS_URL);
+      if (savedUrl) {
+        syncGoogleSheets(savedUrl);
+      }
+    });
+
+    // 15. EXPORTAR HISTORIAL A EXCEL
+    const btnExportHistory = document.getElementById("btn-export-history");
+    btnExportHistory?.addEventListener("click", () => {
+      // Redirigir al generador de Excel
+      window.location.href = "/api/export-excel";
+    });
+
+    // INICIALIZACIÓN INMEDIATA
+    checkSyncBanner();
+    updateAllViews();
+  });
+</script>
