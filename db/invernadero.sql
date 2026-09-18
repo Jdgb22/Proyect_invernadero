@@ -61,43 +61,6 @@ ALTER SEQUENCE public.crecimiento_id_seq OWNED BY public.crecimiento.id;
 
 
 --
--- Name: irradianza; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.irradianza (
-    id integer NOT NULL,
-    planta_id integer,
-    valor numeric(7,2),
-    fecha_medida timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    usuario_id integer
-);
-
-
-ALTER TABLE public.irradianza OWNER TO postgres;
-
---
--- Name: irradianza_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.irradianza_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.irradianza_id_seq OWNER TO postgres;
-
---
--- Name: irradianza_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.irradianza_id_seq OWNED BY public.irradianza.id;
-
-
---
 -- Name: ph; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -249,43 +212,6 @@ ALTER SEQUENCE public.relaciones_id_seq OWNED BY public.relaciones.id;
 
 
 --
--- Name: sanidad; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.sanidad (
-    id integer NOT NULL,
-    planta_id integer,
-    valor numeric(5,2),
-    fecha_medida timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    usuario_id integer
-);
-
-
-ALTER TABLE public.sanidad OWNER TO postgres;
-
---
--- Name: sanidad_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.sanidad_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.sanidad_id_seq OWNER TO postgres;
-
---
--- Name: sanidad_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.sanidad_id_seq OWNED BY public.sanidad.id;
-
-
---
 -- Name: temperatura_atmosferica; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -361,25 +287,28 @@ ALTER SEQUENCE public.temperatura_suelo_id_seq OWNED BY public.temperatura_suelo
 
 
 --
--- Name: usuarios; Type: TABLE; Schema: public; Owner: postgres
+-- Name: humedad; Type: TABLE; Schema: public; Owner: postgres
+-- Humedad relativa / de suelo por planta (%). Sigue el mismo patrón
+-- que ph, crecimiento y temperaturas: valor + fecha_medida + usuario_id.
+-- La fecha de la toma la da fecha_medida (cuando el responsable midió).
 --
 
-CREATE TABLE public.usuarios (
+CREATE TABLE public.humedad (
     id integer NOT NULL,
-    nombre character varying(100) NOT NULL,
-    email character varying(150),
-    rol character varying(50) DEFAULT 'usuario'::character varying,
-    activo boolean DEFAULT true
+    planta_id integer,
+    valor numeric(5,2),
+    fecha_medida timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    usuario_id integer
 );
 
 
-ALTER TABLE public.usuarios OWNER TO postgres;
+ALTER TABLE public.humedad OWNER TO postgres;
 
 --
--- Name: usuarios_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: humedad_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public.usuarios_id_seq
+CREATE SEQUENCE public.humedad_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -388,13 +317,52 @@ CREATE SEQUENCE public.usuarios_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.usuarios_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.humedad_id_seq OWNER TO postgres;
 
 --
--- Name: usuarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: humedad_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public.usuarios_id_seq OWNED BY public.usuarios.id;
+ALTER SEQUENCE public.humedad_id_seq OWNED BY public.humedad.id;
+
+
+--
+-- Name: responsable; Type: TABLE; Schema: public; Owner: postgres
+-- Persona que fue a tomar las medidas. usuario_id en las tablas de
+-- medición referencia a responsable(id).
+--
+
+CREATE TABLE public.responsable (
+    id integer NOT NULL,
+    nombre character varying(100) NOT NULL,
+    cargo character varying(50),
+    activo boolean DEFAULT true,
+    fecha_registro timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.responsable OWNER TO postgres;
+
+--
+-- Name: responsable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.responsable_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.responsable_id_seq OWNER TO postgres;
+
+--
+-- Name: responsable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.responsable_id_seq OWNED BY public.responsable.id;
 
 
 --
@@ -402,13 +370,6 @@ ALTER SEQUENCE public.usuarios_id_seq OWNED BY public.usuarios.id;
 --
 
 ALTER TABLE ONLY public.crecimiento ALTER COLUMN id SET DEFAULT nextval('public.crecimiento_id_seq'::regclass);
-
-
---
--- Name: irradianza id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.irradianza ALTER COLUMN id SET DEFAULT nextval('public.irradianza_id_seq'::regclass);
 
 
 --
@@ -440,13 +401,6 @@ ALTER TABLE ONLY public.relaciones ALTER COLUMN id SET DEFAULT nextval('public.r
 
 
 --
--- Name: sanidad id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.sanidad ALTER COLUMN id SET DEFAULT nextval('public.sanidad_id_seq'::regclass);
-
-
---
 -- Name: temperatura_atmosferica id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -461,10 +415,17 @@ ALTER TABLE ONLY public.temperatura_suelo ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- Name: usuarios id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: humedad id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.usuarios ALTER COLUMN id SET DEFAULT nextval('public.usuarios_id_seq'::regclass);
+ALTER TABLE ONLY public.humedad ALTER COLUMN id SET DEFAULT nextval('public.humedad_id_seq'::regclass);
+
+
+--
+-- Name: responsable id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.responsable ALTER COLUMN id SET DEFAULT nextval('public.responsable_id_seq'::regclass);
 
 
 --
@@ -476,18 +437,6 @@ COPY public.crecimiento (id, planta_id, valor, fecha_medida, usuario_id) FROM st
 2	2	18.70	2026-09-03 17:43:14.557869	1
 3	3	14.90	2026-09-02 17:43:14.557869	1
 4	4	16.50	2026-09-04 17:43:14.557869	1
-\.
-
-
---
--- Data for Name: irradianza; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.irradianza (id, planta_id, valor, fecha_medida, usuario_id) FROM stdin;
-1	1	850.50	2026-09-04 17:43:14.557869	1
-2	2	920.30	2026-09-03 17:43:14.557869	1
-3	3	780.20	2026-09-02 17:43:14.557869	1
-4	4	950.00	2026-09-04 17:43:14.557869	1
 \.
 
 
@@ -540,18 +489,6 @@ COPY public.relaciones (id, tipo_relacion, plantida_id, tipo_medida1, valor1, ti
 
 
 --
--- Data for Name: sanidad; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.sanidad (id, planta_id, valor, fecha_medida, usuario_id) FROM stdin;
-1	1	95.50	2026-09-04 17:43:14.557869	1
-2	2	92.00	2026-09-03 17:43:14.557869	1
-3	3	88.30	2026-09-02 17:43:14.557869	1
-4	4	91.70	2026-09-04 17:43:14.557869	1
-\.
-
-
---
 -- Data for Name: temperatura_atmosferica; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -576,14 +513,26 @@ COPY public.temperatura_suelo (id, planta_id, valor, fecha_medida, usuario_id) F
 
 
 --
--- Data for Name: usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: humedad; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.usuarios (id, nombre, email, rol, activo) FROM stdin;
-1	Administrador	admin@invernadero.com	admin	t
-2	Juan PÃ©rez	juan.perez@invernadero.com	agricultor	t
-3	MarÃ­a GÃ³mez	maria.gomez@invernadero.com	tÃ©cnico	t
-4	Luis Torres	luis.torres@invernadero.com	tÃ©cnico	t
+COPY public.humedad (id, planta_id, valor, fecha_medida, usuario_id) FROM stdin;
+1	1	68.50	2026-09-04 17:43:14.557869	1
+2	2	72.30	2026-09-03 17:43:14.557869	1
+3	3	65.80	2026-09-02 17:43:14.557869	1
+4	4	70.10	2026-09-04 17:43:14.557869	1
+\.
+
+
+--
+-- Data for Name: responsable; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.responsable (id, nombre, cargo, activo, fecha_registro) FROM stdin;
+1	Administrador	Supervisor Técnico	t	2026-09-04 17:43:14.557869
+2	Juan Perez	Técnico Agrónomo	t	2026-09-04 17:43:14.557869
+3	Maria Gomez	Supervisora de Riego	t	2026-09-04 17:43:14.557869
+4	Luis Torres	Auxiliar de Campo	t	2026-09-04 17:43:14.557869
 \.
 
 
@@ -592,13 +541,6 @@ COPY public.usuarios (id, nombre, email, rol, activo) FROM stdin;
 --
 
 SELECT pg_catalog.setval('public.crecimiento_id_seq', 4, true);
-
-
---
--- Name: irradianza_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.irradianza_id_seq', 4, true);
 
 
 --
@@ -630,13 +572,6 @@ SELECT pg_catalog.setval('public.relaciones_id_seq', 4, true);
 
 
 --
--- Name: sanidad_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.sanidad_id_seq', 4, true);
-
-
---
 -- Name: temperatura_atmosferica_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -651,10 +586,17 @@ SELECT pg_catalog.setval('public.temperatura_suelo_id_seq', 4, true);
 
 
 --
--- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: humedad_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.usuarios_id_seq', 4, true);
+SELECT pg_catalog.setval('public.humedad_id_seq', 4, true);
+
+
+--
+-- Name: responsable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.responsable_id_seq', 4, true);
 
 
 --
@@ -663,14 +605,6 @@ SELECT pg_catalog.setval('public.usuarios_id_seq', 4, true);
 
 ALTER TABLE ONLY public.crecimiento
     ADD CONSTRAINT crecimiento_pkey PRIMARY KEY (id);
-
-
---
--- Name: irradianza irradianza_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.irradianza
-    ADD CONSTRAINT irradianza_pkey PRIMARY KEY (id);
 
 
 --
@@ -706,14 +640,6 @@ ALTER TABLE ONLY public.relaciones
 
 
 --
--- Name: sanidad sanidad_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.sanidad
-    ADD CONSTRAINT sanidad_pkey PRIMARY KEY (id);
-
-
---
 -- Name: temperatura_atmosferica temperatura_atmosferica_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -730,19 +656,19 @@ ALTER TABLE ONLY public.temperatura_suelo
 
 
 --
--- Name: usuarios usuarios_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: humedad humedad_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.usuarios
-    ADD CONSTRAINT usuarios_email_key UNIQUE (email);
+ALTER TABLE ONLY public.humedad
+    ADD CONSTRAINT humedad_pkey PRIMARY KEY (id);
 
 
 --
--- Name: usuarios usuarios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: responsable responsable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.usuarios
-    ADD CONSTRAINT usuarios_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.responsable
+    ADD CONSTRAINT responsable_pkey PRIMARY KEY (id);
 
 
 --
@@ -758,23 +684,7 @@ ALTER TABLE ONLY public.crecimiento
 --
 
 ALTER TABLE ONLY public.crecimiento
-    ADD CONSTRAINT crecimiento_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id);
-
-
---
--- Name: irradianza irradianza_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.irradianza
-    ADD CONSTRAINT irradianza_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id);
-
-
---
--- Name: irradianza irradianza_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.irradianza
-    ADD CONSTRAINT irradianza_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id);
+    ADD CONSTRAINT crecimiento_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
 
 
 --
@@ -790,7 +700,7 @@ ALTER TABLE ONLY public.ph
 --
 
 ALTER TABLE ONLY public.ph
-    ADD CONSTRAINT ph_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id);
+    ADD CONSTRAINT ph_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
 
 
 --
@@ -806,7 +716,7 @@ ALTER TABLE ONLY public.productividad
 --
 
 ALTER TABLE ONLY public.productividad
-    ADD CONSTRAINT productividad_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id);
+    ADD CONSTRAINT productividad_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
 
 
 --
@@ -815,22 +725,6 @@ ALTER TABLE ONLY public.productividad
 
 ALTER TABLE ONLY public.relaciones
     ADD CONSTRAINT relaciones_plantida_id_fkey FOREIGN KEY (plantida_id) REFERENCES public.plantas(id) ON DELETE CASCADE;
-
-
---
--- Name: sanidad sanidad_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.sanidad
-    ADD CONSTRAINT sanidad_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id);
-
-
---
--- Name: sanidad sanidad_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.sanidad
-    ADD CONSTRAINT sanidad_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id);
 
 
 --
@@ -846,7 +740,7 @@ ALTER TABLE ONLY public.temperatura_atmosferica
 --
 
 ALTER TABLE ONLY public.temperatura_atmosferica
-    ADD CONSTRAINT temperatura_atmosferica_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id);
+    ADD CONSTRAINT temperatura_atmosferica_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
 
 
 --
@@ -862,7 +756,23 @@ ALTER TABLE ONLY public.temperatura_suelo
 --
 
 ALTER TABLE ONLY public.temperatura_suelo
-    ADD CONSTRAINT temperatura_suelo_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuarios(id);
+    ADD CONSTRAINT temperatura_suelo_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
+
+
+--
+-- Name: humedad humedad_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.humedad
+    ADD CONSTRAINT humedad_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id);
+
+
+--
+-- Name: humedad humedad_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.humedad
+    ADD CONSTRAINT humedad_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
 
 
 --
