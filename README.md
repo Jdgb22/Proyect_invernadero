@@ -2,7 +2,13 @@
 
 Plataforma web enfocada en la simulación 3D interactiva y monitoreo en tiempo real de variables climáticas de un invernadero.
 
-**Autores:** Nixon Ramirez, Luis Manuel Florez, Mateo Herrera, Juan David Giraldo, Alejandro Florez, Luis Angel Mesa.
+**Autores:**
+Nixon Ramirez
+Luis Manuel Florez
+Mateo Herrera
+Juan David Giraldo
+Alejandro Florez
+Luis Angel Mesa
 
 ---
 
@@ -75,3 +81,4 @@ Sigue estos pasos para levantar el entorno de desarrollo en tu máquina local:
 ## 📚 Documentación Adicional
 
 - [Arquitectura del Sistema](./ARCHITECTURE.md) - Detalle técnico del flujo de datos, middleware y Three.js.
+- **Documentación Interna (JSDoc):** El código fuente está fuertemente documentado con JSDoc. Si eres desarrollador, puedes explorar `src/backend/services/` o `src/middleware.ts` en tu editor de código para ver las explicaciones detalladas y ayudas de autocompletado en cada función.
