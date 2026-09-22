@@ -10,10 +10,31 @@ export interface WeatherData {
 
 // Bounding box aproximado del Valle de Aburrá (Área Metropolitana)
 // Latitudes: 6.00 a 6.50, Longitudes: -75.75 a -75.40
+/**
+ * Verifica si unas coordenadas geográficas dadas pertenecen al Área Metropolitana
+ * del Valle de Aburrá (Medellín y municipios aledaños).
+ *
+ * @param {number} lat - Latitud en grados decimales.
+ * @param {number} lon - Longitud en grados decimales.
+ * @returns {boolean} `true` si está dentro del perímetro, `false` en caso contrario.
+ */
 export function isValleDeAburra(lat: number, lon: number): boolean {
   return lat >= 6.00 && lat <= 6.50 && lon >= -75.75 && lon <= -75.40;
 }
 
+/**
+ * Obtiene los datos meteorológicos actuales para unas coordenadas dadas.
+ * 
+ * Esta función es un agregador inteligente:
+ * 1. Si las coordenadas están en Medellín, intenta usar primero el servicio local SIATA
+ *    para obtener mediciones más precisas (como temperatura local).
+ * 2. Utiliza Open-Meteo como base global, o como respaldo total si SIATA falla.
+ *
+ * @param {number} lat - Latitud a consultar.
+ * @param {number} lon - Longitud a consultar.
+ * @param {boolean} [isFallback=false] - Indica si esta petición es un reintento de respaldo.
+ * @returns {Promise<WeatherData>} Objeto consolidado con todas las métricas climáticas.
+ */
 export async function fetchWeatherData(lat: number, lon: number, isFallback = false): Promise<WeatherData> {
   const inMedellin = isValleDeAburra(lat, lon);
   
@@ -81,6 +102,12 @@ async function fetchOpenMeteo(lat: number, lon: number) {
   };
 }
 
+/**
+ * Convierte un código meteorológico estándar (WMO de Open-Meteo) a un Emoji visual.
+ *
+ * @param {number} code - Código WMO (World Meteorological Organization).
+ * @returns {string} Emoji representativo de la condición climática.
+ */
 export function getWeatherEmoji(code: number): string {
   if (code === 0) return '☀️';
   if (code >= 1 && code <= 3) return '⛅';
