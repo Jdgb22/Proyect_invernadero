@@ -3,12 +3,12 @@
 Plataforma web enfocada en la simulación 3D interactiva y monitoreo en tiempo real de variables climáticas de un invernadero.
 
 **Autores:**
-Nixon Ramirez
-Luis Manuel Florez
-Mateo Herrera
-Juan David Giraldo
-Alejandro Florez
-Luis Angel Mesa
+- Nixon Ramirez
+- Luis Manuel Florez
+- Mateo Herrera
+- Juan David Giraldo
+- Alejandro Florez
+- Luis Angel Mesa
 
 ---
 
