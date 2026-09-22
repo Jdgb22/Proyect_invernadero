@@ -30,3 +30,4 @@ minimumReleaseAgeExclude:
   - '@img/sharp-win32-x64@0.35.4'
   - astro@7.2.8
   - sharp@0.35.4
+  - dotenv@18.0.3
