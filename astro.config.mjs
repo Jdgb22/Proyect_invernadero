@@ -11,6 +11,9 @@ export default defineConfig({
   adapter: vercel(),
   integrations: [auth()],
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    server: {
+      allowedHosts: true
+    }
   }
 });
