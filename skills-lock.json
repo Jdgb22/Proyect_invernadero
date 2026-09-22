@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "documentation-and-adrs": {
+      "source": "QiuShuiqaq/documentation-and-adrs",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "aab7da4d19a6e7ffaa6c0c47e0e2d847dea5887ebeec878a62b31cdc6dccf8e6"
+    }
+  }
+}
