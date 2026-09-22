@@ -1,5 +1,7 @@
 # Astro Starter Kit: Basics
-Nombre de participantes: Luis Manuel Florez,Mateo Herrera 
+
+Nombre de participantes: Luis Manuel Florez,Mateo Herrera
+
 ```sh
 pnpm create astro@latest -- --template basics
 ```
@@ -32,9 +34,9 @@ To learn more about the folder structure of an Astro project, refer to [our guid
 
 All commands are run from the root of the project, from a terminal:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
+| Command                | Action                                           |
+| :--------------------- | :----------------------------------------------- |
+| `pnpm install`         | Installs dependencies                            |
 | `pnpm dev`             | Starts local dev server at `localhost:4321`      |
 | `pnpm build`           | Build your production site to `./dist/`          |
 | `pnpm preview`         | Preview your build locally, before deploying     |
