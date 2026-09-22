@@ -7,6 +7,7 @@ import auth from 'auth-astro';
 
 // https://astro.build/config
 export default defineConfig({
+  security: { checkOrigin: false },
   output: 'server',
   adapter: vercel(),
   integrations: [auth()],
