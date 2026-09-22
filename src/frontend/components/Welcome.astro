@@ -35,12 +35,12 @@
         <p class="mt-3 text-sm text-stone-500 dark:text-stone-400">Ingresa tus credenciales para continuar</p>
       </div>
 
-      <form id="login-form" class="space-y-6" novalidate>
+      <form id="login-form" class="space-y-5" novalidate>
         <div>
-          <label for="username" class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2">Usuario</label>
+          <label for="username" class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2">Usuario o Correo Electrónico</label>
           <input id="username" name="username" type="text" autocomplete="username"
             class="block w-full px-4 py-3.5 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
-            placeholder="admin o user" />
+            placeholder="admin@ejemplo.com o tu usuario" />
         </div>
 
         <div>
@@ -50,7 +50,7 @@
             placeholder="••••••••" />
         </div>
 
-        <div class="flex items-center justify-between pt-2">
+        <div class="flex items-center justify-between pt-1">
           <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400 cursor-pointer">
             <input id="remember-me" name="remember-me" type="checkbox"
               class="h-4 w-4 text-amber-600 focus:ring-amber-500 border-stone-300 rounded dark:border-stone-600 dark:bg-stone-700" />
@@ -59,7 +59,7 @@
           <a href="#" class="text-sm font-medium text-amber-600 hover:text-amber-500 dark:text-stone-400">¿Olvidaste tu contraseña?</a>
         </div>
 
-        <div class="pt-2">
+        <div class="pt-1">
           <button id="login-btn" type="submit"
             class="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
             <span id="btn-text">Iniciar Sesión</span>
@@ -67,6 +67,27 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
+          </button>
+        </div>
+
+        <!-- Divisor con opción Google -->
+        <div class="relative flex items-center justify-center my-3">
+          <div class="border-t border-stone-200 dark:border-stone-700 w-full"></div>
+          <span class="bg-white dark:bg-stone-900 px-3 text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wider font-medium">o continuar con</span>
+          <div class="border-t border-stone-200 dark:border-stone-700 w-full"></div>
+        </div>
+
+        <!-- Botón de Google -->
+        <div>
+          <button id="google-btn" type="button"
+            class="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700/80 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-200 font-semibold text-sm rounded-xl transition-all shadow-sm hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Ingresar con Google</span>
           </button>
         </div>
 
@@ -83,17 +104,35 @@
 
   const loginForm  = document.getElementById('login-form')!;
   const loginBtn   = document.getElementById('login-btn') as HTMLButtonElement;
+  const googleBtn  = document.getElementById('google-btn') as HTMLButtonElement;
   const btnText    = document.getElementById('btn-text')!;
   const btnSpinner = document.getElementById('btn-spinner')!;
   const errorMsg   = document.getElementById('error-message') as HTMLElement;
   const welcomeVideo = document.getElementById('welcome-video') as HTMLVideoElement;
 
   function setLoading(on: boolean) {
-    loginBtn.disabled = on;
-    btnText.textContent = on ? 'Cargando…' : 'Iniciar Sesión';
-    btnSpinner.classList.toggle('hidden', !on);
+    if (loginBtn) loginBtn.disabled = on;
+    if (googleBtn) googleBtn.disabled = on;
+    if (btnText) btnText.textContent = on ? 'Cargando…' : 'Iniciar Sesión';
+    if (btnSpinner) btnSpinner.classList.toggle('hidden', !on);
   }
 
+  // Login con Google
+  if (googleBtn) {
+    googleBtn.addEventListener('click', async () => {
+      try {
+        setLoading(true);
+        await signIn('google', { callbackUrl: '/' } as any);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+        errorMsg.textContent = 'Error al conectar con Google. Intenta nuevamente.';
+        errorMsg.classList.remove('hidden');
+      }
+    });
+  }
+
+  // Login con credenciales de la Base de Datos PostgreSQL
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorMsg.classList.add('hidden');
@@ -102,7 +141,7 @@
     const password = (document.getElementById('password') as HTMLInputElement).value;
 
     if (!username || !password) {
-      errorMsg.textContent = 'Por favor ingresa usuario y contraseña.';
+      errorMsg.textContent = 'Por favor ingresa usuario/correo y contraseña.';
       errorMsg.classList.remove('hidden');
       return;
     }
@@ -110,21 +149,23 @@
     setLoading(true);
 
     // 1. Reproducir el video INMEDIATAMENTE
-    welcomeVideo.currentTime = 0;
-    const playPromise = welcomeVideo.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(err => {
-        console.warn('El navegador bloqueó el video:', err);
-      });
+    if (welcomeVideo) {
+      welcomeVideo.currentTime = 0;
+      const playPromise = welcomeVideo.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn('El navegador bloqueó el video:', err);
+        });
+      }
     }
 
-    // 2. Esperar a que el video termine ANTES de autenticar (igual que la animación original Lottie)
+    // 2. Esperar brevemente al video
     await new Promise<void>(resolve => {
-      // Timeout máximo por si el video se traba o no dispara 'ended'
+      if (!welcomeVideo) return resolve();
       const timeout = setTimeout(() => {
         welcomeVideo.removeEventListener('ended', onEnded);
         resolve();
-      }, 5000); // 5 segundos máximo de espera
+      }, 3500);
       
       const onEnded = () => {
         clearTimeout(timeout);
@@ -134,19 +175,20 @@
       welcomeVideo.addEventListener('ended', onEnded, { once: true });
     });
 
-    // 3. Login
+    // 3. Autenticación con Auth.js contra PostgreSQL
     try {
       const result = await signIn('credentials', {
-        username,
-        password,
+        email: username,
+        password: password,
         redirect: false,
+        callbackUrl: '/',
       } as any);
 
       if ((result as any)?.error) {
         setLoading(false);
-        errorMsg.textContent = 'Credenciales incorrectas. Intenta nuevamente.';
+        errorMsg.textContent = 'Credenciales incorrectas. Verifica tu usuario/correo y contraseña.';
         errorMsg.classList.remove('hidden');
-        welcomeVideo.pause();
+        if (welcomeVideo) welcomeVideo.pause();
       } else {
         // Redirigir al dashboard
         window.location.href = '/';
@@ -154,9 +196,9 @@
     } catch (err) {
       console.error(err);
       setLoading(false);
-      errorMsg.textContent = 'Error inesperado. Intenta nuevamente.';
+      errorMsg.textContent = 'Error inesperado al iniciar sesión. Intenta nuevamente.';
       errorMsg.classList.remove('hidden');
-      welcomeVideo.pause();
+      if (welcomeVideo) welcomeVideo.pause();
     }
   });
 </script>
