@@ -49,11 +49,11 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
   <!-- ENCABEZADO PRINCIPAL -->
   <div
-    class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors"
+    class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-[#f4fce3] dark:bg-stone-800 p-6 rounded-2xl border border-green-200 dark:border-[#166534] shadow-sm transition-colors"
   >
     <div class="flex items-start sm:items-center gap-4">
       <div
-        class="p-3.5 bg-gradient-to-br from-indigo-600 via-indigo-700 to-emerald-600 text-white rounded-2xl shadow-lg shadow-indigo-600/20 shrink-0"
+        class="p-3.5 bg-gradient-to-br from-green-600 via-green-700 to-lime-600 text-white rounded-2xl shadow-lg shadow-green-600/20 shrink-0"
       >
         <svg
           class="w-8 h-8"
@@ -71,25 +71,25 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <div>
         <div class="flex flex-wrap items-center gap-2.5">
           <h1
-            class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight"
+            class="text-2xl sm:text-3xl font-black text-green-950 dark:text-white tracking-tight"
           >
             Historial Cronológico de Mediciones
           </h1>
           <span
-            class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800"
+            class="px-2.5 py-0.5 rounded-full text-xs font-black bg-green-100 dark:bg-stone-950/60 text-green-700 dark:text-stone-300 border border-green-300 dark:border-stone-800"
           >
             Registro Multidía
           </span>
         </div>
-        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p class="text-xs sm:text-sm text-green-600 dark:text-stone-400 mt-1">
           Consulta, audita y compara las tomas de datos de cada día para las 20
           plantas del invernadero.
         </p>
         <p
-          class="text-[11px] sm:text-xs text-gray-400 dark:text-gray-500 mt-0.5"
+          class="text-[11px] sm:text-xs text-green-400 dark:text-stone-600 mt-0.5"
         >
           Sesión activa: <strong
-            class="text-gray-700 dark:text-gray-300 font-semibold"
+            class="text-green-800 dark:text-stone-300 font-semibold"
             >{currentUserName}</strong
           > ({currentUserRole})
         </p>
@@ -102,11 +102,11 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <button
         id="btn-open-sheets-modal"
         type="button"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 shadow-xs transition-all cursor-pointer transform hover:-translate-y-0.5"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-lime-800 dark:text-lime-300 bg-lime-50 dark:bg-lime-950/40 hover:bg-lime-100 dark:hover:bg-lime-900/50 border border-lime-300 dark:border-lime-700 shadow-xs transition-all cursor-pointer transform hover:-translate-y-0.5"
         title="Conectar y sincronizar automáticamente con Google Sheets / Google Docs"
       >
         <svg
-          class="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+          class="w-4 h-4 text-lime-600 dark:text-lime-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -121,18 +121,18 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         <span>Conectar Google Sheets</span>
         <span
           id="sheets-badge-dot"
-          class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          class="w-2 h-2 rounded-full bg-lime-500 animate-pulse"></span>
       </button>
 
       <!-- Subir Archivo Excel / CSV -->
       <button
         id="btn-open-upload-modal"
         type="button"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 shadow-xs transition-all cursor-pointer transform hover:-translate-y-0.5"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-green-700 dark:text-stone-300 bg-green-50 dark:bg-stone-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 border border-green-200 dark:border-stone-800 shadow-xs transition-all cursor-pointer transform hover:-translate-y-0.5"
         title="Subir archivo Excel (.xlsx) o CSV con las mediciones tomadas en campo"
       >
         <svg
-          class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+          class="w-4 h-4 text-green-600 dark:text-stone-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -151,11 +151,11 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <button
         id="btn-export-history"
         type="button"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 shadow-xs transition-all cursor-pointer"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-green-800 dark:text-stone-300 bg-green-100 dark:bg-stone-700 hover:bg-green-200 dark:hover:bg-green-600 border border-green-300 dark:border-stone-600 shadow-xs transition-all cursor-pointer"
         title="Exportar base de datos histórica en formato Excel o CSV"
       >
         <svg
-          class="w-4 h-4 text-gray-600 dark:text-gray-300"
+          class="w-4 h-4 text-green-700 dark:text-stone-300"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -175,15 +175,15 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
   <!-- BARRA DE ESTADO DE SINCRONIZACIÓN -->
   <div
     id="sync-banner"
-    class="hidden flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-xs text-emerald-900 dark:text-emerald-200 shadow-xs transition-all"
+    class="hidden flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-lime-50 dark:bg-lime-950/40 border border-lime-200 dark:border-lime-800 rounded-2xl text-xs text-lime-900 dark:text-lime-200 shadow-xs transition-all"
   >
     <div class="flex items-center gap-2.5">
-      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+      <span class="w-2.5 h-2.5 rounded-full bg-lime-500"></span>
       <div>
         <span class="font-bold">Google Sheets Vinculado:</span>
         <span
           id="sync-banner-text"
-          class="text-emerald-700 dark:text-emerald-300 ml-1"
+          class="text-lime-700 dark:text-lime-300 ml-1"
           >Sincronización activa en tiempo real.</span
         >
       </div>
@@ -194,7 +194,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       >
       <button
         id="btn-sync-now-banner"
-        class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer transition-all shadow-xs"
+        class="px-3 py-1 bg-lime-600 hover:bg-lime-700 text-white font-bold rounded-lg cursor-pointer transition-all shadow-xs"
       >
         Sincronizar ahora
       </button>
@@ -203,17 +203,17 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
   <!-- 1. BARRA INTUITIVA DE FILTRO DE FECHA Y CRITERIOS -->
   <div
-    class="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4"
+    class="bg-[#f4fce3] dark:bg-stone-800 p-5 sm:p-6 rounded-2xl border border-green-200 dark:border-[#166534] shadow-sm space-y-4"
   >
     <!-- Fila 1: Selector de Fecha Principal y Chips Rápidos -->
     <div
-      class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-700/80"
+      class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-green-100 dark:border-[#166534]/80"
     >
       <!-- Selector de Fecha Calendario -->
       <div class="flex flex-wrap items-center gap-3">
         <label
           for="history-date-picker"
-          class="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5"
+          class="text-xs sm:text-sm font-bold text-green-800 dark:text-stone-300 flex items-center gap-1.5"
         >
           <span class="text-base">📅</span> Seleccionar Día:
         </label>
@@ -222,11 +222,11 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             id="history-date-picker"
             type="date"
             value={latestDate}
-            class="px-4 py-2 text-xs sm:text-sm font-bold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer shadow-xs transition-all"
+            class="px-4 py-2 text-xs sm:text-sm font-bold rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-950 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500 cursor-pointer shadow-xs transition-all"
           />
         </div>
         <span
-          class="text-[11px] text-gray-400 dark:text-gray-500 hidden sm:inline"
+          class="text-[11px] text-green-400 dark:text-stone-600 hidden sm:inline"
         >
           (Escoge cualquier día para ver sus mediciones)
         </span>
@@ -244,13 +244,13 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <div>
         <label
           for="filter-fila"
-          class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+          class="block text-[11px] font-bold uppercase tracking-wider text-green-600 dark:text-stone-400 mb-1"
         >
           Filtrar por Fila
         </label>
         <select
           id="filter-fila"
-          class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+          class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-900 dark:text-stone-300 focus:ring-2 focus:ring-green-500 cursor-pointer"
         >
           <option value="all">Todas las Filas (t0 a t3)</option>
           <option value="t0">Fila t0</option>
@@ -264,13 +264,13 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <div>
         <label
           for="filter-planta"
-          class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+          class="block text-[11px] font-bold uppercase tracking-wider text-green-600 dark:text-stone-400 mb-1"
         >
           Filtrar por Planta
         </label>
         <select
           id="filter-planta"
-          class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+          class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-900 dark:text-stone-300 focus:ring-2 focus:ring-green-500 cursor-pointer"
         >
           <option value="all">Todas las 20 Plantas</option>
           {
@@ -287,13 +287,13 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <div>
         <label
           for="filter-sanidad"
-          class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+          class="block text-[11px] font-bold uppercase tracking-wider text-green-600 dark:text-stone-400 mb-1"
         >
           Estado Fitosanitario
         </label>
         <select
           id="filter-sanidad"
-          class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+          class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-900 dark:text-stone-300 focus:ring-2 focus:ring-green-500 cursor-pointer"
         >
           <option value="all">Todos los Estados</option>
           <option value="Excelente">Excelente 🟢</option>
@@ -307,7 +307,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <div>
         <label
           for="search-query"
-          class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1"
+          class="block text-[11px] font-bold uppercase tracking-wider text-green-600 dark:text-stone-400 mb-1"
         >
           Búsqueda Rápida
         </label>
@@ -316,9 +316,9 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             id="search-query"
             type="text"
             placeholder="Responsable, nota o código..."
-            class="w-full pl-8 pr-3 py-2 text-xs font-semibold rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500"
+            class="w-full pl-8 pr-3 py-2 text-xs font-semibold rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-900 dark:text-stone-300 focus:ring-2 focus:ring-green-500"
           />
-          <span class="absolute left-2.5 top-2.5 text-gray-400 text-xs">🔍</span
+          <span class="absolute left-2.5 top-2.5 text-green-400 text-xs">🔍</span
           >
         </div>
       </div>
@@ -327,15 +327,15 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
   <!-- 2. RESUMEN EJECUTIVO DEL DÍA SELECCIONADO -->
   <div
-    class="bg-gradient-to-br from-indigo-900 via-indigo-800 to-emerald-900 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden"
+    class="bg-gradient-to-br from-green-900 via-green-800 to-lime-900 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden"
   >
     <!-- Decoración de Fondo -->
     <div
-      class="absolute -right-10 -bottom-10 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"
+      class="absolute -right-10 -bottom-10 w-60 h-60 bg-lime-500/10 rounded-full blur-3xl pointer-events-none"
     >
     </div>
     <div
-      class="absolute -left-10 -top-10 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"
+      class="absolute -left-10 -top-10 w-60 h-60 bg-green-500/10 rounded-full blur-3xl pointer-events-none"
     >
     </div>
 
@@ -345,13 +345,13 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <div>
         <div class="flex items-center gap-2">
           <span
-            class="px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-white/20 text-white backdrop-blur-md"
+            class="px-3 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#f4fce3]/20 text-white backdrop-blur-md"
           >
             Ficha de la Fecha
           </span>
           <span
             id="summary-view-mode-badge"
-            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30"
+            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-lime-400/20 text-lime-300 border border-lime-400/30"
           >
             Día Específico
           </span>
@@ -364,7 +364,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         </h2>
         <p
           id="summary-date-subtitle"
-          class="text-xs sm:text-sm text-indigo-200 mt-0.5"
+          class="text-xs sm:text-sm text-green-200 mt-0.5"
         >
           Consolidado de variables agronómicas tomadas por el equipo de campo.
         </p>
@@ -373,7 +373,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <div class="flex items-center gap-3">
         <div class="text-right">
           <span
-            class="text-[11px] uppercase tracking-wider text-indigo-200 block"
+            class="text-[11px] uppercase tracking-wider text-green-200 block"
             >Plantas Medidas</span
           >
           <span
@@ -383,7 +383,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         </div>
         <div
           id="summary-health-semaphore"
-          class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl border border-white/15"
+          class="w-12 h-12 rounded-2xl bg-[#f4fce3]/10 backdrop-blur-md flex items-center justify-center text-2xl border border-white/15"
         >
           🪴
         </div>
@@ -396,22 +396,22 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
     >
       <!-- pH Promedio -->
       <div
-        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15"
+        class="p-3.5 rounded-2xl bg-[#f4fce3]/10 backdrop-blur-md border border-white/15"
       >
         <div class="flex items-center justify-between">
           <span
-            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            class="text-[10px] font-bold uppercase tracking-wider text-green-200"
             >pH Suelo</span
           >
           <span class="text-base">🧪</span>
         </div>
         <div class="mt-1 flex items-baseline gap-1">
           <span id="kpi-ph" class="text-2xl font-black text-white">--</span>
-          <span class="text-xs text-indigo-200">pH</span>
+          <span class="text-xs text-green-200">pH</span>
         </div>
         <span
           id="kpi-ph-badge"
-          class="text-[10px] font-bold text-emerald-300 block mt-1"
+          class="text-[10px] font-bold text-lime-300 block mt-1"
         >
           Óptimo (6.0 - 6.8)
         </span>
@@ -419,82 +419,82 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
       <!-- Temp. Interna -->
       <div
-        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15"
+        class="p-3.5 rounded-2xl bg-[#f4fce3]/10 backdrop-blur-md border border-white/15"
       >
         <div class="flex items-center justify-between">
           <span
-            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            class="text-[10px] font-bold uppercase tracking-wider text-green-200"
             >Temp. Interna</span
           >
           <span class="text-base">🌡️</span>
         </div>
         <div class="mt-1 flex items-baseline gap-1">
           <span id="kpi-tin" class="text-2xl font-black text-white">--</span>
-          <span class="text-xs text-indigo-200">°C</span>
+          <span class="text-xs text-green-200">°C</span>
         </div>
-        <span class="text-[10px] text-indigo-200 block mt-1"
+        <span class="text-[10px] text-green-200 block mt-1"
           >Microclima del domo</span
         >
       </div>
 
       <!-- Temp. Suelo -->
       <div
-        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15"
+        class="p-3.5 rounded-2xl bg-[#f4fce3]/10 backdrop-blur-md border border-white/15"
       >
         <div class="flex items-center justify-between">
           <span
-            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            class="text-[10px] font-bold uppercase tracking-wider text-green-200"
             >Temp. Suelo</span
           >
           <span class="text-base">🌱</span>
         </div>
         <div class="mt-1 flex items-baseline gap-1">
           <span id="kpi-tsoil" class="text-2xl font-black text-white">--</span>
-          <span class="text-xs text-indigo-200">°C</span>
+          <span class="text-xs text-green-200">°C</span>
         </div>
-        <span class="text-[10px] text-indigo-200 block mt-1"
+        <span class="text-[10px] text-green-200 block mt-1"
           >Zona radicular</span
         >
       </div>
 
       <!-- Crecimiento -->
       <div
-        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15"
+        class="p-3.5 rounded-2xl bg-[#f4fce3]/10 backdrop-blur-md border border-white/15"
       >
         <div class="flex items-center justify-between">
           <span
-            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            class="text-[10px] font-bold uppercase tracking-wider text-green-200"
             >Avance Foliar</span
           >
           <span class="text-base">📈</span>
         </div>
         <div class="mt-1 flex items-baseline gap-1">
           <span id="kpi-growth" class="text-2xl font-black text-white">--</span>
-          <span class="text-xs text-indigo-200">%</span>
+          <span class="text-xs text-green-200">%</span>
         </div>
-        <span class="text-[10px] text-emerald-300 block mt-1"
+        <span class="text-[10px] text-lime-300 block mt-1"
           >Desarrollo promedio</span
         >
       </div>
 
       <!-- Índice de Salud -->
       <div
-        class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 col-span-2 sm:col-span-1"
+        class="p-3.5 rounded-2xl bg-[#f4fce3]/10 backdrop-blur-md border border-white/15 col-span-2 sm:col-span-1"
       >
         <div class="flex items-center justify-between">
           <span
-            class="text-[10px] font-bold uppercase tracking-wider text-indigo-200"
+            class="text-[10px] font-bold uppercase tracking-wider text-green-200"
             >Salud General</span
           >
           <span class="text-base">🛡️</span>
         </div>
         <div class="mt-1 flex items-baseline gap-1">
           <span id="kpi-health" class="text-2xl font-black text-white">--</span>
-          <span class="text-xs text-indigo-200">%</span>
+          <span class="text-xs text-green-200">%</span>
         </div>
         <span
           id="kpi-health-plants"
-          class="text-[10px] text-emerald-300 block mt-1"
+          class="text-[10px] text-lime-300 block mt-1"
         >
           --/20 Saludables
         </span>
@@ -504,18 +504,18 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
   <!-- 3. MATRIZ VISUAL DE PLANTAS EN EL DÍA SELECCIONADO (4x5) -->
   <div
-    class="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4"
+    class="bg-[#f4fce3] dark:bg-stone-800 p-5 sm:p-6 rounded-2xl border border-green-200 dark:border-[#166534] shadow-sm space-y-4"
   >
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
     >
       <div>
         <h3
-          class="text-base sm:text-lg font-black text-gray-900 dark:text-white flex items-center gap-2"
+          class="text-base sm:text-lg font-black text-green-950 dark:text-white flex items-center gap-2"
         >
           <span>🌿</span> Mapa de Plantas en la Fecha Seleccionada
         </h3>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        <p class="text-xs text-green-600 dark:text-stone-400 mt-0.5">
           Haz clic en cualquier planta para ver su <strong
             >ficha técnica con comparativa vs la medición anterior</strong
           >.
@@ -523,19 +523,19 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       </div>
 
       <div
-        class="flex items-center gap-3 text-xs font-semibold text-gray-600 dark:text-gray-300"
+        class="flex items-center gap-3 text-xs font-semibold text-green-700 dark:text-stone-300"
       >
         <span class="flex items-center gap-1.5"
-          ><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Óptimo</span
+          ><span class="w-2.5 h-2.5 rounded-full bg-lime-500"></span> Óptimo</span
         >
         <span class="flex items-center gap-1.5"
-          ><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Vulnerable</span
+          ><span class="w-2.5 h-2.5 rounded-full bg-green-400"></span> Vulnerable</span
         >
         <span class="flex items-center gap-1.5"
           ><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Crítico</span
         >
         <span class="flex items-center gap-1.5"
-          ><span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"
+          ><span class="w-2.5 h-2.5 rounded-full bg-green-300 dark:bg-stone-600"
           ></span> Sin Registro</span
         >
       </div>
@@ -552,23 +552,23 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
   <!-- 4. LÍNEA TEMPORAL / GRÁFICA DE EVOLUCIÓN HISTÓRICA -->
   <div
-    class="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4"
+    class="bg-[#f4fce3] dark:bg-stone-800 p-5 sm:p-6 rounded-2xl border border-green-200 dark:border-[#166534] shadow-sm space-y-4"
   >
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
     >
       <div class="flex items-center gap-2.5">
         <span
-          class="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-sm"
+          class="p-2 rounded-xl bg-green-100 dark:bg-stone-900/40 text-green-600 dark:text-stone-400 text-sm"
           >📊</span
         >
         <div>
           <h3
-            class="text-base sm:text-lg font-black text-gray-900 dark:text-white"
+            class="text-base sm:text-lg font-black text-green-950 dark:text-white"
           >
             Evolución Cronológica Multidía
           </h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400">
+          <p class="text-xs text-green-600 dark:text-stone-400">
             Comparativa de variables de todos los días registrados en el
             historial
           </p>
@@ -578,19 +578,19 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <div class="flex items-center gap-2">
         <button
           id="btn-metric-chart-ph"
-          class="px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white cursor-pointer transition-all shadow-xs"
+          class="px-3 py-1.5 rounded-xl font-bold text-xs bg-green-600 text-white cursor-pointer transition-all shadow-xs"
         >
           pH Suelo
         </button>
         <button
           id="btn-metric-chart-temp"
-          class="px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all"
+          class="px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all"
         >
           Temperatura
         </button>
         <button
           id="btn-metric-chart-growth"
-          class="px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all"
+          class="px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all"
         >
           Crecimiento %
         </button>
@@ -599,7 +599,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     <!-- Contenedor del Gráfico SVG Responsivo -->
     <div
-      class="w-full h-56 relative bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/80 flex items-center justify-center"
+      class="w-full h-56 relative bg-green-50 dark:bg-[#062c16]/50 rounded-2xl p-4 border border-green-100 dark:border-[#166534]/80 flex items-center justify-center"
     >
       <svg
         id="history-evolution-svg"
@@ -613,20 +613,20 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
   <!-- 5. TABLA COMPLETA DE REGISTROS HISTÓRICOS -->
   <div
-    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+    class="bg-[#f4fce3] dark:bg-stone-800 rounded-2xl border border-green-200 dark:border-[#166534] shadow-sm overflow-hidden"
   >
     <div
-      class="p-5 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      class="p-5 sm:p-6 border-b border-green-200 dark:border-[#166534] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
     >
       <div>
         <h3
-          class="text-base sm:text-lg font-black text-gray-900 dark:text-white flex items-center gap-2"
+          class="text-base sm:text-lg font-black text-green-950 dark:text-white flex items-center gap-2"
         >
           <span>📋</span> Registros Detallados de Mediciones
         </h3>
         <p
           id="table-results-counter"
-          class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"
+          class="text-xs text-green-600 dark:text-stone-400 mt-0.5"
         >
           Mostrando mediciones filtradas
         </p>
@@ -636,7 +636,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         <button
           id="btn-reset-filters"
           type="button"
-          class="px-3.5 py-1.5 rounded-xl font-bold text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-all cursor-pointer"
+          class="px-3.5 py-1.5 rounded-xl font-bold text-xs text-green-700 dark:text-stone-300 hover:bg-green-100 dark:hover:bg-green-700 border border-green-200 dark:border-stone-600 transition-all cursor-pointer"
         >
           Restablecer Filtros
         </button>
@@ -645,9 +645,9 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     <!-- Tabla Responsiva -->
     <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
+      <table class="w-full text-left text-xs text-green-700 dark:text-stone-300">
         <thead
-          class="bg-gray-50 dark:bg-gray-800/80 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700"
+          class="bg-green-50 dark:bg-stone-800/80 text-[11px] font-black uppercase tracking-wider text-green-600 dark:text-stone-400 border-b border-green-200 dark:border-[#166534]"
         >
           <tr>
             <th class="px-4 py-3">Fecha y Hora</th>
@@ -664,7 +664,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         </thead>
         <tbody
           id="history-table-body"
-          class="divide-y divide-gray-100 dark:divide-gray-700/60 font-medium"
+          class="divide-y divide-green-100 dark:divide-green-700/60 font-medium"
         >
           <!-- Inyectado por JavaScript -->
         </tbody>
@@ -674,10 +674,10 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
     <!-- Estado vacío -->
     <div id="table-empty-state" class="hidden p-12 text-center">
       <span class="text-4xl">🔍</span>
-      <h4 class="text-base font-bold text-gray-800 dark:text-gray-200 mt-2">
+      <h4 class="text-base font-bold text-green-900 dark:text-stone-300 mt-2">
         No se encontraron mediciones
       </h4>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
+      <p class="text-xs text-green-600 dark:text-stone-400 mt-1 max-w-md mx-auto">
         No hay registros para la fecha o filtros seleccionados. Prueba
         seleccionando otra fecha, subiendo un archivo Excel/CSV o conectando
         Google Sheets.
@@ -694,16 +694,16 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
   class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
 >
   <div
-    class="bg-white dark:bg-gray-800 w-full max-w-xl rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-xl rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
   >
     <!-- Encabezado del Modal -->
     <div
-      class="p-6 bg-gradient-to-r from-indigo-900 to-emerald-900 text-white flex items-center justify-between"
+      class="p-6 bg-gradient-to-r from-green-900 to-lime-900 text-white flex items-center justify-between"
     >
       <div class="flex items-center gap-3">
         <div
           id="modal-plant-icon"
-          class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl border border-white/20"
+          class="w-12 h-12 rounded-2xl bg-[#f4fce3]/10 backdrop-blur-md flex items-center justify-center text-2xl border border-white/20"
         >
           🪴
         </div>
@@ -712,18 +712,18 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             <h3 id="modal-plant-id" class="text-xl font-black">P-01</h3>
             <span
               id="modal-plant-location"
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20"
+              class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f4fce3]/20"
               >Fila t0 • Col 1</span
             >
           </div>
-          <p id="modal-plant-date" class="text-xs text-indigo-200 mt-0.5">
+          <p id="modal-plant-date" class="text-xs text-green-200 mt-0.5">
             Medición del 2026-09-14, 09:30 AM
           </p>
         </div>
       </div>
       <button
         id="modal-plant-close-btn"
-        class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-all"
+        class="p-2 rounded-xl bg-[#f4fce3]/10 hover:bg-[#f4fce3]/20 text-white cursor-pointer transition-all"
       >
         ✕
       </button>
@@ -731,15 +731,15 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     <!-- Cuerpo del Modal -->
     <div
-      class="p-6 space-y-5 max-h-[75vh] overflow-y-auto text-xs text-gray-600 dark:text-gray-300"
+      class="p-6 space-y-5 max-h-[75vh] overflow-y-auto text-xs text-green-700 dark:text-stone-300"
     >
       <!-- Fila de Comparación con día previo -->
       <div
         id="modal-delta-box"
-        class="p-3.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-2xl"
+        class="p-3.5 bg-green-50 dark:bg-stone-950/40 border border-green-200 dark:border-stone-800 rounded-2xl"
       >
         <span
-          class="text-[11px] font-bold text-indigo-800 dark:text-indigo-300 block mb-1"
+          class="text-[11px] font-bold text-green-800 dark:text-stone-300 block mb-1"
         >
           📈 Comparativa vs Día Previo:
         </span>
@@ -754,62 +754,62 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <!-- Variables Agronómicas Principales -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div
-          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 text-center"
+          class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
         >
           <span
-            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block"
+            class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block"
             >pH Suelo</span
           >
           <span
             id="modal-val-ph"
-            class="text-lg font-black text-gray-900 dark:text-white">6.4</span
+            class="text-lg font-black text-green-950 dark:text-white">6.4</span
           >
           <span
             id="modal-badge-ph"
-            class="text-[9px] font-bold text-emerald-600 block mt-0.5"
+            class="text-[9px] font-bold text-lime-600 block mt-0.5"
             >Óptimo</span
           >
         </div>
         <div
-          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 text-center"
+          class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
         >
           <span
-            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block"
+            class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block"
             >Temp. Interna</span
           >
           <span
             id="modal-val-tin"
-            class="text-lg font-black text-gray-900 dark:text-white"
+            class="text-lg font-black text-green-950 dark:text-white"
             >24.5°C</span
           >
-          <span class="text-[9px] text-gray-400 block mt-0.5">Microclima</span>
+          <span class="text-[9px] text-green-400 block mt-0.5">Microclima</span>
         </div>
         <div
-          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 text-center"
+          class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
         >
           <span
-            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block"
+            class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block"
             >Temp. Suelo</span
           >
           <span
             id="modal-val-tsoil"
-            class="text-lg font-black text-gray-900 dark:text-white"
+            class="text-lg font-black text-green-950 dark:text-white"
             >20.3°C</span
           >
-          <span class="text-[9px] text-gray-400 block mt-0.5">Radicular</span>
+          <span class="text-[9px] text-green-400 block mt-0.5">Radicular</span>
         </div>
         <div
-          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 text-center"
+          class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
         >
           <span
-            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block"
+            class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block"
             >Crecimiento</span
           >
           <span
             id="modal-val-growth"
-            class="text-lg font-black text-gray-900 dark:text-white">88%</span
+            class="text-lg font-black text-green-950 dark:text-white">88%</span
           >
-          <span class="text-[9px] text-indigo-500 block mt-0.5"
+          <span class="text-[9px] text-green-500 block mt-0.5"
             >Avance foliar</span
           >
         </div>
@@ -818,29 +818,29 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <!-- Estado Fitosanitario y Productividad -->
       <div class="grid grid-cols-2 gap-3">
         <div
-          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600"
+          class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600"
         >
           <span
-            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1"
+            class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block mb-1"
             >Sanidad</span
           >
           <span
             id="modal-badge-sanidad"
-            class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300"
+            class="px-2.5 py-1 rounded-full text-xs font-bold bg-lime-100 text-lime-800 border border-lime-300"
           >
             Excelente 🟢
           </span>
         </div>
         <div
-          class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600"
+          class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600"
         >
           <span
-            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1"
+            class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block mb-1"
             >Productividad</span
           >
           <span
             id="modal-badge-prod"
-            class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300"
+            class="px-2.5 py-1 rounded-full text-xs font-bold bg-lime-100 text-lime-800 border border-lime-300"
           >
             Alta
           </span>
@@ -849,21 +849,21 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
       <!-- Observaciones y Responsable -->
       <div
-        class="p-4 bg-gray-50 dark:bg-gray-700/40 rounded-2xl border border-gray-200 dark:border-gray-600 space-y-2"
+        class="p-4 bg-green-50 dark:bg-stone-700/40 rounded-2xl border border-green-200 dark:border-stone-600 space-y-2"
       >
         <div class="flex items-center justify-between">
-          <span class="font-bold text-gray-800 dark:text-gray-200"
+          <span class="font-bold text-green-900 dark:text-stone-300"
             >Observaciones Técnicas:</span
           >
           <span
             id="modal-val-resp"
-            class="text-xs text-gray-500 dark:text-gray-400"
+            class="text-xs text-green-600 dark:text-stone-400"
             >Registrado por: Administrador</span
           >
         </div>
         <p
           id="modal-val-obs"
-          class="italic text-gray-600 dark:text-gray-300 text-xs"
+          class="italic text-green-700 dark:text-stone-300 text-xs"
         >
           Sin observaciones adicionales.
         </p>
@@ -872,18 +872,18 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     <!-- Pie del Modal -->
     <div
-      class="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/95 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
+      class="px-6 py-4 bg-green-50/80 dark:bg-stone-800/95 border-t border-green-200 dark:border-[#166534] flex items-center justify-between"
     >
       <div
-        class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+        class="flex items-center gap-2 text-xs text-green-600 dark:text-stone-400"
       >
-        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span class="w-2 h-2 rounded-full bg-lime-500"></span>
         <span class="font-medium">Registro agronómico de la fecha</span>
       </div>
       <button
         id="modal-plant-btn-ok"
         type="button"
-        class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 hover:shadow-lg transition-all cursor-pointer transform hover:-translate-y-0.5"
+        class="px-5 py-2.5 bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-500 hover:to-lime-500 text-white font-bold text-xs rounded-xl shadow-md shadow-green-600/20 hover:shadow-lg transition-all cursor-pointer transform hover:-translate-y-0.5"
       >
         Entendido
       </button>
@@ -899,46 +899,46 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
   class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
 >
   <div
-    class="bg-white dark:bg-gray-800 w-full max-w-2xl rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-2xl rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
   >
     <div
-      class="p-6 bg-gradient-to-r from-indigo-700 to-indigo-900 text-white flex items-center justify-between"
+      class="p-6 bg-gradient-to-r from-green-700 to-green-900 text-white flex items-center justify-between"
     >
       <div class="flex items-center gap-3">
-        <div class="p-3 bg-white/10 backdrop-blur-md rounded-2xl text-2xl">
+        <div class="p-3 bg-[#f4fce3]/10 backdrop-blur-md rounded-2xl text-2xl">
           📥
         </div>
         <div>
           <h3 class="text-lg sm:text-xl font-black">
             Cargar Archivo de Mediciones
           </h3>
-          <p class="text-xs text-indigo-200 mt-0.5">
+          <p class="text-xs text-green-200 mt-0.5">
             Soporta hojas de cálculo (.csv, .xlsx, .txt)
           </p>
         </div>
       </div>
       <button
         id="modal-upload-close-btn"
-        class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-all"
+        class="p-2 rounded-xl bg-[#f4fce3]/10 hover:bg-[#f4fce3]/20 text-white cursor-pointer transition-all"
       >
         ✕
       </button>
     </div>
 
-    <div class="p-6 space-y-5 text-xs text-gray-600 dark:text-gray-300">
+    <div class="p-6 space-y-5 text-xs text-green-700 dark:text-stone-300">
       <!-- Zona de Drag and Drop -->
       <div
         id="drop-zone"
-        class="border-2 border-dashed border-indigo-300 dark:border-indigo-700 rounded-2xl p-6 sm:p-8 text-center bg-indigo-50/50 dark:bg-indigo-950/20 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-all cursor-pointer"
+        class="border-2 border-dashed border-green-300 dark:border-stone-700 rounded-2xl p-6 sm:p-8 text-center bg-green-50/50 dark:bg-stone-950/20 hover:bg-green-50 dark:hover:bg-green-950/40 transition-all cursor-pointer"
       >
         <span class="text-4xl block mb-2">📁</span>
-        <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">
+        <h4 class="text-sm font-bold text-green-900 dark:text-stone-300">
           Arrastra tu archivo aquí o <span
-            class="text-indigo-600 dark:text-indigo-400 underline"
+            class="text-green-600 dark:text-stone-400 underline"
             >haz clic para examinar</span
           >
         </h4>
-        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+        <p class="text-[11px] text-green-600 dark:text-stone-400 mt-1">
           Archivos compatibles: .csv, .xlsx (Tamaño máx: 10MB)
         </p>
         <input
@@ -951,13 +951,13 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
       <!-- Guía y Descarga de Plantilla Oficial -->
       <div
-        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-200 dark:border-gray-700"
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-green-50 dark:bg-stone-800/60 rounded-2xl border border-green-200 dark:border-[#166534]"
       >
         <div>
-          <h5 class="font-bold text-gray-800 dark:text-gray-200">
+          <h5 class="font-bold text-green-900 dark:text-stone-300">
             ¿No tienes el formato exacto?
           </h5>
-          <p class="text-[11px] text-gray-500 dark:text-gray-400">
+          <p class="text-[11px] text-green-600 dark:text-stone-400">
             Descarga la plantilla con las 20 plantas preconfiguradas para llenar
             en campo.
           </p>
@@ -965,7 +965,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         <button
           id="btn-download-template"
           type="button"
-          class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl cursor-pointer transition-all shrink-0 flex items-center gap-1.5 shadow-xs"
+          class="px-3.5 py-2 bg-lime-600 hover:bg-lime-700 text-white font-bold rounded-xl cursor-pointer transition-all shrink-0 flex items-center gap-1.5 shadow-xs"
         >
           <span>📄</span> Descargar Plantilla (.csv)
         </button>
@@ -974,18 +974,18 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <!-- Vista Previa de Filas Parseadas -->
       <div id="upload-preview-container" class="hidden space-y-2">
         <div class="flex items-center justify-between">
-          <span class="font-bold text-gray-800 dark:text-gray-200"
+          <span class="font-bold text-green-900 dark:text-stone-300"
             >Vista Previa de Datos Detectados:</span
           >
-          <span id="upload-preview-count" class="text-indigo-600 font-bold"
+          <span id="upload-preview-count" class="text-green-600 font-bold"
             >0 filas listas</span
           >
         </div>
         <div
-          class="max-h-44 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl"
+          class="max-h-44 overflow-y-auto border border-green-200 dark:border-[#166534] rounded-xl"
         >
           <table class="w-full text-[11px] text-left">
-            <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0 font-bold">
+            <thead class="bg-green-100 dark:bg-stone-700 sticky top-0 font-bold">
               <tr>
                 <th class="p-2">Planta</th>
                 <th class="p-2">Fecha</th>
@@ -997,7 +997,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             </thead>
             <tbody
               id="upload-preview-body"
-              class="divide-y divide-gray-100 dark:divide-gray-700 font-mono"
+              class="divide-y divide-green-100 dark:divide-green-700 font-mono"
             >
             </tbody>
           </table>
@@ -1006,18 +1006,18 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
     </div>
 
     <div
-      class="p-4 bg-gray-50/80 dark:bg-gray-800/95 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2"
+      class="p-4 bg-green-50/80 dark:bg-stone-800/95 border-t border-green-200 dark:border-[#166534] flex justify-end gap-2"
     >
       <button
         id="modal-upload-btn-cancel"
-        class="px-4 py-2 rounded-xl text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
+        class="px-4 py-2 rounded-xl text-green-700 dark:text-stone-300 font-bold hover:bg-green-200 dark:hover:bg-green-700 cursor-pointer"
       >
         Cancelar
       </button>
       <button
         id="modal-upload-btn-confirm"
         disabled
-        class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold opacity-50 cursor-not-allowed transition-all"
+        class="px-5 py-2 rounded-xl bg-green-600 text-white font-bold opacity-50 cursor-not-allowed transition-all"
       >
         Guardar en Historial
       </button>
@@ -1033,38 +1033,38 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
   class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
 >
   <div
-    class="bg-white dark:bg-gray-800 w-full max-w-xl rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-xl rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
   >
     <div
-      class="p-6 bg-gradient-to-r from-emerald-700 to-teal-800 text-white flex items-center justify-between"
+      class="p-6 bg-gradient-to-r from-lime-700 to-teal-800 text-white flex items-center justify-between"
     >
       <div class="flex items-center gap-3">
-        <div class="p-3 bg-white/10 backdrop-blur-md rounded-2xl text-2xl">
+        <div class="p-3 bg-[#f4fce3]/10 backdrop-blur-md rounded-2xl text-2xl">
           🔗
         </div>
         <div>
           <h3 class="text-lg sm:text-xl font-black">
             Conexión con Google Sheets
           </h3>
-          <p class="text-xs text-emerald-200 mt-0.5">
+          <p class="text-xs text-lime-200 mt-0.5">
             Sincronización en vivo de mediciones de campo
           </p>
         </div>
       </div>
       <button
         id="modal-sheets-close-btn"
-        class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-all"
+        class="p-2 rounded-xl bg-[#f4fce3]/10 hover:bg-[#f4fce3]/20 text-white cursor-pointer transition-all"
       >
         ✕
       </button>
     </div>
 
-    <div class="p-6 space-y-4 text-xs text-gray-600 dark:text-gray-300">
+    <div class="p-6 space-y-4 text-xs text-green-700 dark:text-stone-300">
       <!-- Entrada de URL -->
       <div>
         <label
           for="input-google-sheets-url"
-          class="block text-xs font-bold text-gray-800 dark:text-gray-200 mb-1.5"
+          class="block text-xs font-bold text-green-900 dark:text-stone-300 mb-1.5"
         >
           Enlace de tu Google Sheets:
         </label>
@@ -1072,21 +1072,21 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
           id="input-google-sheets-url"
           type="url"
           placeholder="https://docs.google.com/spreadsheets/d/.../edit o enlace publicado"
-          class="w-full px-4 py-2.5 text-xs font-mono rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+          class="w-full px-4 py-2.5 text-xs font-mono rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-950 dark:text-white focus:ring-2 focus:ring-lime-500"
         />
       </div>
 
       <!-- Pasos sencillos explicados -->
       <div
-        class="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl space-y-2"
+        class="p-4 bg-lime-50 dark:bg-lime-950/30 border border-lime-200 dark:border-lime-800/50 rounded-2xl space-y-2"
       >
         <span
-          class="font-bold text-emerald-900 dark:text-emerald-300 text-xs block"
+          class="font-bold text-lime-900 dark:text-lime-300 text-xs block"
         >
           💡 ¿Cómo obtener el enlace de Google Sheets?
         </span>
         <ol
-          class="list-decimal list-inside space-y-1.5 text-[11px] text-emerald-800 dark:text-emerald-300/90 leading-relaxed"
+          class="list-decimal list-inside space-y-1.5 text-[11px] text-lime-800 dark:text-lime-300/90 leading-relaxed"
         >
           <li>
             Abre tu hoja de cálculo en <strong
@@ -1116,17 +1116,17 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
     </div>
 
     <div
-      class="p-4 bg-gray-50/80 dark:bg-gray-800/95 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2"
+      class="p-4 bg-green-50/80 dark:bg-stone-800/95 border-t border-green-200 dark:border-[#166534] flex justify-end gap-2"
     >
       <button
         id="modal-sheets-btn-cancel"
-        class="px-4 py-2 rounded-xl text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
+        class="px-4 py-2 rounded-xl text-green-700 dark:text-stone-300 font-bold hover:bg-green-200 dark:hover:bg-green-700 cursor-pointer"
       >
         Cancelar
       </button>
       <button
         id="modal-sheets-btn-sync"
-        class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer transition-all flex items-center gap-1.5 shadow-xs"
+        class="px-5 py-2 rounded-xl bg-lime-600 hover:bg-lime-700 text-white font-bold cursor-pointer transition-all flex items-center gap-1.5 shadow-xs"
       >
         <span id="sheets-sync-spinner" class="hidden animate-spin">⏳</span>
         <span id="sheets-sync-btn-text">Probar y Sincronizar</span>
@@ -1140,7 +1140,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 <!-- ========================================== -->
 <div
   id="history-toast"
-  class="fixed bottom-5 right-5 z-50 hidden bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-gray-700 text-xs font-bold flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-200"
+  class="fixed bottom-5 right-5 z-50 hidden bg-green-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-green-700 text-xs font-bold flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-200"
 >
   <span id="toast-icon">✅</span>
   <span id="toast-message">Operación completada</span>
@@ -1365,8 +1365,8 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         btn.type = "button";
         btn.className = `px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
           isSelected
-            ? "bg-indigo-600 text-white shadow-xs"
-            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            ? "bg-green-600 text-white shadow-xs"
+            : "bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 dark:hover:bg-green-600"
         }`;
         btn.textContent = label;
         btn.addEventListener("click", () => {
@@ -1383,8 +1383,8 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       allBtn.type = "button";
       allBtn.className = `px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
         isAllSelected
-          ? "bg-indigo-600 text-white shadow-xs"
-          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+          ? "bg-green-600 text-white shadow-xs"
+          : "bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 dark:hover:bg-green-600"
       }`;
       allBtn.textContent = "🌐 Ver Todo";
       allBtn.addEventListener("click", () => {
@@ -1512,11 +1512,11 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         if (avgPh >= 6.0 && avgPh <= 6.8) {
           kpiPhBadge.textContent = "● Rango Óptimo (6.0 - 6.8)";
           kpiPhBadge.className =
-            "text-[10px] font-bold text-emerald-300 block mt-1";
+            "text-[10px] font-bold text-lime-300 block mt-1";
         } else if (avgPh >= 5.5 && avgPh <= 7.2) {
           kpiPhBadge.textContent = "▲ Atención Nutricional";
           kpiPhBadge.className =
-            "text-[10px] font-bold text-amber-300 block mt-1";
+            "text-[10px] font-bold text-green-300 block mt-1";
         } else {
           kpiPhBadge.textContent = "■ Crítico Fuera de Rango";
           kpiPhBadge.className =
@@ -1588,35 +1588,35 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
           const statusBorder = isCritical
             ? "border-rose-300 dark:border-rose-800 bg-rose-50/60 dark:bg-rose-950/20 hover:border-rose-500"
             : isWarning
-              ? "border-amber-300 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/20 hover:border-amber-500"
-              : "border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-950/10 hover:border-emerald-500";
+              ? "border-green-300 dark:border-stone-800 bg-green-50/60 dark:bg-stone-950/20 hover:border-green-500"
+              : "border-lime-200 dark:border-lime-800/40 bg-lime-50/50 dark:bg-lime-950/10 hover:border-lime-500";
 
           const dotColor = isCritical
             ? "bg-rose-500"
             : isWarning
-              ? "bg-amber-400"
-              : "bg-emerald-500";
+              ? "bg-green-400"
+              : "bg-lime-500";
           const plantIcon = isCritical ? "🥀" : isWarning ? "🌿" : "🪴";
 
           card.className = `text-left p-3 rounded-xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-md cursor-pointer relative group ${statusBorder}`;
           card.innerHTML = `
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-black font-mono text-gray-600 dark:text-gray-300 uppercase">${metric.plantId} • ${metric.fila}</span>
+              <span class="text-[10px] font-black font-mono text-green-700 dark:text-stone-300 uppercase">${metric.plantId} • ${metric.fila}</span>
               <span class="w-2.5 h-2.5 rounded-full ${dotColor}"></span>
             </div>
             <div class="flex items-center justify-between my-1">
               <span class="text-2xl group-hover:scale-115 transition-transform">${plantIcon}</span>
               <div class="text-right">
-                <span class="text-xs font-mono font-bold text-gray-800 dark:text-gray-200 block">${metric.columna}</span>
-                <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">${metric.crecimiento}%</span>
+                <span class="text-xs font-mono font-bold text-green-900 dark:text-stone-300 block">${metric.columna}</span>
+                <span class="text-[10px] font-mono text-lime-600 dark:text-lime-400 font-bold">${metric.crecimiento}%</span>
               </div>
             </div>
-            <div class="mt-2 flex items-center justify-between text-[9px] font-mono text-gray-500 dark:text-gray-400 border-t border-gray-200/70 dark:border-gray-700/70 pt-1.5">
+            <div class="mt-2 flex items-center justify-between text-[9px] font-mono text-green-600 dark:text-stone-400 border-t border-green-200/70 dark:border-[#166534]/70 pt-1.5">
               <span>🧪 ${metric.phSuelo.toFixed(1)} pH</span>
               <span>🌡️ ${metric.tempInterna.toFixed(1)}°C</span>
             </div>
             <div class="mt-1 text-center">
-              <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 group-hover:underline flex items-center justify-center gap-0.5">
+              <span class="text-[9px] font-bold text-green-600 dark:text-stone-400 group-hover:underline flex items-center justify-center gap-0.5">
                 <span>Ver Ficha</span> →
               </span>
             </div>
@@ -1628,17 +1628,17 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         } else {
           // Sin registro para este día
           card.className =
-            "text-left p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/40 opacity-60 cursor-default";
+            "text-left p-3 rounded-xl border border-green-200 dark:border-[#166534] bg-green-50/50 dark:bg-stone-800/40 opacity-60 cursor-default";
           card.innerHTML = `
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-black font-mono text-gray-400 uppercase">${expected.plantId} • ${expected.fila}</span>
-              <span class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+              <span class="text-[10px] font-black font-mono text-green-400 uppercase">${expected.plantId} • ${expected.fila}</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-green-300 dark:bg-stone-600"></span>
             </div>
-            <div class="flex items-center justify-between my-2 text-center text-gray-400 text-xs py-1">
+            <div class="flex items-center justify-between my-2 text-center text-green-400 text-xs py-1">
               <span class="text-lg">⚪</span>
               <span class="text-[10px]">Sin registro</span>
             </div>
-            <div class="mt-2 text-[9px] font-mono text-gray-400 border-t border-gray-200/50 dark:border-gray-700/50 pt-1 text-center">
+            <div class="mt-2 text-[9px] font-mono text-green-400 border-t border-green-200/50 dark:border-[#166534]/50 pt-1 text-center">
               ${expected.columna}
             </div>
           `;
@@ -1844,32 +1844,32 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       filtered.forEach((record) => {
         const tr = document.createElement("tr");
         tr.className =
-          "hover:bg-gray-50/80 dark:hover:bg-gray-700/40 transition-colors";
+          "hover:bg-green-50/80 dark:hover:bg-green-700/40 transition-colors";
 
         const phBadgeColor =
           record.phSuelo >= 6.0 && record.phSuelo <= 6.8
-            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300"
+            ? "bg-lime-100 text-lime-800 dark:bg-lime-950/60 dark:text-lime-300 border-lime-300"
             : record.phSuelo >= 5.5 && record.phSuelo <= 7.2
-              ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300"
+              ? "bg-green-100 text-green-800 dark:bg-stone-950/60 dark:text-stone-300 border-green-300"
               : "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300";
 
         const sanidadBadge =
           record.sanidad === "Excelente" || record.sanidad === "Saludable"
-            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200"
+            ? "bg-lime-100 text-lime-800 dark:bg-lime-950/60 dark:text-lime-300 border-lime-200"
             : record.sanidad === "Vulnerable"
-              ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200"
+              ? "bg-green-100 text-green-800 dark:bg-stone-950/60 dark:text-stone-300 border-green-200"
               : "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200";
 
         tr.innerHTML = `
           <td class="px-4 py-3 whitespace-nowrap font-mono">
-            <span class="font-bold text-gray-900 dark:text-white block">${record.fecha}</span>
-            <span class="text-[10px] text-gray-400">${record.hora}</span>
+            <span class="font-bold text-green-950 dark:text-white block">${record.fecha}</span>
+            <span class="text-[10px] text-green-400">${record.hora}</span>
           </td>
           <td class="px-4 py-3 whitespace-nowrap">
-            <span class="font-black text-indigo-600 dark:text-indigo-400 block">${record.plantId}</span>
-            <span class="text-[10px] text-gray-500 dark:text-gray-400">${record.fila} • ${record.columna}</span>
+            <span class="font-black text-green-600 dark:text-stone-400 block">${record.plantId}</span>
+            <span class="text-[10px] text-green-600 dark:text-stone-400">${record.fila} • ${record.columna}</span>
           </td>
-          <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+          <td class="px-4 py-3 whitespace-nowrap text-green-800 dark:text-stone-300">
             ${record.faseCrecimiento}
           </td>
           <td class="px-4 py-3 whitespace-nowrap font-mono">
@@ -1877,17 +1877,17 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
               ${record.phSuelo.toFixed(2)} pH
             </span>
           </td>
-          <td class="px-4 py-3 whitespace-nowrap font-mono font-bold text-gray-800 dark:text-gray-200">
+          <td class="px-4 py-3 whitespace-nowrap font-mono font-bold text-green-900 dark:text-stone-300">
             ${record.tempInterna.toFixed(1)}°C
           </td>
-          <td class="px-4 py-3 whitespace-nowrap font-mono text-gray-600 dark:text-gray-400">
+          <td class="px-4 py-3 whitespace-nowrap font-mono text-green-700 dark:text-stone-400">
             ${record.tempSuelo.toFixed(1)}°C
           </td>
           <td class="px-4 py-3 whitespace-nowrap">
             <div class="flex items-center gap-1.5">
-              <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">${record.crecimiento}%</span>
-              <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: ${record.crecimiento}%"></div>
+              <span class="font-mono font-bold text-lime-600 dark:text-lime-400">${record.crecimiento}%</span>
+              <div class="w-12 bg-green-200 dark:bg-stone-700 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-lime-500 h-1.5 rounded-full" style="width: ${record.crecimiento}%"></div>
               </div>
             </div>
           </td>
@@ -1896,9 +1896,9 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
               ${record.sanidad}
             </span>
           </td>
-          <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+          <td class="px-4 py-3 whitespace-nowrap text-green-800 dark:text-stone-300">
             <div class="flex items-center gap-1.5">
-              <span class="w-5 h-5 rounded-full ${record.avatarColor || "bg-indigo-600"} text-white text-[9px] font-bold flex items-center justify-center">
+              <span class="w-5 h-5 rounded-full ${record.avatarColor || "bg-green-600"} text-white text-[9px] font-bold flex items-center justify-center">
                 ${record.responsable.charAt(0)}
               </span>
               <span class="text-xs truncate max-w-[120px]" title="${record.responsable}">${record.responsable}</span>
@@ -1907,7 +1907,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
           <td class="px-4 py-3 whitespace-nowrap text-right">
             <button
               type="button"
-              class="btn-row-detail px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all cursor-pointer"
+              class="btn-row-detail px-3 py-1 rounded-lg bg-green-50 dark:bg-stone-950/50 hover:bg-green-100 text-green-700 dark:text-stone-300 text-xs font-bold transition-all cursor-pointer"
             >
               Detalle
             </button>
@@ -1961,11 +1961,11 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         if (metric.phSuelo >= 6.0 && metric.phSuelo <= 6.8) {
           modalBadgePh.textContent = "Óptimo (6.0 - 6.8)";
           modalBadgePh.className =
-            "text-[9px] font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5";
+            "text-[9px] font-bold text-lime-600 dark:text-lime-400 block mt-0.5";
         } else {
           modalBadgePh.textContent = "Requiere Atención";
           modalBadgePh.className =
-            "text-[9px] font-bold text-amber-600 dark:text-amber-400 block mt-0.5";
+            "text-[9px] font-bold text-green-600 dark:text-stone-400 block mt-0.5";
         }
       }
 
@@ -1997,21 +1997,21 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
           modalDeltaContent.innerHTML = `
             <div>
-              <span class="text-gray-500 dark:text-gray-400 block">pH Suelo</span>
-              <span class="font-bold ${deltaPh > 0 ? "text-amber-600" : "text-emerald-600"}">${deltaPh > 0 ? "+" : ""}${deltaPh}</span>
+              <span class="text-green-600 dark:text-stone-400 block">pH Suelo</span>
+              <span class="font-bold ${deltaPh > 0 ? "text-green-600" : "text-lime-600"}">${deltaPh > 0 ? "+" : ""}${deltaPh}</span>
             </div>
             <div>
-              <span class="text-gray-500 dark:text-gray-400 block">Temp Interna</span>
-              <span class="font-bold ${deltaTin > 0 ? "text-amber-600" : "text-blue-600"}">${deltaTin > 0 ? "+" : ""}${deltaTin}°C</span>
+              <span class="text-green-600 dark:text-stone-400 block">Temp Interna</span>
+              <span class="font-bold ${deltaTin > 0 ? "text-green-600" : "text-blue-600"}">${deltaTin > 0 ? "+" : ""}${deltaTin}°C</span>
             </div>
             <div>
-              <span class="text-gray-500 dark:text-gray-400 block">Crecimiento</span>
-              <span class="font-bold text-emerald-600">${deltaGrowth >= 0 ? "+" : ""}${deltaGrowth}%</span>
+              <span class="text-green-600 dark:text-stone-400 block">Crecimiento</span>
+              <span class="font-bold text-lime-600">${deltaGrowth >= 0 ? "+" : ""}${deltaGrowth}%</span>
             </div>
           `;
         } else {
           modalDeltaContent.innerHTML = `
-            <div class="col-span-3 text-gray-500 dark:text-gray-400 italic">
+            <div class="col-span-3 text-green-600 dark:text-stone-400 italic">
               Esta es la primera toma registrada para esta planta en el historial.
             </div>
           `;
@@ -2079,33 +2079,33 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
     btnChartPh?.addEventListener("click", () => {
       state.activeChartMetric = "ph";
       btnChartPh.className =
-        "px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white cursor-pointer transition-all shadow-xs";
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-600 text-white cursor-pointer transition-all shadow-xs";
       btnChartTemp.className =
-        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
       btnChartGrowth.className =
-        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
       renderEvolutionChart();
     });
 
     btnChartTemp?.addEventListener("click", () => {
       state.activeChartMetric = "temp";
       btnChartTemp.className =
-        "px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white cursor-pointer transition-all shadow-xs";
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-600 text-white cursor-pointer transition-all shadow-xs";
       btnChartPh.className =
-        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
       btnChartGrowth.className =
-        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
       renderEvolutionChart();
     });
 
     btnChartGrowth?.addEventListener("click", () => {
       state.activeChartMetric = "growth";
       btnChartGrowth.className =
-        "px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white cursor-pointer transition-all shadow-xs";
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-600 text-white cursor-pointer transition-all shadow-xs";
       btnChartPh.className =
-        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
       btnChartTemp.className =
-        "px-3 py-1.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 cursor-pointer transition-all";
+        "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
       renderEvolutionChart();
     });
 
@@ -2132,16 +2132,16 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     dropZone?.addEventListener("dragover", (e) => {
       e.preventDefault();
-      dropZone.classList.add("border-indigo-600", "bg-indigo-100/50");
+      dropZone.classList.add("border-green-600", "bg-green-100/50");
     });
 
     dropZone?.addEventListener("dragleave", () => {
-      dropZone.classList.remove("border-indigo-600", "bg-indigo-100/50");
+      dropZone.classList.remove("border-green-600", "bg-green-100/50");
     });
 
     dropZone?.addEventListener("drop", (e) => {
       e.preventDefault();
-      dropZone.classList.remove("border-indigo-600", "bg-indigo-100/50");
+      dropZone.classList.remove("border-green-600", "bg-green-100/50");
       if (e.dataTransfer?.files?.length) {
         processUploadedFile(e.dataTransfer.files[0]);
       }
@@ -2215,7 +2215,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             sanidad: sanidad,
             responsable: "Operario de Archivo",
             responsableRol: "Carga Manual",
-            avatarColor: "bg-indigo-600",
+            avatarColor: "bg-green-600",
             observaciones: "Registro importado desde archivo local.",
           });
         }
@@ -2362,7 +2362,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
           if (sheetsSyncStatus) {
             sheetsSyncStatus.className =
-              "p-3 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+              "p-3 rounded-xl text-xs font-bold bg-lime-100 text-lime-800 border border-lime-300";
             sheetsSyncStatus.textContent = `✅ ${data.message}`;
             sheetsSyncStatus.classList.remove("hidden");
           }
@@ -2402,7 +2402,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       if (!url) {
         if (sheetsSyncStatus) {
           sheetsSyncStatus.className =
-            "p-3 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
+            "p-3 rounded-xl text-xs font-bold bg-green-100 text-green-800 border border-green-300";
           sheetsSyncStatus.textContent =
             "⚠️ Ingresa la URL de tu Google Sheets antes de sincronizar.";
           sheetsSyncStatus.classList.remove("hidden");

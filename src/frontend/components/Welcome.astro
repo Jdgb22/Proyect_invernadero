@@ -1,78 +1,67 @@
 ---
 // Welcome.astro
 ---
-<!-- Importamos el reproductor oficial de Lottie -->
-<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" is:inline></script>
 
-<div class="min-h-screen flex flex-col lg:flex-row w-full bg-gray-50 dark:bg-gray-900">
+<div class="min-h-screen flex flex-col lg:flex-row w-full bg-stone-50 dark:bg-stone-900">
   
-  <!-- Left Side: Farmer Image Panel -->
-  <div id="farmer-panel" class="w-full h-72 lg:h-auto lg:min-h-screen lg:w-1/2 relative bg-gray-950 dark:bg-black overflow-hidden flex items-center justify-center flex-shrink-0">
+  <!-- Left Side: Video Panel -->
+  <div id="farmer-panel" class="w-full h-72 lg:h-auto lg:min-h-screen lg:w-1/2 relative bg-stone-950 dark:bg-black overflow-hidden flex items-center justify-center flex-shrink-0">
     
-    <!-- Imagen estática (visible por defecto) -->
-    <img
-      id="farmer-static"
-      src="/static-farmer.svg"
-      alt="Agrónomo en la finca"
+    <!-- Video de bienvenida -->
+    <video
+      id="welcome-video"
+      src="/newwelcome.mp4"
+      muted
+      playsinline
+      preload="auto"
       class="absolute inset-0 w-full h-full object-cover object-center"
-      style="opacity:1; transition:opacity 0.6s ease; z-index:1;"
-    />
-
-    <!-- Reproductor de Lottie (oculto, de calidad vectorial infinita) -->
-    <lottie-player
-      id="farmer-anim-lottie"
-      src="/animated-farmer.json.json"
-      background="transparent"
-      speed="1"
-      preserveAspectRatio="xMidYMid slice"
-      class="absolute inset-0 w-full h-full"
-      style="opacity:0; transition:opacity 0.6s ease; z-index:2;"
-    ></lottie-player>
+      style="z-index:1;"
+    ></video>
 
     <!-- Degradado inferior -->
     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent pointer-events-none" style="z-index:3;"></div>
     <!-- Texto superpuesto -->
     <div class="absolute bottom-6 lg:bottom-10 left-6 lg:left-10 text-white max-w-xs lg:max-w-sm" style="z-index:4;">
       <h2 class="text-2xl lg:text-4xl font-bold drop-shadow-md mb-1 lg:mb-3">AquaSens</h2>
-      <p class="text-sm lg:text-base text-gray-300 drop-shadow">Plataforma integral para el monitoreo y gestión inteligente de tu invernadero.</p>
+      <p class="text-sm lg:text-base text-stone-300 drop-shadow">Plataforma integral para el monitoreo y gestión inteligente de tu invernadero.</p>
     </div>
   </div>
 
   <!-- Right Side: Login Form -->
-  <div class="flex flex-col justify-center w-full lg:w-1/2 p-8 sm:p-12 lg:p-24 bg-white dark:bg-gray-900">
+  <div class="flex flex-col justify-center w-full lg:w-1/2 p-8 sm:p-12 lg:p-24 bg-white dark:bg-stone-900">
     <div class="max-w-md w-full mx-auto">
       <div class="text-center lg:text-left mb-10">
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Acceder al Sistema</h1>
-        <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Ingresa tus credenciales para continuar</p>
+        <h1 class="text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight">Acceder al Sistema</h1>
+        <p class="mt-3 text-sm text-stone-500 dark:text-stone-400">Ingresa tus credenciales para continuar</p>
       </div>
 
       <form id="login-form" class="space-y-6" novalidate>
         <div>
-          <label for="username" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Usuario</label>
+          <label for="username" class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2">Usuario</label>
           <input id="username" name="username" type="text" autocomplete="username"
-            class="block w-full px-4 py-3.5 bg-gray-50 border border-gray-200 dark:border-gray-600 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700/50 dark:text-white text-sm transition-all shadow-sm"
+            class="block w-full px-4 py-3.5 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
             placeholder="admin o user" />
         </div>
 
         <div>
-          <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Contraseña</label>
+          <label for="password" class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2">Contraseña</label>
           <input id="password" name="password" type="password" autocomplete="current-password"
-            class="block w-full px-4 py-3.5 bg-gray-50 border border-gray-200 dark:border-gray-600 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700/50 dark:text-white text-sm transition-all shadow-sm"
+            class="block w-full px-4 py-3.5 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
             placeholder="••••••••" />
         </div>
 
         <div class="flex items-center justify-between pt-2">
-          <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+          <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400 cursor-pointer">
             <input id="remember-me" name="remember-me" type="checkbox"
-              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700" />
+              class="h-4 w-4 text-amber-600 focus:ring-amber-500 border-stone-300 rounded dark:border-stone-600 dark:bg-stone-700" />
             Recordarme
           </label>
-          <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">¿Olvidaste tu contraseña?</a>
+          <a href="#" class="text-sm font-medium text-amber-600 hover:text-amber-500 dark:text-stone-400">¿Olvidaste tu contraseña?</a>
         </div>
 
         <div class="pt-2">
           <button id="login-btn" type="submit"
-            class="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
+            class="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
             <span id="btn-text">Iniciar Sesión</span>
             <svg id="btn-spinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -97,35 +86,12 @@
   const btnText    = document.getElementById('btn-text')!;
   const btnSpinner = document.getElementById('btn-spinner')!;
   const errorMsg   = document.getElementById('error-message') as HTMLElement;
-  
-  const farmerImg  = document.getElementById('farmer-static')  as HTMLElement;
-  const animLottie = document.getElementById('farmer-anim-lottie') as any;
-
-  const ANIM_DURATION = 2500;
+  const welcomeVideo = document.getElementById('welcome-video') as HTMLVideoElement;
 
   function setLoading(on: boolean) {
     loginBtn.disabled = on;
     btnText.textContent = on ? 'Cargando…' : 'Iniciar Sesión';
     btnSpinner.classList.toggle('hidden', !on);
-  }
-
-  function startAnim() {
-    // Forzamos a que inicie desde el frame 0 y reproduzca la animación vectorial Lottie
-    animLottie.seek(0);
-    animLottie.play();
-    
-    // Transición suave: ocultar imagen, mostrar animación
-    farmerImg.style.opacity = '0';
-    animLottie.style.opacity = '1';
-  }
-
-  function stopAnim() {
-    farmerImg.style.opacity = '1';
-    animLottie.style.opacity = '0';
-    
-    setTimeout(() => {
-      animLottie.pause();
-    }, 600);
   }
 
   loginForm.addEventListener('submit', async (e) => {
@@ -143,11 +109,30 @@
 
     setLoading(true);
 
-    // 1. Mostrar y reproducir el archivo JSON (animación Lottie vectorial y nítida)
-    startAnim();
+    // 1. Reproducir el video INMEDIATAMENTE
+    welcomeVideo.currentTime = 0;
+    const playPromise = welcomeVideo.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        console.warn('El navegador bloqueó el video:', err);
+      });
+    }
 
-    // 2. Esperar que el usuario aprecie la animación perfecta
-    await new Promise(r => setTimeout(r, ANIM_DURATION));
+    // 2. Esperar a que el video termine ANTES de autenticar (igual que la animación original Lottie)
+    await new Promise<void>(resolve => {
+      // Timeout máximo por si el video se traba o no dispara 'ended'
+      const timeout = setTimeout(() => {
+        welcomeVideo.removeEventListener('ended', onEnded);
+        resolve();
+      }, 5000); // 5 segundos máximo de espera
+      
+      const onEnded = () => {
+        clearTimeout(timeout);
+        resolve();
+      };
+      
+      welcomeVideo.addEventListener('ended', onEnded, { once: true });
+    });
 
     // 3. Login
     try {
@@ -158,19 +143,20 @@
       } as any);
 
       if ((result as any)?.error) {
-        stopAnim();
         setLoading(false);
         errorMsg.textContent = 'Credenciales incorrectas. Intenta nuevamente.';
         errorMsg.classList.remove('hidden');
+        welcomeVideo.pause();
       } else {
+        // Redirigir al dashboard
         window.location.href = '/';
       }
     } catch (err) {
       console.error(err);
-      stopAnim();
       setLoading(false);
       errorMsg.textContent = 'Error inesperado. Intenta nuevamente.';
       errorMsg.classList.remove('hidden');
+      welcomeVideo.pause();
     }
   });
 </script>
