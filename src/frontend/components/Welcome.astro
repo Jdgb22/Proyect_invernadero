@@ -2,11 +2,14 @@
 // Welcome.astro
 ---
 
-<div class="min-h-screen flex flex-col lg:flex-row w-full bg-stone-50 dark:bg-stone-900">
-  
+<div
+  class="min-h-screen flex flex-col lg:flex-row w-full bg-stone-50 dark:bg-stone-900"
+>
   <!-- Left Side: Video Panel -->
-  <div id="farmer-panel" class="w-full h-72 lg:h-auto lg:min-h-screen lg:w-1/2 relative bg-stone-950 dark:bg-black overflow-hidden flex items-center justify-center flex-shrink-0">
-    
+  <div
+    id="farmer-panel"
+    class="w-full h-72 lg:h-auto lg:min-h-screen lg:w-1/2 relative bg-stone-950 dark:bg-black overflow-hidden flex items-center justify-center flex-shrink-0"
+  >
     <!-- Video de bienvenida -->
     <video
       id="welcome-video"
@@ -15,83 +18,170 @@
       playsinline
       preload="auto"
       class="absolute inset-0 w-full h-full object-cover object-center"
-      style="z-index:1;"
-    ></video>
+      style="z-index:1;"></video>
 
     <!-- Degradado inferior -->
-    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent pointer-events-none" style="z-index:3;"></div>
+    <div
+      class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent pointer-events-none"
+      style="z-index:3;"
+    >
+    </div>
     <!-- Texto superpuesto -->
-    <div class="absolute bottom-6 lg:bottom-10 left-6 lg:left-10 text-white max-w-xs lg:max-w-sm" style="z-index:4;">
-      <h2 class="text-2xl lg:text-4xl font-bold drop-shadow-md mb-1 lg:mb-3">AquaSens</h2>
-      <p class="text-sm lg:text-base text-stone-300 drop-shadow">Plataforma integral para el monitoreo y gestión inteligente de tu invernadero.</p>
+    <div
+      class="absolute bottom-6 lg:bottom-10 left-6 lg:left-10 text-white max-w-xs lg:max-w-sm"
+      style="z-index:4;"
+    >
+      <h2 class="text-2xl lg:text-4xl font-bold drop-shadow-md mb-1 lg:mb-3">
+        Macollo
+      </h2>
+      <p class="text-sm lg:text-base text-stone-300 drop-shadow">
+        Plataforma integral para el monitoreo y gestión inteligente de tu
+        invernadero.
+      </p>
     </div>
   </div>
 
   <!-- Right Side: Login Form -->
-  <div class="flex flex-col justify-center w-full lg:w-1/2 p-8 sm:p-12 lg:p-24 bg-white dark:bg-stone-900">
+  <div
+    class="flex flex-col justify-center w-full lg:w-1/2 p-8 sm:p-12 lg:p-24 bg-white dark:bg-stone-900"
+  >
     <div class="max-w-md w-full mx-auto">
       <div class="text-center lg:text-left mb-10">
-        <h1 class="text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight">Acceder al Sistema</h1>
-        <p class="mt-3 text-sm text-stone-500 dark:text-stone-400">Ingresa tus credenciales para continuar</p>
+        <h1
+          class="text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight"
+        >
+          Acceder al Sistema
+        </h1>
+        <p class="mt-3 text-sm text-stone-500 dark:text-stone-400">
+          Ingresa tus credenciales para continuar
+        </p>
       </div>
 
       <form id="login-form" class="space-y-5" novalidate>
         <div>
-          <label for="username" class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2">Usuario o Correo Electrónico</label>
-          <input id="username" name="username" type="text" autocomplete="username"
+          <label
+            for="username"
+            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2"
+            >Usuario o Correo Electrónico</label
+          >
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
             class="block w-full px-4 py-3.5 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
-            placeholder="admin@ejemplo.com o tu usuario" />
+            placeholder="admin@ejemplo.com o tu usuario"
+          />
         </div>
 
         <div>
-          <label for="password" class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2">Contraseña</label>
-          <input id="password" name="password" type="password" autocomplete="current-password"
+          <label
+            for="password"
+            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2"
+            >Contraseña</label
+          >
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
             class="block w-full px-4 py-3.5 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
-            placeholder="••••••••" />
+            placeholder="••••••••"
+          />
         </div>
 
         <div class="flex items-center justify-between pt-1">
-          <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400 cursor-pointer">
-            <input id="remember-me" name="remember-me" type="checkbox"
-              class="h-4 w-4 text-amber-600 focus:ring-amber-500 border-stone-300 rounded dark:border-stone-600 dark:bg-stone-700" />
+          <label
+            class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400 cursor-pointer"
+          >
+            <input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              class="h-4 w-4 text-amber-600 focus:ring-amber-500 border-stone-300 rounded dark:border-stone-600 dark:bg-stone-700"
+            />
             Recordarme
           </label>
-          <a href="#" class="text-sm font-medium text-amber-600 hover:text-amber-500 dark:text-stone-400">¿Olvidaste tu contraseña?</a>
+          <a
+            href="#"
+            class="text-sm font-medium text-amber-600 hover:text-amber-500 dark:text-stone-400"
+            >¿Olvidaste tu contraseña?</a
+          >
         </div>
 
         <div class="pt-1">
-          <button id="login-btn" type="submit"
-            class="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
+          <button
+            id="login-btn"
+            type="submit"
+            class="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+          >
             <span id="btn-text">Iniciar Sesión</span>
-            <svg id="btn-spinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            <svg
+              id="btn-spinner"
+              class="hidden animate-spin h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
           </button>
         </div>
 
         <!-- Divisor con opción Google -->
         <div class="relative flex items-center justify-center my-3">
-          <div class="border-t border-stone-200 dark:border-stone-700 w-full"></div>
-          <span class="bg-white dark:bg-stone-900 px-3 text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wider font-medium">o continuar con</span>
-          <div class="border-t border-stone-200 dark:border-stone-700 w-full"></div>
+          <div class="border-t border-stone-200 dark:border-stone-700 w-full">
+          </div>
+          <span
+            class="bg-white dark:bg-stone-900 px-3 text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wider font-medium"
+            >o continuar con</span
+          >
+          <div class="border-t border-stone-200 dark:border-stone-700 w-full">
+          </div>
         </div>
 
         <!-- Botón de Google -->
         <div>
-          <button id="google-btn" type="button"
-            class="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700/80 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-200 font-semibold text-sm rounded-xl transition-all shadow-sm hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-amber-500">
+          <button
+            id="google-btn"
+            type="button"
+            class="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700/80 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-200 font-semibold text-sm rounded-xl transition-all shadow-sm hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
             <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              ></path>
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              ></path>
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              ></path>
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+              ></path>
             </svg>
             <span>Ingresar con Google</span>
           </button>
         </div>
 
-        <div id="error-message" class="hidden p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+        <div
+          id="error-message"
+          class="hidden p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400"
+        >
           Credenciales incorrectas. Intenta nuevamente.
         </div>
       </form>
@@ -100,49 +190,55 @@
 </div>
 
 <script>
-  import { signIn } from 'auth-astro/client';
+  import { signIn } from "auth-astro/client";
 
-  const loginForm  = document.getElementById('login-form')!;
-  const loginBtn   = document.getElementById('login-btn') as HTMLButtonElement;
-  const googleBtn  = document.getElementById('google-btn') as HTMLButtonElement;
-  const btnText    = document.getElementById('btn-text')!;
-  const btnSpinner = document.getElementById('btn-spinner')!;
-  const errorMsg   = document.getElementById('error-message') as HTMLElement;
-  const welcomeVideo = document.getElementById('welcome-video') as HTMLVideoElement;
+  const loginForm = document.getElementById("login-form")!;
+  const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
+  const googleBtn = document.getElementById("google-btn") as HTMLButtonElement;
+  const btnText = document.getElementById("btn-text")!;
+  const btnSpinner = document.getElementById("btn-spinner")!;
+  const errorMsg = document.getElementById("error-message") as HTMLElement;
+  const welcomeVideo = document.getElementById(
+    "welcome-video",
+  ) as HTMLVideoElement;
 
   function setLoading(on: boolean) {
     if (loginBtn) loginBtn.disabled = on;
     if (googleBtn) googleBtn.disabled = on;
-    if (btnText) btnText.textContent = on ? 'Cargando…' : 'Iniciar Sesión';
-    if (btnSpinner) btnSpinner.classList.toggle('hidden', !on);
+    if (btnText) btnText.textContent = on ? "Cargando…" : "Iniciar Sesión";
+    if (btnSpinner) btnSpinner.classList.toggle("hidden", !on);
   }
 
   // Login con Google
   if (googleBtn) {
-    googleBtn.addEventListener('click', async () => {
+    googleBtn.addEventListener("click", async () => {
       try {
         setLoading(true);
-        await signIn('google', { callbackUrl: '/' } as any);
+        await signIn("google", { callbackUrl: "/" } as any);
       } catch (err) {
         console.error(err);
         setLoading(false);
-        errorMsg.textContent = 'Error al conectar con Google. Intenta nuevamente.';
-        errorMsg.classList.remove('hidden');
+        errorMsg.textContent =
+          "Error al conectar con Google. Intenta nuevamente.";
+        errorMsg.classList.remove("hidden");
       }
     });
   }
 
   // Login con credenciales de la Base de Datos PostgreSQL
-  loginForm.addEventListener('submit', async (e) => {
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    errorMsg.classList.add('hidden');
+    errorMsg.classList.add("hidden");
 
-    const username = (document.getElementById('username') as HTMLInputElement).value.trim();
-    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const username = (
+      document.getElementById("username") as HTMLInputElement
+    ).value.trim();
+    const password = (document.getElementById("password") as HTMLInputElement)
+      .value;
 
     if (!username || !password) {
-      errorMsg.textContent = 'Por favor ingresa usuario/correo y contraseña.';
-      errorMsg.classList.remove('hidden');
+      errorMsg.textContent = "Por favor ingresa usuario/correo y contraseña.";
+      errorMsg.classList.remove("hidden");
       return;
     }
 
@@ -153,51 +249,53 @@
       welcomeVideo.currentTime = 0;
       const playPromise = welcomeVideo.play();
       if (playPromise !== undefined) {
-        playPromise.catch(err => {
-          console.warn('El navegador bloqueó el video:', err);
+        playPromise.catch((err) => {
+          console.warn("El navegador bloqueó el video:", err);
         });
       }
     }
 
     // 2. Esperar brevemente al video
-    await new Promise<void>(resolve => {
+    await new Promise<void>((resolve) => {
       if (!welcomeVideo) return resolve();
       const timeout = setTimeout(() => {
-        welcomeVideo.removeEventListener('ended', onEnded);
+        welcomeVideo.removeEventListener("ended", onEnded);
         resolve();
       }, 3500);
-      
+
       const onEnded = () => {
         clearTimeout(timeout);
         resolve();
       };
-      
-      welcomeVideo.addEventListener('ended', onEnded, { once: true });
+
+      welcomeVideo.addEventListener("ended", onEnded, { once: true });
     });
 
     // 3. Autenticación con Auth.js contra PostgreSQL
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         email: username,
         password: password,
         redirect: false,
-        callbackUrl: '/',
+        callbackUrl: "/",
       } as any);
 
       if ((result as any)?.error) {
         setLoading(false);
-        errorMsg.textContent = 'Credenciales incorrectas. Verifica tu usuario/correo y contraseña.';
-        errorMsg.classList.remove('hidden');
+        errorMsg.textContent =
+          "Credenciales incorrectas. Verifica tu usuario/correo y contraseña.";
+        errorMsg.classList.remove("hidden");
         if (welcomeVideo) welcomeVideo.pause();
       } else {
         // Redirigir al dashboard
-        window.location.href = '/';
+        window.location.href = "/";
       }
     } catch (err) {
       console.error(err);
       setLoading(false);
-      errorMsg.textContent = 'Error inesperado al iniciar sesión. Intenta nuevamente.';
-      errorMsg.classList.remove('hidden');
+      errorMsg.textContent =
+        "Error inesperado al iniciar sesión. Intenta nuevamente.";
+      errorMsg.classList.remove("hidden");
       if (welcomeVideo) welcomeVideo.pause();
     }
   });
