@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # Custom agents rules
 .agents/
+
+# vercel
+.vercel/
