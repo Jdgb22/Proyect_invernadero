@@ -118,7 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Petición al recurso externo desde el servidor (sin bloqueos de CORS de navegador)
     const response = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'AquaSens-Greenhouse-Sync/1.0',
+        'User-Agent': 'Macollo-Greenhouse-Sync/1.0',
         'Accept': 'text/csv,text/plain,*/*'
       }
     });
@@ -275,7 +275,7 @@ export const POST: APIRoute = async ({ request }) => {
 
       parsedRecords.push({
         id: `MET-GS-${fila}-${colFinal.replace(' ', '')}-${fecha}-${r}`,
-        invernadero: 'Invernadero AquaSens',
+        invernadero: 'Invernadero Macollo',
         fila,
         columna: colFinal,
         plantId,

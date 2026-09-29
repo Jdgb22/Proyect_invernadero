@@ -1,6 +1,6 @@
 ---
 // src/frontend/components/Historial.astro
-// Panel de Historial Agronómico Cronológico para Invernadero AquaSens.
+// Panel de Historial Agronómico Cronológico para Invernadero Macollo.
 // Permite consultar mediciones por fecha específica, importar archivos (Excel/CSV)
 // o sincronizar directamente con Google Sheets / Google Docs.
 
@@ -1167,9 +1167,9 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
     }
 
     // 2. COMBINAR CON LOCALSTORAGE (Registros importados o sincronizados previamente)
-    const STORAGE_KEY_RECORDS = "aquasens_custom_history_records";
-    const STORAGE_KEY_SHEETS_URL = "aquasens_google_sheet_url";
-    const STORAGE_KEY_LAST_SYNC = "aquasens_last_sync_time";
+    const STORAGE_KEY_RECORDS = "macollo_custom_history_records";
+    const STORAGE_KEY_SHEETS_URL = "macollo_google_sheet_url";
+    const STORAGE_KEY_LAST_SYNC = "macollo_last_sync_time";
 
     function getStoredRecords() {
       try {
@@ -2198,7 +2198,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
           parsed.push({
             id: `MET-UPLOAD-${fila}-${col.replace(" ", "")}-${fecha}-${i}`,
-            invernadero: "Invernadero AquaSens",
+            invernadero: "Invernadero Macollo",
             fila,
             columna: col,
             plantId,

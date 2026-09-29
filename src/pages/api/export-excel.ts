@@ -50,7 +50,7 @@ export const POST: APIRoute = async ({ request }) => {
     const buffer = await generateExcelBuffer(plants);
 
     const nowStr = new Date().toISOString().slice(0, 10);
-    const filename = `AquaSens_Mediciones_Invernadero_${nowStr}.xlsx`;
+    const filename = `Macollo_Mediciones_Invernadero_${nowStr}.xlsx`;
 
     return new Response(buffer, {
       status: 200,
@@ -76,7 +76,7 @@ export const GET: APIRoute = async () => {
     const plants = getAllPlantsGrid();
     const buffer = await generateExcelBuffer(plants);
     const nowStr = new Date().toISOString().slice(0, 10);
-    const filename = `AquaSens_Mediciones_Invernadero_${nowStr}.xlsx`;
+    const filename = `Macollo_Mediciones_Invernadero_${nowStr}.xlsx`;
 
     return new Response(buffer, {
       status: 200,
@@ -96,8 +96,8 @@ export const GET: APIRoute = async () => {
 
 async function generateExcelBuffer(plants: PlantMatrixItem[]): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'AquaSens Smart Greenhouse';
-  workbook.lastModifiedBy = 'Sistema Automatizado AquaSens';
+  workbook.creator = 'Macollo Smart Greenhouse';
+  workbook.lastModifiedBy = 'Sistema Automatizado Macollo';
   workbook.created = new Date();
   workbook.modified = new Date();
 
@@ -116,7 +116,7 @@ async function generateExcelBuffer(plants: PlantMatrixItem[]): Promise<ArrayBuff
   // Título Principal
   wsToday.mergeCells('A1:P1');
   const titleCell = wsToday.getCell('A1');
-  titleCell.value = 'INVERNADERO AQUASENS — REPORTE DE MEDICIONES AGRONÓMICAS';
+  titleCell.value = 'INVERNADERO MACOLLO — REPORTE DE MEDICIONES AGRONÓMICAS';
   titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: COLORS.headerText } };
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.titleBg } };
   titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -332,7 +332,7 @@ async function generateExcelBuffer(plants: PlantMatrixItem[]): Promise<ArrayBuff
   // Título
   wsHistory.mergeCells('A1:N1');
   const hTitle = wsHistory.getCell('A1');
-  hTitle.value = 'HISTORIAL AGRONÓMICO CRONOLÓGICO — INVERNADERO AQUASENS';
+  hTitle.value = 'HISTORIAL AGRONÓMICO CRONOLÓGICO — INVERNADERO MACOLLO';
   hTitle.font = { name: 'Calibri', size: 13, bold: true, color: { argb: COLORS.headerText } };
   hTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.titleBg } };
   hTitle.alignment = { vertical: 'middle', horizontal: 'center' };

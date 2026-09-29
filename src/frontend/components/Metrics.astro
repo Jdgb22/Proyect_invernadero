@@ -1,6 +1,6 @@
 ---
 // src/frontend/components/Metrics.astro
-// Panel Profesional de Métricas Agronómicas para Invernadero AquaSens.
+// Panel Profesional de Métricas Agronómicas para Invernadero Macollo.
 // Matriz de 4 Filas (t0 a t3) × 5 Columnas (Col 1 a Col 5) = 20 Plantas.
 // Al hacer clic en cualquier planta (en el selector rápido o en la tabla Excel),
 // se abre un MODAL emergente con la última medición de hoy y sus gráficos individuales.
@@ -266,7 +266,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
         <span class="p-1.5 rounded-lg bg-green-100 dark:bg-stone-900/50 text-green-700 dark:text-stone-300 text-sm">🌐</span>
         <div>
           <h3 class="font-black text-green-950 dark:text-white text-sm">
-            Gráficos Generales del Invernadero AquaSens
+            Gráficos Generales del Invernadero Macollo
           </h3>
           <p class="text-[11px] text-green-600 dark:text-stone-400">
             Consolidado estadístico y tendencias agronómicas de todas las plantas (Filas t0 a t3)
@@ -2222,7 +2222,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
 
       const blob = await response.blob();
       const nowStr = new Date().toISOString().slice(0, 10);
-      const filename = `AquaSens_Mediciones_Invernadero_${nowStr}.xlsx`;
+      const filename = `Macollo_Mediciones_Invernadero_${nowStr}.xlsx`;
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2251,7 +2251,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
       let csv = "PlantaID;Invernadero;Fila;Columna;Fecha;Hora;pH Suelo;Temp Interna (°C);Temp Externa (°C);Temp Suelo (°C);Crecimiento (%);Productividad;Sanidad;Responsable;Observaciones\n";
       plantsState.forEach((p) => {
         const m = p.latestMetric;
-        csv += `"${p.plantId}";"Invernadero AquaSens";"${p.fila}";"${p.columna}";"${m.fecha}";"${m.hora}";${m.phSuelo};${m.tempInterna};${m.tempExterna};${m.tempSuelo};${m.crecimiento}%;"${m.productividad}";"${m.sanidad}";"${m.responsable}";"${m.observaciones || ''}"\n`;
+        csv += `"${p.plantId}";"Invernadero Macollo";"${p.fila}";"${p.columna}";"${m.fecha}";"${m.hora}";${m.phSuelo};${m.tempInterna};${m.tempExterna};${m.tempSuelo};${m.crecimiento}%;"${m.productividad}";"${m.sanidad}";"${m.responsable}";"${m.observaciones || ''}"\n`;
       });
 
       const bom = "\uFEFF";
@@ -2259,7 +2259,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `AquaSens_Mediciones_Invernadero_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `Macollo_Mediciones_Invernadero_${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -2313,7 +2313,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
     if (targetPlant) {
       const newRecord = {
         id: `MET-${fila}-${columna.replace(' ', '')}-${Date.now()}`,
-        invernadero: 'Invernadero AquaSens',
+        invernadero: 'Invernadero Macollo',
         fila: fila as any,
         columna: columna as any,
         plantId: targetPlant.plantId,

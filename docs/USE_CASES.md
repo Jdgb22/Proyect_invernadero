@@ -1,6 +1,6 @@
 # Casos de Uso
 
-## Sistema: AquaSens - Monitoreo y Simulación de Greenhouse
+## Sistema: Macollo - Monitoreo y Simulación de Greenhouse
 
 ### Caso de Uso: CU-001 - Autenticación de Usuario
 **Actor(es):** Usuario final, Sistema de autenticación

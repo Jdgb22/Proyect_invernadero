@@ -1,10 +1,10 @@
 // src/backend/services/metricsData.ts
-// Servicio y modelo de datos de Métricas Agronómicas para Invernadero AquaSens (Invernadero Único).
+// Servicio y modelo de datos de Métricas Agronómicas para Invernadero Macollo (Invernadero Único).
 // Matriz estricta de 4 Filas (t0, t1, t2, t3) × 5 Columnas (Col 1, Col 2, Col 3, Col 4, Col 5) = 20 Plantas.
 
 export interface MetricRecord {
   id: string;
-  invernadero: string; // Invernadero AquaSens (Único)
+  invernadero: string; // Invernadero Macollo (Único)
   fila: 't0' | 't1' | 't2' | 't3';
   columna: 'Col 1' | 'Col 2' | 'Col 3' | 'Col 4' | 'Col 5';
   plantId: string; // ej: 'P-01', 'P-02', ..., 'P-20'
@@ -131,7 +131,7 @@ FILAS.forEach((fila) => {
     // 1. Registro del día de hoy (Última medición)
     const todayRecord: MetricRecord = {
       id: `MET-${fila}-${columna.replace(' ', '')}-TODAY`,
-      invernadero: 'Invernadero AquaSens',
+      invernadero: 'Invernadero Macollo',
       fila,
       columna,
       plantId,
@@ -155,7 +155,7 @@ FILAS.forEach((fila) => {
     // 2. Histórico previo (3 días antes) para gráficos individuales ricos y reales
     const historyRecord1: MetricRecord = {
       id: `MET-${fila}-${columna.replace(' ', '')}-H1`,
-      invernadero: 'Invernadero AquaSens',
+      invernadero: 'Invernadero Macollo',
       fila,
       columna,
       plantId,
@@ -178,7 +178,7 @@ FILAS.forEach((fila) => {
 
     const historyRecord2: MetricRecord = {
       id: `MET-${fila}-${columna.replace(' ', '')}-H2`,
-      invernadero: 'Invernadero AquaSens',
+      invernadero: 'Invernadero Macollo',
       fila,
       columna,
       plantId,
@@ -201,7 +201,7 @@ FILAS.forEach((fila) => {
 
     const historyRecord3: MetricRecord = {
       id: `MET-${fila}-${columna.replace(' ', '')}-H3`,
-      invernadero: 'Invernadero AquaSens',
+      invernadero: 'Invernadero Macollo',
       fila,
       columna,
       plantId,

@@ -1,7 +1,7 @@
 # System Architecture
 
 ## Overview
-AquaSens is a greenhouse monitoring and 3D simulation platform built with **Astro** v7.2.8 in SSR mode, deployed to Vercel. The system integrates sensor data, weather services, and provides visualization capabilities.
+Macollo is a greenhouse monitoring and 3D simulation platform built with **Astro** v7.2.8 in SSR mode, deployed to Vercel. The system integrates sensor data, weather services, and provides visualization capabilities.
 
 ## Technology Stack
 
