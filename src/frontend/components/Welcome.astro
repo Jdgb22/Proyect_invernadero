@@ -26,6 +26,25 @@
       style="z-index:3;"
     >
     </div>
+
+    <!-- Botón de Audio (Mute/Unmute) -->
+    <button
+      id="audio-toggle-btn"
+      type="button"
+      class="absolute top-4 right-4 lg:top-8 lg:right-8 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500"
+      style="z-index:10;"
+      aria-label="Alternar audio"
+    >
+      <!-- Ícono Muted (por defecto) -->
+      <svg id="icon-muted" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+      </svg>
+      <!-- Ícono Unmuted (oculto por defecto) -->
+      <svg id="icon-unmuted" class="hidden w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+      </svg>
+    </button>
     <!-- Texto superpuesto -->
     <div
       class="absolute bottom-6 lg:bottom-10 left-6 lg:left-10 text-white max-w-xs lg:max-w-sm"
@@ -201,6 +220,22 @@
   const welcomeVideo = document.getElementById(
     "welcome-video",
   ) as HTMLVideoElement;
+  const audioToggleBtn = document.getElementById("audio-toggle-btn");
+  const iconMuted = document.getElementById("icon-muted");
+  const iconUnmuted = document.getElementById("icon-unmuted");
+
+  if (audioToggleBtn && welcomeVideo && iconMuted && iconUnmuted) {
+    audioToggleBtn.addEventListener("click", () => {
+      welcomeVideo.muted = !welcomeVideo.muted;
+      if (welcomeVideo.muted) {
+        iconMuted.classList.remove("hidden");
+        iconUnmuted.classList.add("hidden");
+      } else {
+        iconMuted.classList.add("hidden");
+        iconUnmuted.classList.remove("hidden");
+      }
+    });
+  }
 
   function setLoading(on: boolean) {
     if (loginBtn) loginBtn.disabled = on;
