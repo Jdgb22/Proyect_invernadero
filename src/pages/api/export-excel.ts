@@ -180,7 +180,12 @@ async function generateExcelBuffer(plants: PlantMatrixItem[]): Promise<ArrayBuff
     row.getCell(4).value = m.fecha;
     row.getCell(5).value = m.hora;
     row.getCell(6).value = Number(m.phSuelo);
-    row.getCell(7).value = Number(m.tempInterna);
+    if (m.tempInterna !== null && m.tempInterna !== undefined) {
+      row.getCell(7).value = Number(m.tempInterna);
+      row.getCell(7).numFmt = '0.0" °C"';
+    } else {
+      row.getCell(7).value = 'N/D';
+    }
     row.getCell(8).value = Number(m.tempExterna);
     row.getCell(9).value = Number(m.tempSuelo);
     row.getCell(10).value = Number(m.crecimiento);
@@ -392,7 +397,12 @@ async function generateExcelBuffer(plants: PlantMatrixItem[]): Promise<ArrayBuff
     row.getCell(5).value = m.fecha;
     row.getCell(6).value = m.hora;
     row.getCell(7).value = Number(m.phSuelo);
-    row.getCell(8).value = Number(m.tempInterna);
+    if (m.tempInterna !== null && m.tempInterna !== undefined) {
+      row.getCell(8).value = Number(m.tempInterna);
+      row.getCell(8).numFmt = '0.0" °C"';
+    } else {
+      row.getCell(8).value = 'N/D';
+    }
     row.getCell(9).value = Number(m.tempExterna);
     row.getCell(10).value = Number(m.tempSuelo);
     row.getCell(11).value = Number(m.crecimiento);

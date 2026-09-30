@@ -1,16 +1,24 @@
 ---
 // Dashboard.astro
+import { getAllPlantsGrid, type PlantMatrixItem } from "../../backend/services/metricsData";
+const plants: PlantMatrixItem[] = getAllPlantsGrid();
 ---
 
 <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 overflow-hidden">
   <div class="bg-[#f4fce3] dark:bg-stone-800 rounded-2xl shadow-sm p-4 sm:p-6 border border-green-100 dark:border-[#166534]">
-    <div class="mb-6">
-      <h2 class="text-2xl font-bold text-green-950 dark:text-white mb-2">Dashboard Principal</h2>
-      <p class="text-green-700 dark:text-stone-300">Monitoreo de cultivos y simulación ambiental del invernadero.</p>
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h2 class="text-2xl font-bold text-green-950 dark:text-white mb-1">Dashboard Principal</h2>
+        <p class="text-green-700 dark:text-stone-300 text-sm">Monitoreo de cultivos reales y simulación ambiental del invernadero.</p>
+      </div>
+      <div id="dashboard-sync-indicator" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-stone-100 dark:bg-stone-900/60 text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700">
+        <span class="w-2 h-2 rounded-full bg-stone-400"></span>
+        <span id="dashboard-sync-text">Esperando sincronización de datos reales</span>
+      </div>
     </div>
 
     <div class="grid lg:grid-cols-2 gap-6 items-start">
-      <!-- Matriz de Plantas (4x5) -->
+      <!-- Matriz de Plantas (4x5 = 20 Plantas) -->
       <div class="flex flex-col">
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
@@ -18,7 +26,7 @@
       <h2
         class="text-xl font-bold text-green-950 dark:text-white flex items-center gap-2"
       >
-        <span>🌱</span> Estado de los Cultivos
+        <span>🌱</span> Estado de los Cultivos (4 Filas × 5 Plantas)
       </h2>
       <div
         class="flex flex-wrap gap-3 sm:gap-4 text-xs font-semibold text-green-700 dark:text-stone-300 mt-2 sm:mt-0"
@@ -35,71 +43,76 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+    <div id="dashboard-plant-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
       {
-        Array.from({ length: 20 }).map((_, i) => {
-          // Generar algunos estados aleatorios para demostrar el diseño
-          const isWarning = i === 4 || i === 12;
-          const isCritical = i === 8;
-          const statusColor = isCritical
-            ? "bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/50"
-            : isWarning
-              ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/50"
-              : "bg-lime-50 dark:bg-lime-900/10 border-lime-200 dark:border-lime-800/30";
+        plants.map((p) => {
+          const m = p.latestMetric;
+          const hasData = Boolean(m.fecha);
+          const isCritical = hasData && m.sanidad === "Crítica";
+          const isWarning = hasData && m.sanidad === "Vulnerable";
+          const statusColor = !hasData
+            ? "bg-stone-50/50 dark:bg-stone-900/30 border-stone-200 dark:border-stone-800"
+            : isCritical
+              ? "bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/50"
+              : isWarning
+                ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/50"
+                : "bg-lime-50 dark:bg-lime-900/10 border-lime-200 dark:border-lime-800/30";
 
-          const iconBg = isCritical
-            ? "bg-rose-500"
-            : isWarning
-              ? "bg-yellow-400"
-              : "bg-lime-500";
+          const iconBg = !hasData
+            ? "bg-stone-400"
+            : isCritical
+              ? "bg-rose-500"
+              : isWarning
+                ? "bg-yellow-400"
+                : "bg-lime-500";
 
-          const humedad = isCritical ? "30%" : isWarning ? "45%" : "65%";
-          const temp = isCritical ? "32°C" : isWarning ? "28°C" : "24°C";
-          const plantIcon = isCritical ? "🥀" : isWarning ? "🌿" : "🪴";
-          const plantStatus = isCritical ? 'Crítico' : isWarning ? 'Atención' : 'Óptimo';
-          
-          // Datos generados para el modal
-          const ph = (Math.random() * 1.5 + 5.5).toFixed(1);
-          const tsoil = (Math.random() * 4 + 18).toFixed(1) + "°C";
-          const growth = Math.floor(Math.random() * 30 + (isCritical ? 30 : 60)) + "%";
-          const prod = isCritical ? "Baja" : isWarning ? "Media" : "Alta";
-          const health = isCritical ? "Enferma" : isWarning ? "Vulnerable" : "Excelente";
-          
-          const row = Math.floor(i / 5) + 1;
-          const col = (i % 5) + 1;
-          const plantId = `T0-F${row}C${col}`;
+          const humedad = !hasData ? "--" : (isCritical ? "35%" : isWarning ? "48%" : "65%");
+          const temp = !hasData ? "N/D" : (m.tempInterna !== null && m.tempInterna !== undefined ? `${m.tempInterna}°C` : "N/D");
+          const plantIcon = !hasData ? "🌱" : (isCritical ? "🥀" : isWarning ? "🌿" : "🪴");
+          const plantStatus = !hasData ? 'Esperando datos' : (isCritical ? 'Crítico' : isWarning ? 'Atención' : 'Óptimo');
+          const ph = !hasData ? "--" : m.phSuelo.toFixed(1);
+          const tsoil = !hasData ? "--" : (m.tempSuelo !== null && m.tempSuelo !== undefined ? `${Number(m.tempSuelo).toFixed(1)}°C` : "N/D");
+          const growth = !hasData ? "--" : (m.alturaCm !== null && m.alturaCm !== undefined ? `${m.alturaCm} cm` : `${m.crecimiento}%`);
 
           return (
             <div
               class={`plant-card relative group overflow-hidden rounded-xl border p-2.5 transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer ${statusColor}`}
-              data-id={plantId}
+              data-id={p.code}
+              data-plantid={p.plantId}
+              data-fila={p.fila}
+              data-columna={p.columna}
               data-icon={plantIcon}
               data-status={plantStatus}
-              data-statuscolor={isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-yellow-600 dark:text-yellow-400' : 'text-lime-600 dark:text-lime-400'}
+              data-statuscolor={!hasData ? 'text-stone-500 dark:text-stone-400' : isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-yellow-600 dark:text-yellow-400' : 'text-lime-600 dark:text-lime-400'}
               data-ph={ph}
               data-tsoil={tsoil}
               data-tair={temp}
               data-growth={growth}
-              data-prod={prod}
-              data-health={health}
+              data-prod={hasData ? m.productividad : 'Sin datos'}
+              data-health={hasData ? m.sanidad : 'Sin datos'}
             >
               <div class="flex justify-between items-start mb-1.5">
-                <span class="text-[9px] font-black uppercase tracking-wider text-green-600 dark:text-stone-400">
-                  {plantId}
-                </span>
-                <span class={`w-1.5 h-1.5 rounded-full ${iconBg} shadow-sm`} />
+                <div class="flex items-center gap-1">
+                  <span class="text-[10px] font-black uppercase tracking-wider text-green-700 dark:text-stone-300 font-mono">
+                    {p.code}
+                  </span>
+                  <span class="text-[8px] text-green-500 dark:text-stone-400 font-mono">
+                    ({p.plantId})
+                  </span>
+                </div>
+                <span class={`plant-dot w-1.5 h-1.5 rounded-full ${iconBg} shadow-sm`} />
               </div>
-              <div class="flex justify-center mb-2 text-2xl transition-transform duration-300 group-hover:scale-110">
+              <div class="plant-icon-display flex justify-center mb-2 text-2xl transition-transform duration-300 group-hover:scale-110">
                 {plantIcon}
               </div>
               <div class="grid grid-cols-2 gap-1 text-[9px] font-bold text-green-800 dark:text-stone-300">
                 <div class="flex flex-col items-center bg-[#f4fce3]/60 dark:bg-black/20 rounded py-0.5">
                   <span class="opacity-60 mb-px">💧</span>
-                  <span>{humedad}</span>
+                  <span class="plant-humedad-val">{humedad}</span>
                 </div>
                 <div class="flex flex-col items-center bg-[#f4fce3]/60 dark:bg-black/20 rounded py-0.5">
                   <span class="opacity-60 mb-px">🌡️</span>
-                  <span>{temp}</span>
+                  <span class="plant-temp-val">{temp}</span>
                 </div>
               </div>
             </div>
@@ -108,6 +121,7 @@
       }
     </div>
   </div>
+
 
   <div class="flex flex-col">
     <!-- Contenedor para Three.js -->
@@ -224,20 +238,28 @@
     
     <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
       <div class="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-800/30">
-        <div class="text-[10px] font-bold uppercase tracking-wider text-blue-600/70 dark:text-blue-400/70 mb-1">pH del Suelo</div>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-blue-600/70 dark:text-blue-400/70 mb-1">pH del Suelo (Ph)</div>
         <div id="modal-plant-ph" class="text-lg font-black text-blue-900 dark:text-blue-100">6.5</div>
       </div>
       <div class="bg-orange-50/50 dark:bg-orange-900/10 p-3 rounded-xl border border-orange-100 dark:border-orange-800/30">
-        <div class="text-[10px] font-bold uppercase tracking-wider text-orange-600/70 dark:text-orange-400/70 mb-1">Temp. Suelo</div>
-        <div id="modal-plant-tsoil" class="text-lg font-black text-orange-900 dark:text-orange-100">22°C</div>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-orange-600/70 dark:text-orange-400/70 mb-1">T. Piso Planta (T_Planta_C)</div>
+        <div id="modal-plant-tsoil" class="text-lg font-black text-orange-900 dark:text-orange-100">N/D</div>
       </div>
       <div class="bg-green-50/50 dark:bg-stone-900/10 p-3 rounded-xl border border-green-100 dark:border-stone-800/30">
-        <div class="text-[10px] font-bold uppercase tracking-wider text-green-600/70 dark:text-stone-400/70 mb-1">Temp. Aire</div>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-green-600/70 dark:text-stone-400/70 mb-1">T. Invernadero (T_Int_C)</div>
         <div id="modal-plant-tair" class="text-lg font-black text-green-900 dark:text-stone-100">24°C</div>
       </div>
+      <div class="bg-sky-50/50 dark:bg-sky-900/10 p-3 rounded-xl border border-sky-100 dark:border-sky-800/30">
+        <div class="text-[10px] font-bold uppercase tracking-wider text-sky-600/70 dark:text-sky-400/70 mb-1">T. Externa (T_Ext_C)</div>
+        <div id="modal-plant-text" class="text-lg font-black text-sky-900 dark:text-sky-100">20°C</div>
+      </div>
+      <div class="bg-teal-50/50 dark:bg-teal-900/10 p-3 rounded-xl border border-teal-100 dark:border-teal-800/30">
+        <div class="text-[10px] font-bold uppercase tracking-wider text-teal-600/70 dark:text-teal-400/70 mb-1">Humedad (humedad_Pct)</div>
+        <div id="modal-plant-hum" class="text-lg font-black text-teal-900 dark:text-teal-100">65%</div>
+      </div>
       <div class="bg-lime-50/50 dark:bg-lime-900/10 p-3 rounded-xl border border-lime-100 dark:border-lime-800/30">
-        <div class="text-[10px] font-bold uppercase tracking-wider text-lime-600/70 dark:text-lime-400/70 mb-1">Crecimiento</div>
-        <div id="modal-plant-growth" class="text-lg font-black text-lime-900 dark:text-lime-100">85%</div>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-lime-600/70 dark:text-lime-400/70 mb-1">Altura Planta (ALtura_cm)</div>
+        <div id="modal-plant-growth" class="text-lg font-black text-lime-900 dark:text-lime-100">85 cm</div>
       </div>
       <div class="bg-purple-50/50 dark:bg-purple-900/10 p-3 rounded-xl border border-purple-100 dark:border-purple-800/30">
         <div class="text-[10px] font-bold uppercase tracking-wider text-purple-600/70 dark:text-purple-400/70 mb-1">Productividad</div>
@@ -245,7 +267,11 @@
       </div>
       <div class="bg-rose-50/50 dark:bg-rose-900/10 p-3 rounded-xl border border-rose-100 dark:border-rose-800/30">
         <div class="text-[10px] font-bold uppercase tracking-wider text-rose-600/70 dark:text-rose-400/70 mb-1">Sanidad</div>
-        <div id="modal-plant-health" class="text-lg font-black text-rose-900 dark:text-rose-100">Buena</div>
+        <div id="modal-plant-health" class="text-lg font-black text-rose-900 dark:text-rose-100">Saludable</div>
+      </div>
+      <div class="bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70 mb-1">Responsable</div>
+        <div id="modal-plant-resp" class="text-xs font-bold text-emerald-900 dark:text-emerald-100 truncate">Equipo de Campo</div>
       </div>
     </div>
   </div>
@@ -603,19 +629,247 @@
         const phEl = document.getElementById('modal-plant-ph');
         const tsEl = document.getElementById('modal-plant-tsoil');
         const taEl = document.getElementById('modal-plant-tair');
+        const teEl = document.getElementById('modal-plant-text');
+        const huEl = document.getElementById('modal-plant-hum');
         const grEl = document.getElementById('modal-plant-growth');
         const prEl = document.getElementById('modal-plant-prod');
         const heEl = document.getElementById('modal-plant-health');
+        const reEl = document.getElementById('modal-plant-resp');
 
         if (phEl) phEl.textContent = t.dataset.ph || '--';
         if (tsEl) tsEl.textContent = t.dataset.tsoil || '--';
         if (taEl) taEl.textContent = t.dataset.tair || '--';
+        if (teEl) teEl.textContent = t.dataset.text || '--';
+        if (huEl) huEl.textContent = t.dataset.hum || '--';
         if (grEl) grEl.textContent = t.dataset.growth || '--';
         if (prEl) prEl.textContent = t.dataset.prod || '--';
         if (heEl) heEl.textContent = t.dataset.health || '--';
+        if (reEl) reEl.textContent = t.dataset.resp || 'Equipo de Campo';
 
         openModal();
       });
     });
   }
+
+  // --- SINCRONIZACIÓN EN VIVO CON HISTORIAL Y GOOGLE SHEETS ---
+  const STORAGE_KEY_RECORDS = 'macollo_custom_history_records';
+  const STORAGE_KEY_RECORDS_ALT = 'aquasens_custom_history_records';
+
+  function resolveCoordsDashboard(rawId: string, rawFila?: string, rawCol?: string) {
+    const pRaw = String(rawId || '').trim();
+    const fRaw = String(rawFila || '').trim();
+    const cRaw = String(rawCol || '').trim();
+
+    let filaIdx = -1;
+    let colIdx = -1;
+
+    // 1. Buscar código compuesto T[0-3O]-P[1-5] en cualquiera de los valores
+    const candidateTexts = [pRaw, fRaw, cRaw].filter(Boolean);
+    for (const text of candidateTexts) {
+      const compMatch = text.match(/(?:^|[^a-zA-Z])T([0-3O])[\s\-_/.]*(?:P|F|COL|PLANTA)?[\s\-_/.]*([1-5])\b/i);
+      if (compMatch) {
+        const fChar = compMatch[1].toUpperCase() === 'O' ? '0' : compMatch[1];
+        filaIdx = parseInt(fChar, 10);
+        colIdx = parseInt(compMatch[2], 10) - 1;
+        break;
+      }
+    }
+
+    // 2. Extraer tratamiento (fila) si aún no está determinado
+    if (filaIdx === -1 && fRaw) {
+      const tratMatch = fRaw.match(/(?:TRATAMIENTO|FILA|CAMA|BLOQUE|SECCION)[\s\-_:]*T?([0-3O])\b/i);
+      if (tratMatch) {
+        const fChar = tratMatch[1].toUpperCase() === 'O' ? '0' : tratMatch[1];
+        filaIdx = parseInt(fChar, 10);
+      } else {
+        const tMatch = fRaw.match(/(?:^|[^a-zA-Z])T([0-3O])(?:[^a-zA-Z0-9]|$)/i);
+        if (tMatch) {
+          const fChar = tMatch[1].toUpperCase() === 'O' ? '0' : tMatch[1];
+          filaIdx = parseInt(fChar, 10);
+        } else {
+          const dMatch = fRaw.match(/^([0-3])$/);
+          if (dMatch) {
+            filaIdx = parseInt(dMatch[1], 10);
+          }
+        }
+      }
+    }
+
+    // 3. Extraer columna/planta (1..5) si aún no está determinada
+    const colCandidates = [cRaw, pRaw].filter(Boolean);
+    if (colIdx === -1) {
+      for (const text of colCandidates) {
+        const pMatch = text.match(/(?:^|[^a-zA-Z])P[\s\-_:]*0?([1-5])(?:[^a-zA-Z0-9]|$)/i);
+        if (pMatch) {
+          colIdx = parseInt(pMatch[1], 10) - 1;
+          break;
+        }
+        const namedColMatch = text.match(/(?:PLANTA|COL|COLUMNA|SITIO)[\s\-_:]*0?([1-5])\b/i);
+        if (namedColMatch) {
+          colIdx = parseInt(namedColMatch[1], 10) - 1;
+          break;
+        }
+        const numMatch = text.match(/^0?([1-5])$/);
+        if (numMatch) {
+          colIdx = parseInt(numMatch[1], 10) - 1;
+          break;
+        }
+      }
+    }
+
+    // 4. Si filaIdx aún no se resolvió pero se dispone de número global 1..20
+    if (filaIdx === -1) {
+      const globalMatch = pRaw.match(/^P[-_\s]?0?([1-9]|1[0-9]|20)$/i) || pRaw.match(/^0?([1-9]|1[0-9]|20)$/);
+      if (globalMatch) {
+        const num = parseInt(globalMatch[1], 10);
+        filaIdx = Math.floor((num - 1) / 5);
+        if (colIdx === -1) {
+          colIdx = (num - 1) % 5;
+        }
+      }
+    }
+
+    if (filaIdx < 0 || filaIdx > 3) filaIdx = 0;
+    if (colIdx < 0 || colIdx > 4) colIdx = 0;
+
+    const FILAS = ['t0', 't1', 't2', 't3'];
+    const COLUMNAS = ['Col 1', 'Col 2', 'Col 3', 'Col 4', 'Col 5'];
+    return {
+      fila: FILAS[filaIdx],
+      columna: COLUMNAS[colIdx],
+      code: `T${filaIdx}-P${colIdx + 1}`,
+      plantNumber: filaIdx * 5 + colIdx + 1,
+      plantId: `P-${(filaIdx * 5 + colIdx + 1) < 10 ? '0' + (filaIdx * 5 + colIdx + 1) : (filaIdx * 5 + colIdx + 1)}`
+    };
+  }
+
+  function purgeMockStorage() {
+    const keys = [STORAGE_KEY_RECORDS, STORAGE_KEY_RECORDS_ALT];
+    keys.forEach(k => {
+      try {
+        const stored = localStorage.getItem(k);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const realOnly = parsed.filter((r: any) => r && typeof r.id === 'string' && r.id.startsWith('MET-GS-'));
+          if (realOnly.length === 0) {
+            localStorage.removeItem(k);
+          } else if (realOnly.length !== parsed.length) {
+            localStorage.setItem(k, JSON.stringify(realOnly));
+          }
+        }
+      } catch {
+        localStorage.removeItem(k);
+      }
+    });
+  }
+
+  function syncDashboardWithRealRecords() {
+    try {
+      purgeMockStorage();
+      const stored = localStorage.getItem(STORAGE_KEY_RECORDS) || localStorage.getItem(STORAGE_KEY_RECORDS_ALT);
+      if (!stored) return;
+      const records = JSON.parse(stored);
+      if (!Array.isArray(records) || records.length === 0) return;
+
+      const dates = Array.from(new Set(records.map((r: any) => r.fecha))).sort((a: any, b: any) => b.localeCompare(a));
+      const latestDate = dates[0] || '2026-09-30';
+
+      const syncText = document.getElementById('dashboard-sync-text');
+      if (syncText) {
+        syncText.textContent = `Datos en Vivo (${latestDate}) • ${records.length} tomas reales`;
+      }
+      const syncDot = document.querySelector('#dashboard-sync-indicator span');
+      if (syncDot) {
+        syncDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+      }
+      const syncBadge = document.getElementById('dashboard-sync-indicator');
+      if (syncBadge) {
+        syncBadge.className = 'inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800';
+      }
+
+      const cards = document.querySelectorAll('.plant-card');
+      cards.forEach((cardEl) => {
+        const card = cardEl as HTMLElement;
+        const code = card.dataset.id;
+        const plantId = card.dataset.plantid;
+        const fila = card.dataset.fila;
+        const col = card.dataset.columna;
+
+        const plantRecords = records.filter((r: any) => {
+          if (r.code && r.code === code) return true;
+          if (r.plantId && r.plantId === plantId) return true;
+          if (r.fila === fila && r.columna === col) return true;
+          const parsed = resolveCoordsDashboard(r.code || r.plantId, r.fila, r.columna);
+          return parsed.fila === fila && parsed.columna === col;
+        }).sort((a: any, b: any) => a.fecha.localeCompare(b.fecha));
+
+        if (plantRecords.length === 0) return;
+
+        const latest = plantRecords[plantRecords.length - 1];
+        const isCritical = latest.sanidad === 'Crítica';
+        const isWarning = latest.sanidad === 'Vulnerable';
+        const plantStatus = isCritical ? 'Crítico' : isWarning ? 'Atención' : 'Óptimo';
+        const plantIcon = isCritical ? '🥀' : isWarning ? '🌿' : '🪴';
+        const tempStr = (latest.tempInterna !== null && latest.tempInterna !== undefined && !isNaN(Number(latest.tempInterna)))
+          ? `${Number(latest.tempInterna).toFixed(1)}°C`
+          : (latest.tempInvernadero !== undefined && latest.tempInvernadero !== null ? `${Number(latest.tempInvernadero).toFixed(1)}°C` : 'N/D');
+        const humedad = latest.humedad !== undefined && latest.humedad !== null
+          ? `${latest.humedad}%`
+          : (isCritical ? '35%' : isWarning ? '48%' : '65%');
+        const ph = Number(latest.phSuelo).toFixed(1);
+        const tsoil = (latest.tempSuelo !== null && latest.tempSuelo !== undefined && !isNaN(Number(latest.tempSuelo)))
+          ? `${Number(latest.tempSuelo).toFixed(1)}°C`
+          : 'N/D';
+        const growth = latest.alturaCm !== undefined && latest.alturaCm !== null
+          ? `${latest.alturaCm} cm`
+          : `${latest.crecimiento}%`;
+
+        card.dataset.status = plantStatus;
+        card.dataset.icon = plantIcon;
+        card.dataset.statuscolor = isCritical
+          ? 'text-rose-600 dark:text-rose-400'
+          : isWarning
+            ? 'text-yellow-600 dark:text-yellow-400'
+            : 'text-lime-600 dark:text-lime-400';
+        card.dataset.ph = ph;
+        card.dataset.tsoil = tsoil;
+        card.dataset.tair = latest.tempInvernadero !== undefined ? `${latest.tempInvernadero}°C` : tempStr;
+        card.dataset.text = (latest.tempExterna !== undefined && latest.tempExterna !== null) ? `${Number(latest.tempExterna).toFixed(1)}°C` : 'N/D';
+        card.dataset.hum = humedad;
+        card.dataset.growth = growth;
+        card.dataset.prod = latest.productividad;
+        card.dataset.health = latest.sanidad;
+        card.dataset.resp = latest.responsable || 'Equipo de Campo';
+
+        const iconEl = card.querySelector('.plant-icon-display');
+        if (iconEl) iconEl.textContent = plantIcon;
+
+        const dotEl = card.querySelector('.plant-dot');
+        if (dotEl) {
+          dotEl.className = `plant-dot w-1.5 h-1.5 rounded-full ${isCritical ? 'bg-rose-500' : isWarning ? 'bg-yellow-400' : 'bg-lime-500'} shadow-sm`;
+        }
+
+        const tempValEl = card.querySelector('.plant-temp-val');
+        if (tempValEl) tempValEl.textContent = tempStr;
+
+        const humValEl = card.querySelector('.plant-humedad-val');
+        if (humValEl) humValEl.textContent = humedad;
+
+        const statusBorder = isCritical
+          ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/50'
+          : isWarning
+            ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/50'
+            : 'bg-lime-50 dark:bg-lime-900/10 border-lime-200 dark:border-lime-800/30';
+
+        card.className = `plant-card relative group overflow-hidden rounded-xl border p-2.5 transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer ${statusBorder}`;
+      });
+    } catch (e) {
+      console.error('Error sincronizando Dashboard con datos reales:', e);
+    }
+  }
+
+  syncDashboardWithRealRecords();
+  window.addEventListener('storage', syncDashboardWithRealRecords);
+  window.addEventListener('aquasens:data-synced', syncDashboardWithRealRecords);
 </script>
