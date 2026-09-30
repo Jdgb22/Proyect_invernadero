@@ -23,11 +23,13 @@ BEGIN
     END IF;
 END $$;
 
--- 2. Tabla de Usuarios (users) con soporte de email, contraseña y rol
+-- 2. Tabla de Usuarios (users) con soporte de email, celular, fecha de nacimiento, contraseña y rol
 CREATE TABLE IF NOT EXISTS users (
     id              SERIAL PRIMARY KEY,
     name            VARCHAR(255),
-    email           VARCHAR(255) UNIQUE NOT NULL,
+    email           VARCHAR(255) UNIQUE,
+    phone           VARCHAR(50),
+    birth_date      DATE,
     password        VARCHAR(255),
     role            user_role_enum NOT NULL DEFAULT 'Campesino',
     "emailVerified" TIMESTAMPTZ,

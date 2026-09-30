@@ -47,7 +47,7 @@ export default defineConfig({
         try {
           console.log(`[Auth] Consultando usuario en PostgreSQL: ${identifier}`);
           const res = await pool.query(
-            'SELECT * FROM users WHERE LOWER(email) = LOWER($1) OR LOWER(name) = LOWER($1)',
+            'SELECT * FROM users WHERE LOWER(COALESCE(email, \'\')) = LOWER($1) OR LOWER(COALESCE(name, \'\')) = LOWER($1) OR phone = $1',
             [identifier]
           );
           const user = res.rows[0];
@@ -77,11 +77,11 @@ export default defineConfig({
           }
 
           if (isValidPassword) {
-            console.log(`[Auth] Login exitoso: ${user.email} (Rol: ${user.role || 'Usuario X'})`);
+            console.log(`[Auth] Login exitoso: ${user.email || user.phone || user.name} (Rol: ${user.role || 'Campesino'})`);
             return {
               id:    user.id.toString(),
-              name:  user.name || user.email.split('@')[0],
-              email: user.email,
+              name:  user.name || (user.email ? user.email.split('@')[0] : user.phone || 'Usuario'),
+              email: user.email || `${user.phone || user.id}@invernadero.local`,
               image: user.image || null,
               role:  user.role  || 'Campesino',
             };
