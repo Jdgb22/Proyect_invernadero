@@ -99,14 +99,32 @@
             class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2"
             >Contraseña</label
           >
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            class="block w-full px-4 py-3.5 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
-            placeholder="••••••••"
-          />
+          <div class="relative">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              class="block w-full px-4 py-3.5 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              placeholder="••••••••"
+            />
+            <button
+              id="toggle-password-btn"
+              type="button"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 focus:outline-none"
+              aria-label="Mostrar u ocultar contraseña"
+            >
+              <!-- Ícono Mostrar (ojo abierto) -->
+              <svg id="eye-show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <!-- Ícono Ocultar (ojo tachado) -->
+              <svg id="eye-hide" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="flex items-center justify-between pt-1">
@@ -156,17 +174,8 @@
           </button>
         </div>
 
-        <!-- Divisor con opción Google -->
-        <div class="relative flex items-center justify-center my-3">
-          <div class="border-t border-stone-200 dark:border-stone-700 w-full">
-          </div>
-          <span
-            class="bg-white dark:bg-stone-900 px-3 text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wider font-medium"
-            >o continuar con</span
-          >
-          <div class="border-t border-stone-200 dark:border-stone-700 w-full">
-          </div>
-        </div>
+        <!-- Divisor sutil -->
+        <div class="my-4 border-t border-stone-200 dark:border-stone-700"></div>
 
         <!-- Botón de Google -->
         <div>
@@ -224,6 +233,21 @@
   const iconMuted = document.getElementById("icon-muted");
   const iconUnmuted = document.getElementById("icon-unmuted");
 
+  // Mostrar / ocultar contraseña
+  const togglePasswordBtn = document.getElementById("toggle-password-btn");
+  const passwordInput = document.getElementById("password") as HTMLInputElement;
+  const eyeShow = document.getElementById("eye-show");
+  const eyeHide = document.getElementById("eye-hide");
+
+  if (togglePasswordBtn && passwordInput && eyeShow && eyeHide) {
+    togglePasswordBtn.addEventListener("click", () => {
+      const isPassword = passwordInput.type === "password";
+      passwordInput.type = isPassword ? "text" : "password";
+      eyeShow.classList.toggle("hidden", isPassword);
+      eyeHide.classList.toggle("hidden", !isPassword);
+    });
+  }
+
   if (audioToggleBtn && welcomeVideo && iconMuted && iconUnmuted) {
     audioToggleBtn.addEventListener("click", () => {
       welcomeVideo.muted = !welcomeVideo.muted;
@@ -237,6 +261,22 @@
     });
   }
 
+  // Mostrar error si viene en los parámetros de la URL (?error=...)
+  const urlParams = new URLSearchParams(window.location.search);
+  const authError = urlParams.get('error');
+  if (authError && errorMsg) {
+    if (authError === 'OAuthAccountNotLinked') {
+      errorMsg.textContent = 'El correo ya está registrado con otro método de autenticación.';
+    } else if (authError === 'OAuthCallbackError' || authError === 'OAuthSignin' || authError === 'Callback') {
+      errorMsg.textContent = 'Hubo un problema al autenticar con Google. Intenta nuevamente.';
+    } else if (authError === 'AccessDenied') {
+      errorMsg.textContent = 'Acceso denegado con la cuenta de Google.';
+    } else {
+      errorMsg.textContent = `Error de autenticación (${authError}). Intenta nuevamente.`;
+    }
+    errorMsg.classList.remove('hidden');
+  }
+
   function setLoading(on: boolean) {
     if (loginBtn) loginBtn.disabled = on;
     if (googleBtn) googleBtn.disabled = on;
@@ -244,11 +284,44 @@
     if (btnSpinner) btnSpinner.classList.toggle("hidden", !on);
   }
 
+  // Reproducir el video de bienvenida y esperar antes de redirigir
+  async function playWelcomeVideo() {
+    if (welcomeVideo) {
+      welcomeVideo.currentTime = 0;
+      const playPromise = welcomeVideo.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn("El navegador bloqueó el video:", err);
+        });
+      }
+    }
+
+    await new Promise<void>((resolve) => {
+      if (!welcomeVideo) return resolve();
+      const timeout = setTimeout(() => {
+        welcomeVideo.removeEventListener("ended", onEnded);
+        resolve();
+      }, 3500);
+
+      const onEnded = () => {
+        clearTimeout(timeout);
+        resolve();
+      };
+
+      welcomeVideo.addEventListener("ended", onEnded, { once: true });
+    });
+  }
+
   // Login con Google
   if (googleBtn) {
     googleBtn.addEventListener("click", async () => {
       try {
         setLoading(true);
+        errorMsg.classList.add("hidden");
+
+        // Reproducir video antes de redirigir a Google
+        await playWelcomeVideo();
+
         await signIn("google", { callbackUrl: "/" } as any);
       } catch (err) {
         console.error(err);
@@ -256,6 +329,7 @@
         errorMsg.textContent =
           "Error al conectar con Google. Intenta nuevamente.";
         errorMsg.classList.remove("hidden");
+        if (welcomeVideo) welcomeVideo.pause();
       }
     });
   }
@@ -279,34 +353,10 @@
 
     setLoading(true);
 
-    // 1. Reproducir el video INMEDIATAMENTE
-    if (welcomeVideo) {
-      welcomeVideo.currentTime = 0;
-      const playPromise = welcomeVideo.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn("El navegador bloqueó el video:", err);
-        });
-      }
-    }
+    // Reproducir video de bienvenida
+    await playWelcomeVideo();
 
-    // 2. Esperar brevemente al video
-    await new Promise<void>((resolve) => {
-      if (!welcomeVideo) return resolve();
-      const timeout = setTimeout(() => {
-        welcomeVideo.removeEventListener("ended", onEnded);
-        resolve();
-      }, 3500);
-
-      const onEnded = () => {
-        clearTimeout(timeout);
-        resolve();
-      };
-
-      welcomeVideo.addEventListener("ended", onEnded, { once: true });
-    });
-
-    // 3. Autenticación con Auth.js contra PostgreSQL
+    // Autenticación con Auth.js contra PostgreSQL
     try {
       const result = await signIn("credentials", {
         email: username,

@@ -17,9 +17,8 @@ BEGIN
         CREATE TYPE user_role_enum AS ENUM (
             'Super admin',
             'Admin',
-            'Profesor',
-            'Estudiante',
-            'Usuario X'
+            'Agronomo',
+            'Campesino'
         );
     END IF;
 END $$;
@@ -30,7 +29,7 @@ CREATE TABLE IF NOT EXISTS users (
     name            VARCHAR(255),
     email           VARCHAR(255) UNIQUE NOT NULL,
     password        VARCHAR(255),
-    role            user_role_enum NOT NULL DEFAULT 'Usuario X',
+    role            user_role_enum NOT NULL DEFAULT 'Campesino',
     "emailVerified" TIMESTAMPTZ,
     image           TEXT,
     created_at      TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

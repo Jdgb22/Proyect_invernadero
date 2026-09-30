@@ -11,7 +11,7 @@ import { pool } from '../../../db/client';
  *  - name:     string (opcional)
  *  - email:    string (requerido)
  *  - password: string (requerido)
- *  - role:     'Super admin' | 'Admin' | 'Profesor' | 'Estudiante' | 'Usuario X'
+ *  - role:     'Super admin' | 'Admin' | 'Agronomo' | 'Campesino'
  *
  * Respuestas:
  *  - 201: Usuario registrado exitosamente
@@ -19,7 +19,7 @@ import { pool } from '../../../db/client';
  *  - 500: Error interno de base de datos
  */
 
-const VALID_ROLES = ['Super admin', 'Admin', 'Profesor', 'Estudiante', 'Usuario X'] as const;
+const VALID_ROLES = ['Super admin', 'Admin', 'Agronomo', 'Campesino'] as const;
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -34,7 +34,7 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const assignedRole = VALID_ROLES.includes(role) ? role : 'Usuario X';
+    const assignedRole = VALID_ROLES.includes(role) ? role : 'Campesino';
     const cleanEmail   = (email as string).trim().toLowerCase();
     const cleanName    = (name as string)?.trim() || cleanEmail.split('@')[0];
 
@@ -78,7 +78,7 @@ export const POST: APIRoute = async ({ request }) => {
         [cleanName, cleanEmail, hashedPassword]
       );
 
-      const newUser = { ...fallback.rows[0], role: 'Usuario X' };
+      const newUser = { ...fallback.rows[0], role: 'Campesino' };
       return new Response(
         JSON.stringify({ message: 'Usuario registrado (sin columna role).', user: newUser }),
         { status: 201, headers: { 'Content-Type': 'application/json' } }

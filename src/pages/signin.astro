@@ -15,7 +15,7 @@ import { SignIn } from 'auth-astro/components';
 const session = await getSession(Astro.request);
 
 if (session) {
-  return Astro.redirect('/dashboard');
+  return Astro.redirect('/');
 }
 ---
 
@@ -164,9 +164,8 @@ if (session) {
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
               <select id="reg-role" name="role" class="form-select">
-                <option value="Usuario X">Usuario X (por defecto)</option>
-                <option value="Estudiante">Estudiante</option>
-                <option value="Profesor">Profesor</option>
+                <option value="Campesino">Campesino (por defecto)</option>
+                <option value="Agronomo">Agrónomo</option>
                 <option value="Admin">Admin</option>
                 <option value="Super admin">Super Admin</option>
               </select>
@@ -239,10 +238,10 @@ if (session) {
     try {
       // Las credenciales van en el tercer argumento (authorizationParams)
       // Se usa 'as any' porque AstroSignInOptions no re-exporta callbackUrl en su tipo
-      await signIn('credentials', { callbackUrl: '/dashboard' } as any, { email, password });
+      await signIn('credentials', { callbackUrl: '/' } as any, { email, password });
       // Si no redirigió automáticamente, lo hacemos manualmente
       showAlert('¡Sesión iniciada! Redirigiendo...', 'success');
-      window.location.href = '/dashboard';
+      window.location.href = '/';
     } catch (err: any) {
       console.error('[Login] Error:', err);
       const msg = err?.message || '';

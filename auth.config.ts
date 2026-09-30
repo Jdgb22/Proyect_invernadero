@@ -13,7 +13,7 @@ import { pool } from './src/db/client';
  *  - Credentials: login con email + contraseña hasheada (bcrypt) en PostgreSQL
  *  - Google: OAuth con Google (requiere GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET)
  *
- * Roles disponibles: 'Super admin' | 'Admin' | 'Profesor' | 'Estudiante' | 'Usuario X'
+ * Roles disponibles: 'Super admin' | 'Admin' | 'Agronomo' | 'Campesino'
  * Los roles se almacenan en la tabla `users` de pgAdmin.
  *
  * Estrategia de sesión: JWT (no requiere tabla `sessions` activa)
@@ -27,6 +27,7 @@ export default defineConfig({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID || (import.meta as any).env?.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || (import.meta as any).env?.GOOGLE_CLIENT_SECRET || '',
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       name: 'Credenciales',
@@ -82,7 +83,7 @@ export default defineConfig({
               name:  user.name || user.email.split('@')[0],
               email: user.email,
               image: user.image || null,
-              role:  user.role  || 'Usuario X',
+              role:  user.role  || 'Campesino',
             };
           }
 
@@ -100,20 +101,20 @@ export default defineConfig({
   },
   secret: process.env.AUTH_SECRET || 'super-secret-key-for-development-only-1234567890',
   pages: {
-    signIn: '/signin',
+    signIn: '/',
   },
   callbacks: {
     async session({ session, token }: any) {
       if (token && session.user) {
         session.user.id = token.sub as string;
-        (session.user as any).role = (token.role as string) || 'Usuario X';
+        (session.user as any).role = (token.role as string) || 'Campesino';
       }
       return session;
     },
     async jwt({ token, user }: any) {
       if (user) {
         token.sub  = user.id;
-        token.role = (user as any).role || 'Usuario X';
+        token.role = (user as any).role || 'Campesino';
       }
       return token;
     },
