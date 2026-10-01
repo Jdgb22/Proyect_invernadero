@@ -61,7 +61,7 @@ const validTout = hasRealData ? plants.filter(p => p.latestMetric.tempExterna !=
 const globalAvgTout = validTout.length > 0 ? +(validTout.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / validTout.length).toFixed(1) : "--";
 
 const validTsoil = hasRealData ? plants.filter(p => p.latestMetric.tempSuelo !== null && p.latestMetric.tempSuelo !== undefined) : [];
-const globalAvgTsoil = validTsoil.length > 0 ? +(validTsoil.reduce((acc, p) => acc + p.latestMetric.tempSuelo, 0) / validTsoil.length).toFixed(1) : "--";
+const globalAvgTsoil = validTsoil.length > 0 ? +(validTsoil.reduce((acc, p) => acc + (p.latestMetric.tempSuelo || 0), 0) / validTsoil.length).toFixed(1) : "--";
 
 const validGrowth = hasRealData ? plants.filter(p => p.latestMetric.crecimiento !== null && p.latestMetric.crecimiento !== undefined) : [];
 const globalAvgGrowth = validGrowth.length > 0 ? Math.round(validGrowth.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / validGrowth.length) : "--";
@@ -83,7 +83,7 @@ const filaMetrics = filasKeys.map((f) => {
   const avgTout = toutArr.length > 0 ? +(toutArr.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / toutArr.length).toFixed(1) : 0;
 
   const tsoilArr = hasRealData ? fPlants.filter(p => p.latestMetric.tempSuelo != null) : [];
-  const avgTsoil = tsoilArr.length > 0 ? +(tsoilArr.reduce((acc, p) => acc + p.latestMetric.tempSuelo, 0) / tsoilArr.length).toFixed(1) : 0;
+  const avgTsoil = tsoilArr.length > 0 ? +(tsoilArr.reduce((acc, p) => acc + (p.latestMetric.tempSuelo || 0), 0) / tsoilArr.length).toFixed(1) : 0;
 
   const growthArr = hasRealData ? fPlants.filter(p => p.latestMetric.crecimiento != null) : [];
   const avgGrowth = growthArr.length > 0 ? Math.round(growthArr.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / growthArr.length) : 0;
