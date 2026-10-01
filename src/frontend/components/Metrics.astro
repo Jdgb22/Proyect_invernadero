@@ -47,23 +47,47 @@ function getHealthBadge(sanidad: string) {
   return { icon: '🔴', label: sanidad, class: "bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800" };
 }
 
-// Agregaciones y métricas globales para los 6 gráficos generales del invernadero
+const hasRealData = plants.some(p => Boolean(p.latestMetric && p.latestMetric.fecha));
 const totalPlants = plants.length || 20;
-const globalAvgPh = +(plants.reduce((acc, p) => acc + p.latestMetric.phSuelo, 0) / totalPlants).toFixed(2);
-const globalAvgTin = +(plants.reduce((acc, p) => acc + p.latestMetric.tempInterna, 0) / totalPlants).toFixed(1);
-const globalAvgTout = +(plants.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / totalPlants).toFixed(1);
-const globalAvgTsoil = +(plants.reduce((acc, p) => acc + p.latestMetric.tempSuelo, 0) / totalPlants).toFixed(1);
-const globalAvgGrowth = Math.round(plants.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / totalPlants);
+
+const validPh = hasRealData ? plants.filter(p => p.latestMetric.phSuelo !== null && p.latestMetric.phSuelo !== undefined) : [];
+const globalAvgPh = validPh.length > 0 ? +(validPh.reduce((acc, p) => acc + p.latestMetric.phSuelo, 0) / validPh.length).toFixed(2) : "--";
+
+const validTin = hasRealData ? plants.filter(p => p.latestMetric.tempInterna !== null && p.latestMetric.tempInterna !== undefined && !isNaN(Number(p.latestMetric.tempInterna))) : [];
+const globalAvgTin = validTin.length > 0 ? +(validTin.reduce((acc, p) => acc + Number(p.latestMetric.tempInterna), 0) / validTin.length).toFixed(1) : null;
+const globalAvgTinStr = hasRealData ? (globalAvgTin !== null ? `${globalAvgTin}°C` : "N/D") : "--";
+
+const validTout = hasRealData ? plants.filter(p => p.latestMetric.tempExterna !== null && p.latestMetric.tempExterna !== undefined) : [];
+const globalAvgTout = validTout.length > 0 ? +(validTout.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / validTout.length).toFixed(1) : "--";
+
+const validTsoil = hasRealData ? plants.filter(p => p.latestMetric.tempSuelo !== null && p.latestMetric.tempSuelo !== undefined) : [];
+const globalAvgTsoil = validTsoil.length > 0 ? +(validTsoil.reduce((acc, p) => acc + p.latestMetric.tempSuelo, 0) / validTsoil.length).toFixed(1) : "--";
+
+const validGrowth = hasRealData ? plants.filter(p => p.latestMetric.crecimiento !== null && p.latestMetric.crecimiento !== undefined) : [];
+const globalAvgGrowth = validGrowth.length > 0 ? Math.round(validGrowth.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / validGrowth.length) : "--";
+
+const validHumedad = hasRealData ? plants.filter(p => p.latestMetric.humedad !== null && p.latestMetric.humedad !== undefined && !isNaN(Number(p.latestMetric.humedad))) : [];
+const globalAvgHumedad = validHumedad.length > 0 ? Math.round(validHumedad.reduce((acc, p) => acc + Number(p.latestMetric.humedad), 0) / validHumedad.length) : "--";
 
 const filasKeys = ['t0', 't1', 't2', 't3'] as const;
 const filaMetrics = filasKeys.map((f) => {
   const fPlants = plants.filter(p => p.fila === f);
   const count = fPlants.length || 1;
-  const avgPh = +(fPlants.reduce((acc, p) => acc + p.latestMetric.phSuelo, 0) / count).toFixed(2);
-  const avgTin = +(fPlants.reduce((acc, p) => acc + p.latestMetric.tempInterna, 0) / count).toFixed(1);
-  const avgTout = +(fPlants.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / count).toFixed(1);
-  const avgTsoil = +(fPlants.reduce((acc, p) => acc + p.latestMetric.tempSuelo, 0) / count).toFixed(1);
-  const avgGrowth = Math.round(fPlants.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / count);
+  const phArr = hasRealData ? fPlants.filter(p => p.latestMetric.phSuelo != null) : [];
+  const avgPh = phArr.length > 0 ? +(phArr.reduce((acc, p) => acc + p.latestMetric.phSuelo, 0) / phArr.length).toFixed(2) : 0;
+
+  const tinArr = hasRealData ? fPlants.filter(p => p.latestMetric.tempInterna != null && !isNaN(Number(p.latestMetric.tempInterna))) : [];
+  const avgTin = tinArr.length > 0 ? +(tinArr.reduce((acc, p) => acc + Number(p.latestMetric.tempInterna), 0) / tinArr.length).toFixed(1) : null;
+
+  const toutArr = hasRealData ? fPlants.filter(p => p.latestMetric.tempExterna != null) : [];
+  const avgTout = toutArr.length > 0 ? +(toutArr.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / toutArr.length).toFixed(1) : 0;
+
+  const tsoilArr = hasRealData ? fPlants.filter(p => p.latestMetric.tempSuelo != null) : [];
+  const avgTsoil = tsoilArr.length > 0 ? +(tsoilArr.reduce((acc, p) => acc + p.latestMetric.tempSuelo, 0) / tsoilArr.length).toFixed(1) : 0;
+
+  const growthArr = hasRealData ? fPlants.filter(p => p.latestMetric.crecimiento != null) : [];
+  const avgGrowth = growthArr.length > 0 ? Math.round(growthArr.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / growthArr.length) : 0;
+
   return {
     fila: f,
     label: `Fila ${f}`,
@@ -77,19 +101,19 @@ const filaMetrics = filasKeys.map((f) => {
 });
 
 const healthCounts = {
-  Excelente: plants.filter(p => p.latestMetric.sanidad === 'Excelente').length,
-  Saludable: plants.filter(p => p.latestMetric.sanidad === 'Saludable').length,
-  Vulnerable: plants.filter(p => p.latestMetric.sanidad === 'Vulnerable').length,
-  Crítica: plants.filter(p => p.latestMetric.sanidad === 'Crítica').length,
+  Excelente: hasRealData ? plants.filter(p => p.latestMetric.sanidad === 'Excelente').length : 0,
+  Saludable: hasRealData ? plants.filter(p => p.latestMetric.sanidad === 'Saludable').length : 0,
+  Vulnerable: hasRealData ? plants.filter(p => p.latestMetric.sanidad === 'Vulnerable').length : 0,
+  Crítica: hasRealData ? plants.filter(p => p.latestMetric.sanidad === 'Crítica').length : 0,
 };
 
 const prodCounts = {
-  Alta: plants.filter(p => p.latestMetric.productividad === 'Alta').length,
-  Media: plants.filter(p => p.latestMetric.productividad === 'Media').length,
-  Baja: plants.filter(p => p.latestMetric.productividad === 'Baja').length,
+  Alta: hasRealData ? plants.filter(p => p.latestMetric.productividad === 'Alta').length : 0,
+  Media: hasRealData ? plants.filter(p => p.latestMetric.productividad === 'Media').length : 0,
+  Baja: hasRealData ? plants.filter(p => p.latestMetric.productividad === 'Baja').length : 0,
 };
 
-const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludable) / totalPlants) * 100);
+const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthCounts.Saludable) / totalPlants) * 100) : "--";
 ---
 
 <!-- Datos de plantas serializados de forma segura para el script de cliente -->
@@ -110,9 +134,9 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
           <h1 class="text-2xl sm:text-3xl font-black text-green-950 dark:text-white tracking-tight">
             Métricas de Cultivo por Planta
           </h1>
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-lime-100 dark:bg-lime-950/60 text-lime-800 dark:text-lime-300 border border-lime-300 dark:border-lime-700 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-lime-500 animate-pulse"></span>
-            Mediciones del Día Actual (Hoy)
+          <span id="metrics-live-badge" class={`px-2.5 py-0.5 rounded-full text-xs font-black ${hasRealData ? 'bg-lime-100 dark:bg-lime-950/60 text-lime-800 dark:text-lime-300 border border-lime-300 dark:border-lime-700' : 'bg-stone-100 dark:bg-stone-900/60 text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700'} flex items-center gap-1.5`}>
+            <span class={`w-2 h-2 rounded-full ${hasRealData ? 'bg-lime-500 animate-pulse' : 'bg-stone-400'}`}></span>
+            {hasRealData ? 'Mediciones del Día Actual' : 'Esperando sincronización de datos reales'}
           </span>
         </div>
         <p class="text-xs sm:text-sm text-green-600 dark:text-stone-400 mt-1">
@@ -201,16 +225,19 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
     <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
       {plants.map((plant) => {
         const m = plant.latestMetric;
-        const isCritical = m.sanidad === 'Crítica';
-        const isWarning = m.sanidad === 'Vulnerable';
-        const statusBorder = isCritical
-          ? 'border-rose-300 dark:border-rose-800 bg-rose-50/60 dark:bg-rose-950/20 hover:border-rose-500'
-          : isWarning
-            ? 'border-green-300 dark:border-stone-800 bg-green-50/60 dark:bg-stone-950/20 hover:border-green-500'
-            : 'border-lime-200 dark:border-lime-800/40 bg-lime-50/50 dark:bg-lime-950/10 hover:border-lime-500';
+        const hasData = Boolean(m.fecha);
+        const isCritical = hasData && m.sanidad === 'Crítica';
+        const isWarning = hasData && m.sanidad === 'Vulnerable';
+        const statusBorder = !hasData
+          ? 'border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/20 hover:border-stone-400'
+          : isCritical
+            ? 'border-rose-300 dark:border-rose-800 bg-rose-50/60 dark:bg-rose-950/20 hover:border-rose-500'
+            : isWarning
+              ? 'border-green-300 dark:border-stone-800 bg-green-50/60 dark:bg-stone-950/20 hover:border-green-500'
+              : 'border-lime-200 dark:border-lime-800/40 bg-lime-50/50 dark:bg-lime-950/10 hover:border-lime-500';
 
-        const dotColor = isCritical ? 'bg-rose-500' : isWarning ? 'bg-green-400' : 'bg-lime-500';
-        const plantIcon = isCritical ? '🥀' : isWarning ? '🌿' : '🪴';
+        const dotColor = !hasData ? 'bg-stone-400' : (isCritical ? 'bg-rose-500' : isWarning ? 'bg-green-400' : 'bg-lime-500');
+        const plantIcon = !hasData ? '🌱' : (isCritical ? '🥀' : isWarning ? '🌿' : '🪴');
 
         return (
           <button
@@ -222,27 +249,27 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
             title={`Ver métricas y gráficos de ${plant.plantId} (${plant.fila} • ${plant.columna})`}
           >
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-black font-mono uppercase tracking-wider text-green-700 dark:text-stone-300">
+              <span class="plant-card-tag text-[10px] font-black font-mono uppercase tracking-wider text-green-700 dark:text-stone-300">
                 {plant.plantId} • {plant.fila}
               </span>
-              <span class={`w-2.5 h-2.5 rounded-full ${dotColor} shadow-xs`}></span>
+              <span class={`plant-card-dot w-2.5 h-2.5 rounded-full ${dotColor} shadow-xs`}></span>
             </div>
 
             <div class="flex items-center justify-between my-1">
-              <span class="text-2xl group-hover:scale-115 transition-transform duration-200">{plantIcon}</span>
+              <span class="plant-card-icon text-2xl group-hover:scale-115 transition-transform duration-200">{plantIcon}</span>
               <div class="text-right">
                 <span class="text-xs font-mono font-black text-green-900 dark:text-stone-300 block">
                   {plant.columna}
                 </span>
-                <span class="text-[10px] font-mono text-lime-600 dark:text-lime-400 font-bold">
-                  {m.crecimiento}%
+                <span class="plant-card-growth text-[10px] font-mono text-lime-600 dark:text-lime-400 font-bold">
+                  {hasData ? `${m.crecimiento}%` : '--'}
                 </span>
               </div>
             </div>
 
             <div class="mt-2 flex items-center justify-between text-[9px] font-mono text-green-600 dark:text-stone-400 border-t border-green-200/70 dark:border-[#166534]/70 pt-1.5">
-              <span>🧪 {m.phSuelo.toFixed(1)} pH</span>
-              <span>🌡️ {m.tempInterna.toFixed(1)}°C</span>
+              <span class="plant-card-ph">🧪 {hasData ? `${m.phSuelo.toFixed(1)} pH` : '--'}</span>
+              <span class="plant-card-tin">🌡️ {hasData ? (m.tempInterna !== null && m.tempInterna !== undefined ? `${Number(m.tempInterna).toFixed(1)}°C` : 'N/D') : '--'}</span>
             </div>
 
             <div class="mt-1 text-center">
@@ -297,33 +324,33 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pb-2">
         <div class="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-900/40 text-center">
           <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">pH Promedio</span>
-          <span class="text-xl font-black text-blue-900 dark:text-blue-100">{globalAvgPh} <span class="text-xs font-normal opacity-70">pH</span></span>
+          <span class="text-xl font-black text-blue-900 dark:text-blue-100"><span id="kpi-global-ph">{globalAvgPh}</span> <span class="text-xs font-normal opacity-70">pH</span></span>
           <span class="text-[10px] font-bold text-lime-600 dark:text-lime-400 block mt-0.5">● Rango Óptimo</span>
         </div>
         <div class="p-3 bg-green-50/70 dark:bg-stone-950/30 rounded-xl border border-green-200 dark:border-stone-900/40 text-center">
           <span class="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-stone-400 block">Temp. Interna</span>
-          <span class="text-xl font-black text-green-900 dark:text-stone-100">{globalAvgTin}°C</span>
+          <span id="kpi-global-tin" class="text-xl font-black text-green-900 dark:text-stone-100">{globalAvgTinStr}</span>
           <span class="text-[10px] text-green-600 dark:text-stone-400 block mt-0.5">Microclima</span>
         </div>
         <div class="p-3 bg-sky-50/70 dark:bg-sky-950/30 rounded-xl border border-sky-200 dark:border-sky-900/40 text-center">
           <span class="text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 block">Temp. Externa</span>
-          <span class="text-xl font-black text-sky-900 dark:text-sky-100">{globalAvgTout}°C</span>
+          <span id="kpi-global-tout" class="text-xl font-black text-sky-900 dark:text-sky-100">{globalAvgTout}°C</span>
           <span class="text-[10px] text-green-600 dark:text-stone-400 block mt-0.5">Ambiente</span>
         </div>
         <div class="p-3 bg-lime-50/70 dark:bg-lime-950/30 rounded-xl border border-lime-200 dark:border-lime-900/40 text-center">
           <span class="text-[10px] font-bold uppercase tracking-wider text-lime-600 dark:text-lime-400 block">Temp. Suelo</span>
-          <span class="text-xl font-black text-lime-900 dark:text-lime-100">{globalAvgTsoil}°C</span>
+          <span id="kpi-global-tsoil" class="text-xl font-black text-lime-900 dark:text-lime-100">{globalAvgTsoil}°C</span>
           <span class="text-[10px] text-green-600 dark:text-stone-400 block mt-0.5">Radicular</span>
         </div>
         <div class="p-3 bg-teal-50/70 dark:bg-teal-950/30 rounded-xl border border-teal-200 dark:border-teal-900/40 text-center">
           <span class="text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400 block">Crecimiento</span>
-          <span class="text-xl font-black text-teal-900 dark:text-teal-100">{globalAvgGrowth}%</span>
+          <span class="text-xl font-black text-teal-900 dark:text-teal-100"><span id="kpi-global-growth">{globalAvgGrowth}</span>%</span>
           <span class="text-[10px] text-green-600 dark:text-stone-400 block mt-0.5">Avance Foliar</span>
         </div>
-        <div class="p-3 bg-purple-50/70 dark:bg-purple-950/30 rounded-xl border border-purple-200 dark:border-purple-900/40 text-center">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 block">Sanidad General</span>
-          <span class="text-xl font-black text-purple-900 dark:text-purple-100">{healthyRatio}%</span>
-          <span class="text-[10px] font-bold text-lime-600 dark:text-lime-400 block mt-0.5">16/20 Plantas OK</span>
+        <div class="p-3 bg-cyan-50/70 dark:bg-cyan-950/30 rounded-xl border border-cyan-200 dark:border-cyan-900/40 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 block">Humedad Prom.</span>
+          <span class="text-xl font-black text-cyan-900 dark:text-cyan-100"><span id="kpi-global-humedad">{globalAvgHumedad}</span><span class="text-xs font-normal opacity-70">%</span></span>
+          <span class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 block mt-0.5">● Rango Óptimo 60–80%</span>
         </div>
       </div>
 
@@ -347,7 +374,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 text-[11px]">
+              <span id="general-badge-ph" class="text-xs font-black px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 text-[11px]">
                 {globalAvgPh} pH
               </span>
               <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-green-100 dark:bg-stone-900/50 text-green-600 dark:text-stone-300 text-xs font-bold" title="Click para maximizar">⤢</span>
@@ -355,10 +382,10 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
           </div>
 
           <div class="w-full h-44 relative bg-[#f4fce3] dark:bg-stone-800/80 rounded-xl p-3 border border-green-100 dark:border-[#166534] flex items-center justify-center">
-            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+            <svg id="general-svg-ph" class="w-full h-full overflow-hidden" viewBox="0 0 460 130">
               <!-- Zona Óptima -->
               <rect x="40" y="53" width="390" height="32" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
-              <text x="45" y="49" fill="#10B981" font-size="8.5" font-weight="bold">Banda Óptima (6.0 - 6.8)</text>
+              <text x="45" y="82" fill="#10B981" font-size="8.5" font-weight="bold">← Banda Óptima (6.0 - 6.8)</text>
 
               <!-- Guías -->
               <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
@@ -426,8 +453,8 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
           data-chart-title="2. Temperatura Interna del Invernadero"
           data-chart-subtitle="Microclima interior por fila y zonas de ventilación"
           data-chart-icon="🌡️"
-          data-chart-badge={`${globalAvgTin}°C Promedio`}
-          data-chart-info="La temperatura interna promedio es de ${globalAvgTin}°C, situándose dentro de la zona de confort agronómico (23°C - 26°C). Las filas t0 y t3 gozan de excelente ventilación, mientras que la fila t2 presenta acumulación térmica en su extremo."
+          data-chart-badge={`${globalAvgTinStr} Promedio`}
+          data-chart-info={globalAvgTin !== null ? `La temperatura interna promedio es de ${globalAvgTin}°C, situándose dentro de la zona de confort agronómico (23°C - 26°C). Las filas t0 y t3 gozan de excelente ventilación, mientras que la fila t2 presenta acumulación térmica en su extremo.` : "Temperatura foliar no tomada el 2026-09-29 y 2026-09-30 debido a mantenimiento de sensores."}
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
@@ -438,18 +465,18 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-green-50 dark:bg-stone-900/30 text-green-700 dark:text-stone-300 border border-green-200 text-[11px]">
-                {globalAvgTin}°C
+              <span id="general-badge-tin" class="text-xs font-black px-2 py-0.5 rounded-full bg-green-50 dark:bg-stone-900/30 text-green-700 dark:text-stone-300 border border-green-200 text-[11px]">
+                {globalAvgTinStr}
               </span>
               <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-green-100 dark:bg-stone-900/50 text-green-600 dark:text-stone-300 text-xs font-bold" title="Click para maximizar">⤢</span>
             </div>
           </div>
 
           <div class="w-full h-44 relative bg-[#f4fce3] dark:bg-stone-800/80 rounded-xl p-3 border border-green-100 dark:border-[#166534] flex items-center justify-center">
-            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+            <svg id="general-svg-tin" class="w-full h-full overflow-hidden" viewBox="0 0 460 130">
               <!-- Banda de Confort -->
               <rect x="40" y="65" width="390" height="30" fill="rgba(245, 158, 11, 0.12)" rx="4"></rect>
-              <text x="45" y="61" fill="#D97706" font-size="8.5" font-weight="bold">Confort Térmico (23°C - 26°C)</text>
+              <text x="45" y="92" fill="#D97706" font-size="8.5" font-weight="bold">← Confort Térmico (23°C - 26°C)</text>
 
               <!-- Guías -->
               <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
@@ -463,17 +490,17 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
               <path d="M 70,82 Q 120,77 170,73 T 270,63 T 370,78" fill="none" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" />
 
               <!-- Nodos -->
-              <circle cx="70" cy="82" r="5" fill="#F59E0B" stroke="#fff" stroke-width="2"><title>t0 Int: {filaMetrics[0].avgTin}°C</title></circle>
-              <text x="60" y="73" fill="#B45309" class="dark:fill-green-300 text-[10px] font-bold">{filaMetrics[0].avgTin}°</text>
+              <circle cx="70" cy="82" r="5" fill={filaMetrics[0].avgTin !== null ? "#F59E0B" : "#9CA3AF"} stroke="#fff" stroke-width="2"><title>t0 Int: {filaMetrics[0].avgTin !== null ? `${filaMetrics[0].avgTin}°C` : 'N/D'}</title></circle>
+              <text x="60" y="73" fill={filaMetrics[0].avgTin !== null ? "#B45309" : "#6B7280"} class="dark:fill-green-300 text-[10px] font-bold">{filaMetrics[0].avgTin !== null ? `${filaMetrics[0].avgTin}°` : 'N/D'}</text>
 
-              <circle cx="170" cy="73" r="5" fill="#F59E0B" stroke="#fff" stroke-width="2"><title>t1 Int: {filaMetrics[1].avgTin}°C</title></circle>
-              <text x="160" y="64" fill="#B45309" class="dark:fill-green-300 text-[10px] font-bold">{filaMetrics[1].avgTin}°</text>
+              <circle cx="170" cy="73" r="5" fill={filaMetrics[1].avgTin !== null ? "#F59E0B" : "#9CA3AF"} stroke="#fff" stroke-width="2"><title>t1 Int: {filaMetrics[1].avgTin !== null ? `${filaMetrics[1].avgTin}°C` : 'N/D'}</title></circle>
+              <text x="160" y="64" fill={filaMetrics[1].avgTin !== null ? "#B45309" : "#6B7280"} class="dark:fill-green-300 text-[10px] font-bold">{filaMetrics[1].avgTin !== null ? `${filaMetrics[1].avgTin}°` : 'N/D'}</text>
 
-              <circle cx="270" cy="63" r="5" fill="#EF4444" stroke="#fff" stroke-width="2"><title>t2 Int: {filaMetrics[2].avgTin}°C (Zona Cálida)</title></circle>
-              <text x="260" y="53" fill="#DC2626" class="dark:fill-rose-300 text-[10px] font-bold">{filaMetrics[2].avgTin}°</text>
+              <circle cx="270" cy="63" r="5" fill={filaMetrics[2].avgTin !== null ? "#EF4444" : "#9CA3AF"} stroke="#fff" stroke-width="2"><title>t2 Int: {filaMetrics[2].avgTin !== null ? `${filaMetrics[2].avgTin}°C` : 'N/D'}</title></circle>
+              <text x="260" y="53" fill={filaMetrics[2].avgTin !== null ? "#DC2626" : "#6B7280"} class="dark:fill-rose-300 text-[10px] font-bold">{filaMetrics[2].avgTin !== null ? `${filaMetrics[2].avgTin}°` : 'N/D'}</text>
 
-              <circle cx="370" cy="78" r="5" fill="#F59E0B" stroke="#fff" stroke-width="2"><title>t3 Int: {filaMetrics[3].avgTin}°C</title></circle>
-              <text x="360" y="69" fill="#B45309" class="dark:fill-green-300 text-[10px] font-bold">{filaMetrics[3].avgTin}°</text>
+              <circle cx="370" cy="78" r="5" fill={filaMetrics[3].avgTin !== null ? "#F59E0B" : "#9CA3AF"} stroke="#fff" stroke-width="2"><title>t3 Int: {filaMetrics[3].avgTin !== null ? `${filaMetrics[3].avgTin}°C` : 'N/D'}</title></circle>
+              <text x="360" y="69" fill={filaMetrics[3].avgTin !== null ? "#B45309" : "#6B7280"} class="dark:fill-green-300 text-[10px] font-bold">{filaMetrics[3].avgTin !== null ? `${filaMetrics[3].avgTin}°` : 'N/D'}</text>
 
               <!-- Dispersión de plantas -->
               <g opacity="0.6">
@@ -509,7 +536,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-200 text-[11px]">
+              <span id="general-badge-tout" class="text-xs font-black px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-200 text-[11px]">
                 {globalAvgTout}°C
               </span>
               <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-green-100 dark:bg-stone-900/50 text-green-600 dark:text-stone-300 text-xs font-bold" title="Click para maximizar">⤢</span>
@@ -517,7 +544,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
           </div>
 
           <div class="w-full h-44 relative bg-[#f4fce3] dark:bg-stone-800/80 rounded-xl p-3 border border-green-100 dark:border-[#166534] flex items-center justify-center">
-            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+            <svg id="general-svg-tout" class="w-full h-full overflow-visible" viewBox="0 0 460 130">
               <!-- Guías -->
               <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
               <text x="15" y="28" class="fill-green-400 text-[9px] font-mono">24°</text>
@@ -572,7 +599,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-lime-50 dark:bg-lime-900/30 text-lime-700 dark:text-lime-300 border border-lime-200 text-[11px]">
+              <span id="general-badge-tsoil" class="text-xs font-black px-2 py-0.5 rounded-full bg-lime-50 dark:bg-lime-900/30 text-lime-700 dark:text-lime-300 border border-lime-200 text-[11px]">
                 {globalAvgTsoil}°C
               </span>
               <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-green-100 dark:bg-stone-900/50 text-green-600 dark:text-stone-300 text-xs font-bold" title="Click para maximizar">⤢</span>
@@ -580,10 +607,10 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
           </div>
 
           <div class="w-full h-44 relative bg-[#f4fce3] dark:bg-stone-800/80 rounded-xl p-3 border border-green-100 dark:border-[#166534] flex items-center justify-center">
-            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+            <svg id="general-svg-tsoil" class="w-full h-full overflow-hidden" viewBox="0 0 460 130">
               <!-- Banda Óptima Radicular -->
               <rect x="40" y="65" width="390" height="30" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
-              <text x="45" y="61" fill="#10B981" font-size="8.5" font-weight="bold">Zona Radicular Óptima (19°C - 22°C)</text>
+              <text x="45" y="92" fill="#10B981" font-size="8.5" font-weight="bold">← Zona Radicular Óptima (19°C - 22°C)</text>
 
               <!-- Guías -->
               <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
@@ -643,7 +670,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border border-teal-200 text-[11px]">
+              <span id="general-badge-growth" class="text-xs font-black px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border border-teal-200 text-[11px]">
                 {globalAvgGrowth}%
               </span>
               <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-green-100 dark:bg-stone-900/50 text-green-600 dark:text-stone-300 text-xs font-bold" title="Click para maximizar">⤢</span>
@@ -651,7 +678,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
           </div>
 
           <div class="w-full h-44 relative bg-[#f4fce3] dark:bg-stone-800/80 rounded-xl p-3 border border-green-100 dark:border-[#166534] flex items-center justify-center">
-            <svg class="w-full h-full overflow-visible" viewBox="0 0 460 130">
+            <svg id="general-svg-growth" class="w-full h-full overflow-visible" viewBox="0 0 460 130">
               <!-- Guías -->
               <line x1="40" y1="20" x2="430" y2="20" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
               <text x="15" y="23" class="fill-green-400 text-[9px] font-mono">100%</text>
@@ -689,73 +716,65 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
           </div>
         </div>
 
-        <!-- GRÁFICO 6: Sanidad y Productividad de los Cultivos -->
+        <!-- GRÁFICO 6: Humedad Relativa del Invernadero -->
         <div class="chart-card-maximizable bg-green-50 dark:bg-[#062c16]/40 p-4 sm:p-5 rounded-2xl border border-green-200 dark:border-[#166534] shadow-xs flex flex-col justify-between cursor-pointer hover:border-green-400 dark:hover:border-green-500 hover:shadow-md transition-all group relative"
-          data-chart-title="6. Sanidad y Productividad Global"
-          data-chart-subtitle="Distribución fitosanitaria y rendimiento de las 20 plantas"
-          data-chart-icon="🛡️"
-          data-chart-badge={`${healthyRatio}% Sanas`}
-          data-chart-info="Evaluación del estado integral del cultivo. El 80% (16 de 20 plantas) se encuentra en estado fitosanitario Excelente o Saludable. En productividad esperada, el 65% proyecta cosechas altas y el 25% medias."
+          data-chart-title="6. Humedad Relativa del Invernadero"
+          data-chart-subtitle="Porcentaje de humedad relativa por fila y zona óptima (60–80%)"
+          data-chart-icon="💧"
+          data-chart-badge={`${globalAvgHumedad}% Promedio`}
+          data-chart-info={`La humedad relativa promedio es de ${globalAvgHumedad}%, monitoreada en todas las filas del invernadero. La zona óptima de operación se sitúa entre 60% y 80% para favorecer el desarrollo foliar sin propiciar hongos ni estrés hídrico.`}
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
-              <span class="p-2 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 text-base">🛡️</span>
+              <span class="p-2 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 text-base">💧</span>
               <div>
-                <h4 class="font-extrabold text-green-950 dark:text-white text-sm">6. Sanidad y Productividad</h4>
-                <p class="text-[10px] text-green-600 dark:text-stone-400">Distribución fitosanitaria y rendimiento de las 20 plantas</p>
+                <h4 class="font-extrabold text-green-950 dark:text-white text-sm">6. Humedad Relativa (%)</h4>
+                <p class="text-[10px] text-green-600 dark:text-stone-400">Porcentaje de humedad por fila y zona óptima (60–80%)</p>
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="text-xs font-black px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 text-[11px]">
-                {healthyRatio}% Sanas
+              <span id="general-badge-humedad" class="text-xs font-black px-2 py-0.5 rounded-full bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border border-cyan-200 text-[11px]">
+                {globalAvgHumedad}%
               </span>
               <span class="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-green-100 dark:bg-stone-900/50 text-green-600 dark:text-stone-300 text-xs font-bold" title="Click para maximizar">⤢</span>
             </div>
           </div>
 
-          <div class="w-full h-44 relative bg-[#f4fce3] dark:bg-stone-800/80 rounded-xl p-3 border border-green-100 dark:border-[#166534] flex flex-col justify-center gap-3">
-            <!-- Sanidad -->
-            <div>
-              <div class="flex justify-between text-[11px] font-bold text-green-800 dark:text-stone-300 mb-1">
-                <span>Estado Sanitario (20 Plantas)</span>
-                <span class="text-lime-600 dark:text-lime-400">{healthCounts.Excelente + healthCounts.Saludable} Sanas / {healthCounts.Vulnerable + healthCounts.Crítica} En Alerta</span>
-              </div>
-              <div class="w-full h-3.5 bg-green-100 dark:bg-stone-700 rounded-full flex overflow-hidden">
-                <div style={`width: ${(healthCounts.Excelente / totalPlants) * 100}%`} class="bg-lime-500 h-full" title={`Excelente: ${healthCounts.Excelente} plantas`}></div>
-                <div style={`width: ${(healthCounts.Saludable / totalPlants) * 100}%`} class="bg-teal-400 h-full" title={`Saludable: ${healthCounts.Saludable} plantas`}></div>
-                <div style={`width: ${(healthCounts.Vulnerable / totalPlants) * 100}%`} class="bg-green-400 h-full" title={`Vulnerable: ${healthCounts.Vulnerable} plantas`}></div>
-                <div style={`width: ${(healthCounts.Crítica / totalPlants) * 100}%`} class="bg-rose-500 h-full" title={`Crítica: ${healthCounts.Crítica} planta`}></div>
-              </div>
-              <div class="flex items-center justify-between text-[9px] text-green-600 font-bold mt-1">
-                <span class="text-lime-600">● Exc: {healthCounts.Excelente}</span>
-                <span class="text-teal-600">● Sal: {healthCounts.Saludable}</span>
-                <span class="text-green-600">● Vul: {healthCounts.Vulnerable}</span>
-                <span class="text-rose-600">● Crít: {healthCounts.Crítica}</span>
-              </div>
-            </div>
+          <div class="w-full h-44 relative bg-[#f4fce3] dark:bg-stone-800/80 rounded-xl p-3 border border-green-100 dark:border-[#166534] flex items-center justify-center">
+            <svg id="general-svg-humedad" class="w-full h-full overflow-hidden" viewBox="0 0 460 130">
+              <!-- Zona Óptima Humedad (60–80%) -->
+              <rect x="40" y="37" width="390" height="40" fill="rgba(6, 182, 212, 0.12)" rx="4"></rect>
+              <text x="45" y="74" fill="#0891B2" font-size="8.5" font-weight="bold">← Zona Óptima (60% – 80%)</text>
 
-            <!-- Productividad -->
-            <div>
-              <div class="flex justify-between text-[11px] font-bold text-green-800 dark:text-stone-300 mb-1">
-                <span>Proyección de Productividad</span>
-                <span class="text-green-600 dark:text-stone-400">{prodCounts.Alta} Alta / {prodCounts.Media} Media / {prodCounts.Baja} Baja</span>
-              </div>
-              <div class="w-full h-3.5 bg-green-100 dark:bg-stone-700 rounded-full flex overflow-hidden">
-                <div style={`width: ${(prodCounts.Alta / totalPlants) * 100}%`} class="bg-green-600 h-full" title={`Alta: ${prodCounts.Alta} plantas`}></div>
-                <div style={`width: ${(prodCounts.Media / totalPlants) * 100}%`} class="bg-green-400 h-full" title={`Media: ${prodCounts.Media} plantas`}></div>
-                <div style={`width: ${(prodCounts.Baja / totalPlants) * 100}%`} class="bg-rose-400 h-full" title={`Baja: ${prodCounts.Baja} plantas`}></div>
-              </div>
-              <div class="flex items-center justify-between text-[9px] text-green-600 font-bold mt-1">
-                <span class="text-green-600">● Alta: {prodCounts.Alta} ({Math.round((prodCounts.Alta / totalPlants) * 100)}%)</span>
-                <span class="text-green-600">● Media: {prodCounts.Media} ({Math.round((prodCounts.Media / totalPlants) * 100)}%)</span>
-                <span class="text-rose-600">● Baja: {prodCounts.Baja} ({Math.round((prodCounts.Baja / totalPlants) * 100)}%)</span>
-              </div>
-            </div>
+              <!-- Guías -->
+              <line x1="40" y1="15" x2="430" y2="15" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+              <text x="12" y="18" class="fill-green-400 text-[9px] font-mono">100%</text>
+              <line x1="40" y1="37" x2="430" y2="37" stroke="currentColor" stroke-dasharray="3,3" class="text-cyan-400 dark:text-cyan-700" stroke-width="1" />
+              <text x="15" y="40" class="fill-cyan-500 text-[9px] font-mono">80%</text>
+              <line x1="40" y1="77" x2="430" y2="77" stroke="currentColor" stroke-dasharray="3,3" class="text-cyan-400 dark:text-cyan-700" stroke-width="1" />
+              <text x="15" y="80" class="fill-cyan-500 text-[9px] font-mono">60%</text>
+              <line x1="40" y1="115" x2="430" y2="115" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+              <text x="15" y="118" class="fill-green-400 text-[9px] font-mono">30%</text>
+
+              <!-- Barras de Humedad por Fila -->
+              <rect x="52" y="77" width="36" height="0" rx="5" fill="#06B6D4" opacity="0.85" id="hum-bar-t0"><title>Fila t0</title></rect>
+              <text id="hum-label-t0" x="70" y="70" fill="#0E7490" class="dark:fill-cyan-300 text-[10px] font-black" text-anchor="middle">--</text>
+
+              <rect x="152" y="77" width="36" height="0" rx="5" fill="#06B6D4" opacity="0.85" id="hum-bar-t1"><title>Fila t1</title></rect>
+              <text id="hum-label-t1" x="170" y="70" fill="#0E7490" class="dark:fill-cyan-300 text-[10px] font-black" text-anchor="middle">--</text>
+
+              <rect x="252" y="77" width="36" height="0" rx="5" fill="#06B6D4" opacity="0.85" id="hum-bar-t2"><title>Fila t2</title></rect>
+              <text id="hum-label-t2" x="270" y="70" fill="#0E7490" class="dark:fill-cyan-300 text-[10px] font-black" text-anchor="middle">--</text>
+
+              <rect x="352" y="77" width="36" height="0" rx="5" fill="#06B6D4" opacity="0.85" id="hum-bar-t3"><title>Fila t3</title></rect>
+              <text id="hum-label-t3" x="370" y="70" fill="#0E7490" class="dark:fill-cyan-300 text-[10px] font-black" text-anchor="middle">--</text>
+            </svg>
           </div>
-
-          <div class="flex justify-between items-center text-[10px] text-green-600 font-mono mt-2 px-1">
-            <span class="text-lime-600 font-bold">✓ 80% Índice de Sanidad Global</span>
-            <span class="text-green-600 font-bold">65% Alta Capacidad</span>
+          <div class="flex justify-between text-[10px] text-green-600 font-mono mt-2 px-8">
+            <span>Fila t0</span>
+            <span>Fila t1</span>
+            <span>Fila t2</span>
+            <span>Fila t3</span>
           </div>
         </div>
 
@@ -908,9 +927,10 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
         <tbody id="plants-table-body" class="divide-y divide-green-200 dark:divide-green-700 text-xs sm:text-sm font-medium">
           {plants.map((p, idx) => {
             const m = p.latestMetric;
-            const ph = getPhBadge(m.phSuelo);
-            const prodClass = getProdBadge(m.productividad);
-            const health = getHealthBadge(m.sanidad);
+            const hasData = Boolean(m.fecha);
+            const ph = hasData ? getPhBadge(m.phSuelo) : { label: "--", class: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400 border-stone-300" };
+            const prodClass = hasData ? getProdBadge(m.productividad) : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400 border-stone-300";
+            const health = hasData ? getHealthBadge(m.sanidad) : { icon: '⚪', label: 'Esperando datos', class: "bg-stone-50 text-stone-600 dark:bg-stone-800/40 dark:text-stone-400 border-stone-200 dark:border-stone-700" };
 
             return (
               <tr
@@ -918,18 +938,18 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
                 data-fila={p.fila}
                 data-columna={p.columna}
                 data-plantid={p.plantId}
-                data-health={m.sanidad}
-                data-prod={m.productividad}
-                data-resp={m.responsable}
-                data-ph={m.phSuelo}
-                data-tin={m.tempInterna}
-                data-tout={m.tempExterna}
-                data-tsoil={m.tempSuelo}
-                data-growth={m.crecimiento}
-                data-fase={m.faseCrecimiento}
-                data-obs={m.observaciones || ''}
-                data-hora={m.hora}
-                data-fecha={m.fecha}
+                data-health={hasData ? m.sanidad : 'Sin datos'}
+                data-prod={hasData ? m.productividad : 'Sin datos'}
+                data-resp={hasData ? m.responsable : 'Sin registrar'}
+                data-ph={hasData ? m.phSuelo : ''}
+                data-tin={hasData && m.tempInterna !== null && m.tempInterna !== undefined ? m.tempInterna : ''}
+                data-tout={hasData ? m.tempExterna : ''}
+                data-tsoil={hasData ? m.tempSuelo : ''}
+                data-growth={hasData ? m.crecimiento : ''}
+                data-fase={hasData ? m.faseCrecimiento : 'Esperando datos'}
+                data-obs={hasData ? (m.observaciones || '') : ''}
+                data-hora={hasData ? m.hora : ''}
+                data-fecha={hasData ? m.fecha : ''}
                 title={`Haz clic para abrir analítica de ${p.plantId}`}
               >
                 <!-- N° de fila Excel -->
@@ -938,7 +958,7 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
                 </td>
 
                 <!-- Columna A: Planta & Ubicación -->
-                <td class="py-3 px-4 border-r border-green-200 dark:border-[#166534]">
+                <td class="table-cell-id py-3 px-4 border-r border-green-200 dark:border-[#166534]">
                   <div class="flex items-center gap-2">
                     <span class="px-2 py-0.5 rounded bg-green-600 text-white font-mono font-black text-xs shadow-xs">
                       {p.plantId}
@@ -950,82 +970,82 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
                 </td>
 
                 <!-- Columna B: Fecha y Hora de hoy -->
-                <td class="py-3 px-4 border-r border-green-200 dark:border-[#166534]">
+                <td class="table-cell-fecha py-3 px-4 border-r border-green-200 dark:border-[#166534]">
                   <span class="font-semibold text-green-950 dark:text-white block text-xs">
-                    {m.fecha}
+                    {hasData ? m.fecha : '--'}
                   </span>
                   <span class="text-[11px] text-green-600 dark:text-stone-400 font-mono">
-                    {m.hora}
+                    {hasData ? m.hora : ''}
                   </span>
                 </td>
 
                 <!-- Columna C: pH Suelo -->
-                <td class="py-3 px-3 text-center border-r border-green-200 dark:border-[#166534]">
+                <td class="table-cell-ph py-3 px-3 text-center border-r border-green-200 dark:border-[#166534]">
                   <span class={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black border ${ph.class}`}>
-                    <span>{m.phSuelo.toFixed(1)}</span>
+                    <span>{hasData ? m.phSuelo.toFixed(1) : '--'}</span>
                     <span class="text-[9px] opacity-75">pH</span>
                   </span>
                 </td>
 
                 <!-- Columna D: T. Interna -->
-                <td class="py-3 px-3 text-center font-bold text-green-700 dark:text-stone-300 border-r border-green-200 dark:border-[#166534]">
+                <td class="table-cell-tin py-3 px-3 text-center font-bold text-green-700 dark:text-stone-300 border-r border-green-200 dark:border-[#166534]">
                   <span class="px-2 py-0.5 rounded bg-green-50 dark:bg-stone-900/20 font-mono">
-                    {m.tempInterna.toFixed(1)}°C
+                    {hasData ? (m.tempInterna !== null && m.tempInterna !== undefined ? `${Number(m.tempInterna).toFixed(1)}°C` : 'N/D') : '--'}
                   </span>
                 </td>
 
                 <!-- Columna E: T. Externa -->
-                <td class="py-3 px-3 text-center text-blue-700 dark:text-blue-300 border-r border-green-200 dark:border-[#166534]">
+                <td class="table-cell-tout py-3 px-3 text-center text-blue-700 dark:text-blue-300 border-r border-green-200 dark:border-[#166534]">
                   <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 font-mono text-xs font-bold">
-                    {m.tempExterna.toFixed(1)}°C
+                    {hasData ? (m.tempExterna !== null && m.tempExterna !== undefined && !isNaN(Number(m.tempExterna)) ? `${Number(m.tempExterna).toFixed(1)}°C` : 'N/D') : '--'}
                   </span>
                 </td>
 
                 <!-- Columna F: T. Suelo -->
-                <td class="py-3 px-3 text-center text-lime-700 dark:text-lime-300 border-r border-green-200 dark:border-[#166534]">
+                <td class="table-cell-tsoil py-3 px-3 text-center text-lime-700 dark:text-lime-300 border-r border-green-200 dark:border-[#166534]">
                   <span class="px-2 py-0.5 rounded bg-lime-50 dark:bg-lime-900/20 font-mono text-xs font-bold">
-                    {m.tempSuelo.toFixed(1)}°C
+                    {hasData ? (m.tempSuelo !== null && m.tempSuelo !== undefined && !isNaN(Number(m.tempSuelo)) ? `${Number(m.tempSuelo).toFixed(1)}°C` : 'N/D') : '--'}
                   </span>
                 </td>
 
                 <!-- Columna G: Crecimiento -->
-                <td class="py-3 px-4 border-r border-green-200 dark:border-[#166534] min-w-[140px]">
+                <td class="table-cell-growth py-3 px-4 border-r border-green-200 dark:border-[#166534] min-w-[140px]">
                   <div class="flex items-center justify-between text-xs font-bold text-green-800 dark:text-stone-300 mb-1">
-                    <span class="text-[11px] truncate max-w-[80px]">{m.faseCrecimiento}</span>
-                    <span class="text-lime-600 dark:text-lime-400 font-mono">{m.crecimiento}%</span>
+                    <span class="text-[11px] truncate max-w-[80px]">{hasData ? m.faseCrecimiento : 'Esperando datos'}</span>
+                    <span class="text-lime-600 dark:text-lime-400 font-mono">{hasData ? `${m.crecimiento}%` : '--'}</span>
                   </div>
                   <div class="w-full bg-green-200 dark:bg-stone-700 h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-gradient-to-r from-teal-500 to-lime-500 h-full rounded-full" style={`width: ${m.crecimiento}%`}></div>
+                    <div class="bg-gradient-to-r from-teal-500 to-lime-500 h-full rounded-full" style={`width: ${hasData ? m.crecimiento : 0}%`}></div>
                   </div>
                 </td>
 
                 <!-- Columna H: Productividad -->
-                <td class="py-3 px-3 text-center border-r border-green-200 dark:border-[#166534]">
+                <td class="table-cell-prod py-3 px-3 text-center border-r border-green-200 dark:border-[#166534]">
                   <span class={`inline-block px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${prodClass}`}>
-                    {m.productividad}
+                    {hasData ? m.productividad : '--'}
                   </span>
                 </td>
 
                 <!-- Columna I: Sanidad -->
-                <td class="py-3 px-3 text-center border-r border-green-200 dark:border-[#166534]">
+                <td class="table-cell-health py-3 px-3 text-center border-r border-green-200 dark:border-[#166534]">
                   <span class={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${health.class}`}>
                     <span>{health.icon}</span>
-                    <span>{m.sanidad}</span>
+                    <span>{health.label}</span>
                   </span>
                 </td>
 
                 <!-- Columna J: Responsable -->
-                <td class="py-3 px-4">
+                <td class="table-cell-resp py-3 px-4">
                   <div class="flex items-center gap-2">
-                    <div class={`w-7 h-7 rounded-full ${m.avatarColor} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0`}>
-                      {m.responsable.split(" ").map(n => n[0]).slice(0, 2).join("")}
+                    <div class={`w-7 h-7 rounded-full ${hasData ? m.avatarColor : 'bg-stone-400'} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0`}>
+                      {hasData ? m.responsable.split(" ").map(n => n[0]).slice(0, 2).join("") : "?"}
                     </div>
                     <div>
                       <span class="font-bold text-green-950 dark:text-white text-xs block">
-                        {m.responsable}
+                        {hasData ? m.responsable : 'Sin registrar'}
                       </span>
                       <span class="text-[10px] text-green-600 dark:text-stone-400 block font-normal">
-                        {m.responsableRol}
+                        {hasData ? m.responsableRol : 'Esperando datos de Google Sheets'}
                       </span>
                     </div>
                   </div>
@@ -1077,15 +1097,15 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
           <h3 id="modal-plant-title" class="text-xl sm:text-2xl font-black text-green-950 dark:text-white tracking-tight">
             Planta P-01 (Fila t0 • Col 1)
           </h3>
-          <span id="modal-plant-health" class="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-lime-50 text-lime-700 border-lime-200">
-            🟢 Excelente
+          <span id="modal-plant-health" class="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-stone-50 text-stone-700 border-stone-200">
+            ⚪ Esperando datos
           </span>
           <span id="modal-plant-phase" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 dark:bg-stone-900/40 text-green-700 dark:text-stone-300">
-            Floración
+            Esperando datos
           </span>
         </div>
         <p id="modal-plant-subtitle" class="text-xs text-green-600 dark:text-stone-400 mt-1">
-          Medición de hoy registrada a las <strong id="modal-plant-time">09:30 AM</strong> • Responsable: <strong id="modal-plant-resp">Luis Manuel Florez</strong>
+          Medición registrada a las <strong id="modal-plant-time">--:--</strong> • Responsable: <strong id="modal-plant-resp">Sin registrar</strong>
         </p>
       </div>
     </div>
@@ -1098,39 +1118,39 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div class="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40">
           <span class="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 block mb-0.5">🧪 pH Suelo</span>
-          <span id="modal-kpi-ph" class="text-xl font-black text-blue-900 dark:text-blue-100 font-mono">6.4</span>
-          <span id="modal-kpi-ph-desc" class="block text-[10px] font-bold text-lime-600 mt-0.5">Óptimo</span>
+          <span id="modal-kpi-ph" class="text-xl font-black text-blue-900 dark:text-blue-100 font-mono">--</span>
+          <span id="modal-kpi-ph-desc" class="block text-[10px] font-bold text-lime-600 mt-0.5">--</span>
         </div>
 
         <div class="p-3 rounded-xl bg-green-50/70 dark:bg-stone-900/20 border border-green-100 dark:border-stone-800/40">
           <span class="text-[10px] font-bold uppercase text-green-600 dark:text-stone-400 block mb-0.5">🌡️ T. Interna</span>
-          <span id="modal-kpi-tin" class="text-xl font-black text-green-900 dark:text-stone-100 font-mono">24.5°C</span>
+          <span id="modal-kpi-tin" class="text-xl font-black text-green-900 dark:text-stone-100 font-mono">--</span>
           <span class="block text-[10px] text-green-600 mt-0.5">Ambiente</span>
         </div>
 
         <div class="p-3 rounded-xl bg-lime-50/70 dark:bg-lime-900/20 border border-lime-100 dark:border-lime-800/40">
           <span class="text-[10px] font-bold uppercase text-lime-600 dark:text-lime-400 block mb-0.5">🌱 T. Suelo</span>
-          <span id="modal-kpi-tsoil" class="text-xl font-black text-lime-900 dark:text-lime-100 font-mono">20.3°C</span>
+          <span id="modal-kpi-tsoil" class="text-xl font-black text-lime-900 dark:text-lime-100 font-mono">--</span>
           <span class="block text-[10px] text-green-600 mt-0.5">Radicular</span>
         </div>
 
         <div class="p-3 rounded-xl bg-sky-50/70 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800/40">
           <span class="text-[10px] font-bold uppercase text-sky-600 dark:text-sky-400 block mb-0.5">☀️ T. Externa</span>
-          <span id="modal-kpi-tout" class="text-xl font-black text-sky-900 dark:text-sky-100 font-mono">20.1°C</span>
+          <span id="modal-kpi-tout" class="text-xl font-black text-sky-900 dark:text-sky-100 font-mono">--</span>
           <span class="block text-[10px] text-green-600 mt-0.5">Exterior</span>
         </div>
 
         <div class="p-3 rounded-xl bg-teal-50/70 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800/40">
           <span class="text-[10px] font-bold uppercase text-teal-600 dark:text-teal-400 block mb-0.5">📈 Crecimiento</span>
-          <span id="modal-kpi-growth" class="text-xl font-black text-teal-900 dark:text-teal-100 font-mono">88%</span>
+          <span id="modal-kpi-growth" class="text-xl font-black text-teal-900 dark:text-teal-100 font-mono">--</span>
           <div class="w-full bg-green-200 dark:bg-stone-700 h-1.5 rounded-full overflow-hidden mt-1">
-            <div id="modal-kpi-growth-bar" class="bg-teal-500 h-full rounded-full" style="width: 88%"></div>
+            <div id="modal-kpi-growth-bar" class="bg-teal-500 h-full rounded-full" style="width: 0%"></div>
           </div>
         </div>
 
         <div class="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/40">
           <span class="text-[10px] font-bold uppercase text-purple-600 dark:text-purple-400 block mb-0.5">⚡ Productividad</span>
-          <span id="modal-kpi-prod" class="text-xl font-black text-purple-900 dark:text-purple-100">Alta</span>
+          <span id="modal-kpi-prod" class="text-xl font-black text-purple-900 dark:text-purple-100">--</span>
           <span class="block text-[10px] text-green-600 mt-0.5">Rendimiento</span>
         </div>
       </div>
@@ -1702,36 +1722,58 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
 
     let pathD = '';
     const points: any[] = [];
+    let hasStarted = false;
 
     history.forEach((rec, idx) => {
       const x = getX(idx);
-      const y = getY(rec.tempInterna);
-      points.push({ x, y, val: rec.tempInterna });
-      if (idx === 0) pathD += `M ${x},${y}`;
-      else pathD += ` L ${x},${y}`;
+      const isNull = rec.tempInterna === null || rec.tempInterna === undefined || isNaN(Number(rec.tempInterna));
+      if (!isNull) {
+        const val = Number(rec.tempInterna);
+        const y = getY(val);
+        points.push({ x, y, val: val.toFixed(1), isNd: false });
+        if (!hasStarted) {
+          pathD += `M ${x},${y}`;
+          hasStarted = true;
+        } else {
+          pathD += ` L ${x},${y}`;
+        }
+      } else {
+        points.push({ x, y: (yConfTop + yConfBot) / 2, val: 'N/D', isNd: true });
+      }
     });
 
     let circlesSvg = '';
     points.forEach((pt) => {
-      circlesSvg += `
-        <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="#F59E0B" stroke="#ffffff" stroke-width="2">
-          <title>${pt.val}°C</title>
-        </circle>
-        <text x="${pt.x}" y="${pt.y - 6}" fill="#B45309" class="dark:fill-green-300" font-size="8.5" font-weight="bold" text-anchor="middle">
-          ${pt.val}°
-        </text>
-      `;
+      if (pt.isNd) {
+        circlesSvg += `
+          <circle cx="${pt.x}" cy="${pt.y}" r="3" fill="#9CA3AF" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="2,2">
+            <title>Sin registro de temperatura foliar (N/D)</title>
+          </circle>
+          <text x="${pt.x}" y="${pt.y - 6}" fill="#6B7280" class="dark:fill-stone-400" font-size="7.5" font-weight="bold" text-anchor="middle">
+            N/D
+          </text>
+        `;
+      } else {
+        circlesSvg += `
+          <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="#F59E0B" stroke="#ffffff" stroke-width="2">
+            <title>${pt.val}°C</title>
+          </circle>
+          <text x="${pt.x}" y="${pt.y - 6}" fill="#B45309" class="dark:fill-green-300" font-size="8.5" font-weight="bold" text-anchor="middle">
+            ${pt.val}°
+          </text>
+        `;
+      }
     });
 
     modalSvgTin.innerHTML = `
       <rect x="${pad}" y="${yConfTop}" width="${w - pad * 2}" height="${confHeight}" fill="rgba(245, 158, 11, 0.12)" rx="3" />
-      <text x="${pad + 4}" y="${yConfTop + 8}" fill="#D97706" font-size="7" font-weight="bold">Confort (23° - 26°C)</text>
+      <text x="${pad + 4}" y="${yConfBot - 3}" fill="#D97706" font-size="7" font-weight="bold">← Confort (23° - 26°C)</text>
       
       <line x1="${pad}" y1="${getY(30)}" x2="${w - pad}" y2="${getY(30)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
       <line x1="${pad}" y1="${getY(26)}" x2="${w - pad}" y2="${getY(26)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
       <line x1="${pad}" y1="${getY(22)}" x2="${w - pad}" y2="${getY(22)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
 
-      <path d="${pathD}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      ${pathD ? `<path d="${pathD}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />` : ''}
       ${circlesSvg}
     `;
   }
@@ -1753,29 +1795,43 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
 
     history.forEach((rec, idx) => {
       const x = getX(idx);
-      const y = getY(rec.tempExterna);
-      points.push({ x, y, val: rec.tempExterna });
-      if (idx === 0) pathD += `M ${x},${y}`;
-      else pathD += ` L ${x},${y}`;
+      const isNull = rec.tempExterna === null || rec.tempExterna === undefined || isNaN(Number(rec.tempExterna));
+      if (!isNull) {
+        const y = getY(Number(rec.tempExterna));
+        points.push({ x, y, val: Number(rec.tempExterna).toFixed(1), isNd: false });
+        if (pathD === '') pathD += `M ${x},${y}`;
+        else pathD += ` L ${x},${y}`;
+      } else {
+        points.push({ x, y: getY(21), val: 'N/D', isNd: true });
+      }
     });
 
     let circlesSvg = '';
     points.forEach((pt) => {
-      circlesSvg += `
-        <circle cx="${pt.x}" cy="${pt.y}" r="3.5" fill="#0EA5E9" stroke="#ffffff" stroke-width="2">
-          <title>${pt.val}°C</title>
-        </circle>
-        <text x="${pt.x}" y="${pt.y - 6}" fill="#0369A1" class="dark:fill-sky-300" font-size="8.5" font-weight="bold" text-anchor="middle">
-          ${pt.val}°
-        </text>
-      `;
+      if (pt.isNd) {
+        circlesSvg += `
+          <circle cx="${pt.x}" cy="${pt.y}" r="3" fill="#9CA3AF" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="2,2">
+            <title>Sin dato de temperatura externa (N/D)</title>
+          </circle>
+          <text x="${pt.x}" y="${pt.y - 6}" fill="#6B7280" font-size="7.5" font-weight="bold" text-anchor="middle">N/D</text>
+        `;
+      } else {
+        circlesSvg += `
+          <circle cx="${pt.x}" cy="${pt.y}" r="3.5" fill="#0EA5E9" stroke="#ffffff" stroke-width="2">
+            <title>${pt.val}°C</title>
+          </circle>
+          <text x="${pt.x}" y="${pt.y - 6}" fill="#0369A1" class="dark:fill-sky-300" font-size="8.5" font-weight="bold" text-anchor="middle">
+            ${pt.val}°
+          </text>
+        `;
+      }
     });
 
     modalSvgTout.innerHTML = `
       <line x1="${pad}" y1="${getY(24)}" x2="${w - pad}" y2="${getY(24)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
       <line x1="${pad}" y1="${getY(20)}" x2="${w - pad}" y2="${getY(20)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
 
-      <path d="${pathD}" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-dasharray="4,2" stroke-linecap="round" stroke-linejoin="round" />
+      ${pathD ? `<path d="${pathD}" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-dasharray="4,2" stroke-linecap="round" stroke-linejoin="round" />` : ''}
       ${circlesSvg}
     `;
   }
@@ -1801,34 +1857,48 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
 
     history.forEach((rec, idx) => {
       const x = getX(idx);
-      const y = getY(rec.tempSuelo);
-      points.push({ x, y, val: rec.tempSuelo });
-      if (idx === 0) pathD += `M ${x},${y}`;
-      else pathD += ` L ${x},${y}`;
+      const isNull = rec.tempSuelo === null || rec.tempSuelo === undefined || isNaN(Number(rec.tempSuelo));
+      if (!isNull) {
+        const y = getY(Number(rec.tempSuelo));
+        points.push({ x, y, val: Number(rec.tempSuelo).toFixed(1), isNd: false });
+        if (pathD === '') pathD += `M ${x},${y}`;
+        else pathD += ` L ${x},${y}`;
+      } else {
+        points.push({ x, y: getY(20), val: 'N/D', isNd: true });
+      }
     });
 
     let circlesSvg = '';
     points.forEach((pt) => {
-      const isGood = pt.val >= 19 && pt.val <= 22.5;
-      circlesSvg += `
-        <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="${isGood ? '#10B981' : '#EF4444'}" stroke="#ffffff" stroke-width="2">
-          <title>${pt.val}°C</title>
-        </circle>
-        <text x="${pt.x}" y="${pt.y - 6}" fill="#047857" class="dark:fill-lime-300" font-size="8.5" font-weight="bold" text-anchor="middle">
-          ${pt.val}°
-        </text>
-      `;
+      if (pt.isNd) {
+        circlesSvg += `
+          <circle cx="${pt.x}" cy="${pt.y}" r="3" fill="#9CA3AF" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="2,2">
+            <title>Sin dato de temperatura de suelo (N/D)</title>
+          </circle>
+          <text x="${pt.x}" y="${pt.y - 6}" fill="#6B7280" font-size="7.5" font-weight="bold" text-anchor="middle">N/D</text>
+        `;
+      } else {
+        const isGood = Number(pt.val) >= 19 && Number(pt.val) <= 22.5;
+        circlesSvg += `
+          <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="${isGood ? '#10B981' : '#EF4444'}" stroke="#ffffff" stroke-width="2">
+            <title>${pt.val}°C</title>
+          </circle>
+          <text x="${pt.x}" y="${pt.y - 6}" fill="#047857" class="dark:fill-lime-300" font-size="8.5" font-weight="bold" text-anchor="middle">
+            ${pt.val}°
+          </text>
+        `;
+      }
     });
 
     modalSvgTsoil.innerHTML = `
       <rect x="${pad}" y="${yOptTop}" width="${w - pad * 2}" height="${optHeight}" fill="rgba(16, 185, 129, 0.12)" rx="3" />
-      <text x="${pad + 4}" y="${yOptTop + 8}" fill="#10B981" font-size="7" font-weight="bold">Radicular Óptimo (19° - 22°C)</text>
+      <text x="${pad + 4}" y="${yOptBot - 3}" fill="#10B981" font-size="7" font-weight="bold">← Radicular Óptimo (19° - 22°C)</text>
 
       <line x1="${pad}" y1="${getY(26)}" x2="${w - pad}" y2="${getY(26)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
       <line x1="${pad}" y1="${getY(22)}" x2="${w - pad}" y2="${getY(22)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
       <line x1="${pad}" y1="${getY(18)}" x2="${w - pad}" y2="${getY(18)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
 
-      <path d="${pathD}" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      ${pathD ? `<path d="${pathD}" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />` : ''}
       ${circlesSvg}
     `;
   }
@@ -1977,9 +2047,13 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
       modalKpiPhDesc.className = `block text-[10px] font-bold mt-0.5 ${isPhOpt ? 'text-lime-600' : 'text-green-600'}`;
     }
 
-    if (modalKpiTin) modalKpiTin.textContent = `${m.tempInterna.toFixed(1)}°C`;
-    if (modalKpiTsoil) modalKpiTsoil.textContent = `${m.tempSuelo.toFixed(1)}°C`;
-    if (modalKpiTout) modalKpiTout.textContent = `${m.tempExterna.toFixed(1)}°C`;
+    if (modalKpiTin) {
+      modalKpiTin.textContent = (m.tempInterna !== null && m.tempInterna !== undefined)
+        ? `${Number(m.tempInterna).toFixed(1)}°C`
+        : 'N/D';
+    }
+    if (modalKpiTsoil) modalKpiTsoil.textContent = (m.tempSuelo !== null && m.tempSuelo !== undefined && !isNaN(Number(m.tempSuelo))) ? `${Number(m.tempSuelo).toFixed(1)}°C` : 'N/D';
+    if (modalKpiTout) modalKpiTout.textContent = (m.tempExterna !== null && m.tempExterna !== undefined && !isNaN(Number(m.tempExterna))) ? `${Number(m.tempExterna).toFixed(1)}°C` : 'N/D';
     if (modalKpiGrowth) modalKpiGrowth.textContent = `${m.crecimiento}%`;
     if (modalKpiGrowthBar) modalKpiGrowthBar.style.width = `${m.crecimiento}%`;
     if (modalKpiProd) modalKpiProd.textContent = m.productividad;
@@ -2370,4 +2444,632 @@ const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludabl
     closeModalForm();
     formNewMetric?.reset();
   });
+
+  // --- SINCRONIZACIÓN EN TIEMPO REAL CON HISTORIAL Y GOOGLE SHEETS ---
+  const STORAGE_KEY_RECORDS = 'macollo_custom_history_records';
+  const STORAGE_KEY_RECORDS_ALT = 'aquasens_custom_history_records';
+
+  function getPhBadgeClient(ph: number) {
+    if (ph >= 6.0 && ph <= 6.8) {
+      return { label: "Óptimo", class: "bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 border-lime-300" };
+    }
+    if (ph >= 5.5 && ph <= 7.2) {
+      return { label: "Atención", class: "bg-green-100 text-green-800 dark:bg-stone-900/50 dark:text-stone-300 border-green-300" };
+    }
+    return { label: "Crítico", class: "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300" };
+  }
+
+  function getProdBadgeClient(prod: string) {
+    if (prod === 'Alta') return "bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 border-lime-300";
+    if (prod === 'Media') return "bg-green-100 text-green-800 dark:bg-stone-900/50 dark:text-stone-300 border-green-300";
+    return "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300";
+  }
+
+  function getHealthBadgeClient(sanidad: string) {
+    if (sanidad === 'Excelente' || sanidad === 'Saludable') {
+      return { icon: '🟢', label: sanidad, class: "bg-lime-50 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300 border-lime-200 dark:border-lime-800" };
+    }
+    if (sanidad === 'Vulnerable') {
+      return { icon: '🟡', label: sanidad, class: "bg-green-50 text-green-700 dark:bg-stone-900/40 dark:text-stone-300 border-green-200 dark:border-stone-800" };
+    }
+    return { icon: '🔴', label: sanidad, class: "bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800" };
+  }
+
+  function resolveCoordsMetrics(rawId?: string, filaStr?: string, colStr?: string) {
+    const pRaw = String(rawId || '').trim();
+    const fRaw = String(filaStr || '').trim();
+    const cRaw = String(colStr || '').trim();
+
+    let filaIdx = -1;
+    let colIdx = -1;
+
+    // 1. Buscar código compuesto T[0-3O]-P[1-5] en cualquiera de los valores
+    const candidateTexts = [pRaw, fRaw, cRaw].filter(Boolean);
+    for (const text of candidateTexts) {
+      const compMatch = text.match(/(?:^|[^a-zA-Z])T([0-3O])[\s\-_/.]*(?:P|F|COL|PLANTA)?[\s\-_/.]*([1-5])\b/i);
+      if (compMatch) {
+        const fChar = compMatch[1].toUpperCase() === 'O' ? '0' : compMatch[1];
+        filaIdx = parseInt(fChar, 10);
+        colIdx = parseInt(compMatch[2], 10) - 1;
+        break;
+      }
+    }
+
+    // 2. Extraer tratamiento (fila) si aún no está determinado
+    if (filaIdx === -1 && fRaw) {
+      const tratMatch = fRaw.match(/(?:TRATAMIENTO|FILA|CAMA|BLOQUE|SECCION)[\s\-_:]*T?([0-3O])\b/i);
+      if (tratMatch) {
+        const fChar = tratMatch[1].toUpperCase() === 'O' ? '0' : tratMatch[1];
+        filaIdx = parseInt(fChar, 10);
+      } else {
+        const tMatch = fRaw.match(/(?:^|[^a-zA-Z])T([0-3O])(?:[^a-zA-Z0-9]|$)/i);
+        if (tMatch) {
+          const fChar = tMatch[1].toUpperCase() === 'O' ? '0' : tMatch[1];
+          filaIdx = parseInt(fChar, 10);
+        } else {
+          const dMatch = fRaw.match(/^([0-3])$/);
+          if (dMatch) {
+            filaIdx = parseInt(dMatch[1], 10);
+          }
+        }
+      }
+    }
+
+    // 3. Extraer columna/planta (1..5) si aún no está determinada
+    const colCandidates = [cRaw, pRaw].filter(Boolean);
+    if (colIdx === -1) {
+      for (const text of colCandidates) {
+        const pMatch = text.match(/(?:^|[^a-zA-Z])P[\s\-_:]*0?([1-5])(?:[^a-zA-Z0-9]|$)/i);
+        if (pMatch) {
+          colIdx = parseInt(pMatch[1], 10) - 1;
+          break;
+        }
+        const namedColMatch = text.match(/(?:PLANTA|COL|COLUMNA|SITIO)[\s\-_:]*0?([1-5])\b/i);
+        if (namedColMatch) {
+          colIdx = parseInt(namedColMatch[1], 10) - 1;
+          break;
+        }
+        const numMatch = text.match(/^0?([1-5])$/);
+        if (numMatch) {
+          colIdx = parseInt(numMatch[1], 10) - 1;
+          break;
+        }
+      }
+    }
+
+    // 4. Si filaIdx aún no se resolvió pero se dispone de número global 1..20
+    if (filaIdx === -1) {
+      const globalMatch = pRaw.match(/^P[-_\s]?0?([1-9]|1[0-9]|20)$/i) || pRaw.match(/^0?([1-9]|1[0-9]|20)$/);
+      if (globalMatch) {
+        const num = parseInt(globalMatch[1], 10);
+        filaIdx = Math.floor((num - 1) / 5);
+        if (colIdx === -1) {
+          colIdx = (num - 1) % 5;
+        }
+      }
+    }
+
+    if (filaIdx < 0 || filaIdx > 3) filaIdx = 0;
+    if (colIdx < 0 || colIdx > 4) colIdx = 0;
+
+    const FILAS = ['t0', 't1', 't2', 't3'];
+    const COLUMNAS = ['Col 1', 'Col 2', 'Col 3', 'Col 4', 'Col 5'];
+    const plantNum = filaIdx * 5 + colIdx + 1;
+    const plantId = `P-${String(plantNum).padStart(2, '0')}`;
+    return {
+      fila: FILAS[filaIdx],
+      columna: COLUMNAS[colIdx],
+      code: `T${filaIdx}-P${colIdx + 1}`,
+      plantNumber: plantNum,
+      plantId
+    };
+  }
+
+  function renderGeneralChartsDynamic(plants: any[]) {
+    if (!plants || plants.length === 0) return;
+    const totalPlants = plants.length || 20;
+
+    const validPh = plants.filter((p: any) => p.latestMetric.phSuelo !== null && p.latestMetric.phSuelo !== undefined && !isNaN(Number(p.latestMetric.phSuelo)));
+    const globalAvgPh = validPh.length > 0 ? +(validPh.reduce((acc: number, p: any) => acc + Number(p.latestMetric.phSuelo), 0) / validPh.length).toFixed(2) : 6.5;
+
+    const validTin = plants.filter((p: any) => p.latestMetric.tempInterna !== null && p.latestMetric.tempInterna !== undefined && !isNaN(Number(p.latestMetric.tempInterna)));
+    const globalAvgTin = validTin.length > 0 ? +(validTin.reduce((acc: number, p: any) => acc + Number(p.latestMetric.tempInterna), 0) / validTin.length).toFixed(1) : null;
+    const globalAvgTinStr = globalAvgTin !== null ? `${globalAvgTin}°C` : 'N/D';
+
+    const validTout = plants.filter((p: any) => p.latestMetric.tempExterna !== null && p.latestMetric.tempExterna !== undefined && !isNaN(Number(p.latestMetric.tempExterna)));
+    const globalAvgTout = validTout.length > 0 ? +(validTout.reduce((acc: number, p: any) => acc + Number(p.latestMetric.tempExterna), 0) / validTout.length).toFixed(1) : 21.0;
+
+    const validTsoil = plants.filter((p: any) => p.latestMetric.tempSuelo !== null && p.latestMetric.tempSuelo !== undefined && !isNaN(Number(p.latestMetric.tempSuelo)));
+    const globalAvgTsoil = validTsoil.length > 0 ? +(validTsoil.reduce((acc: number, p: any) => acc + Number(p.latestMetric.tempSuelo), 0) / validTsoil.length).toFixed(1) : 20.0;
+
+    const validGrowth = plants.filter((p: any) => p.latestMetric.crecimiento !== null && p.latestMetric.crecimiento !== undefined && !isNaN(Number(p.latestMetric.crecimiento)));
+    const globalAvgGrowth = validGrowth.length > 0 ? Math.round(validGrowth.reduce((acc: number, p: any) => acc + Number(p.latestMetric.crecimiento), 0) / validGrowth.length) : 0;
+
+    const validHumedad = plants.filter((p: any) => p.latestMetric.humedad !== null && p.latestMetric.humedad !== undefined && !isNaN(Number(p.latestMetric.humedad)));
+    const globalAvgHumedad = validHumedad.length > 0 ? Math.round(validHumedad.reduce((acc: number, p: any) => acc + Number(p.latestMetric.humedad), 0) / validHumedad.length) : null;
+
+    const filasKeys = ['t0', 't1', 't2', 't3'];
+    const rowMetrics = filasKeys.map((f) => {
+      const fPlants = plants.filter((p: any) => p.fila === f);
+      const phArr = fPlants.filter((p: any) => p.latestMetric.phSuelo != null && !isNaN(Number(p.latestMetric.phSuelo)));
+      const avgPh = phArr.length > 0 ? +(phArr.reduce((a: number, b: any) => a + Number(b.latestMetric.phSuelo), 0) / phArr.length).toFixed(2) : 6.5;
+
+      const tinArr = fPlants.filter((p: any) => p.latestMetric.tempInterna !== null && p.latestMetric.tempInterna !== undefined && !isNaN(Number(p.latestMetric.tempInterna)));
+      const avgTin = tinArr.length > 0 ? +(tinArr.reduce((a: number, b: any) => a + Number(b.latestMetric.tempInterna), 0) / tinArr.length).toFixed(1) : null;
+
+      const toutArr = fPlants.filter((p: any) => p.latestMetric.tempExterna != null && !isNaN(Number(p.latestMetric.tempExterna)));
+      const avgTout = toutArr.length > 0 ? +(toutArr.reduce((a: number, b: any) => a + Number(b.latestMetric.tempExterna), 0) / toutArr.length).toFixed(1) : 21.0;
+
+      const tsoilArr = fPlants.filter((p: any) => p.latestMetric.tempSuelo != null && !isNaN(Number(p.latestMetric.tempSuelo)));
+      const avgTsoil = tsoilArr.length > 0 ? +(tsoilArr.reduce((a: number, b: any) => a + Number(b.latestMetric.tempSuelo), 0) / tsoilArr.length).toFixed(1) : 20.0;
+
+      const growthArr = fPlants.filter((p: any) => p.latestMetric.crecimiento != null && !isNaN(Number(p.latestMetric.crecimiento)));
+      const avgGrowth = growthArr.length > 0 ? Math.round(growthArr.reduce((a: number, b: any) => a + Number(b.latestMetric.crecimiento), 0) / growthArr.length) : 0;
+
+      const humArr = fPlants.filter((p: any) => p.latestMetric.humedad != null && !isNaN(Number(p.latestMetric.humedad)));
+      const avgHumedad = humArr.length > 0 ? Math.round(humArr.reduce((a: number, b: any) => a + Number(b.latestMetric.humedad), 0) / humArr.length) : null;
+
+      return { fila: f, avgPh, avgTin, avgTout, avgTsoil, avgGrowth, avgHumedad, plants: fPlants };
+    });
+
+    const healthCounts: Record<string, number> = { Excelente: 0, Saludable: 0, Vulnerable: 0, Crítica: 0 };
+    const prodCounts: Record<string, number> = { Alta: 0, Media: 0, Baja: 0 };
+    plants.forEach((p: any) => {
+      const h = p.latestMetric.sanidad;
+      if (healthCounts[h] !== undefined) healthCounts[h]++;
+      const pr = p.latestMetric.productividad;
+      if (prodCounts[pr] !== undefined) prodCounts[pr]++;
+    });
+
+    const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludable) / totalPlants) * 100);
+
+    // Actualizar Top 6 KPIs
+    const kpiPh = document.getElementById('kpi-global-ph');
+    if (kpiPh) kpiPh.textContent = `${globalAvgPh} pH`;
+
+    const kpiTin = document.getElementById('kpi-global-tin');
+    if (kpiTin) kpiTin.textContent = globalAvgTinStr;
+
+    const kpiTout = document.getElementById('kpi-global-tout');
+    if (kpiTout) kpiTout.textContent = `${globalAvgTout}°C`;
+
+    const kpiTsoil = document.getElementById('kpi-global-tsoil');
+    if (kpiTsoil) kpiTsoil.textContent = `${globalAvgTsoil}°C`;
+
+    const kpiGrowth = document.getElementById('kpi-global-growth');
+    if (kpiGrowth) kpiGrowth.textContent = `${globalAvgGrowth}`;
+
+    const kpiHealth = document.getElementById('kpi-global-health');
+    if (kpiHealth) kpiHealth.textContent = `${healthyRatio}`;
+
+    const kpiHealthSub = document.getElementById('kpi-global-health-sub');
+    if (kpiHealthSub) kpiHealthSub.textContent = `${healthCounts.Excelente + healthCounts.Saludable}/${totalPlants} Plantas OK`;
+
+    // Gráfico 1: pH
+    const badgePh = document.getElementById('general-badge-ph');
+    if (badgePh) badgePh.textContent = `${globalAvgPh} pH`;
+
+    const svgPh = document.getElementById('general-svg-ph');
+    if (svgPh) {
+      const getYPh = (v: number) => 105 - ((v - 5.5) / 2.0) * 80;
+      const y0 = getYPh(rowMetrics[0].avgPh);
+      const y1 = getYPh(rowMetrics[1].avgPh);
+      const y2 = getYPh(rowMetrics[2].avgPh);
+      const y3 = getYPh(rowMetrics[3].avgPh);
+
+      let dotsSvg = '';
+      plants.forEach((p: any) => {
+        const phVal = Number(p.latestMetric.phSuelo);
+        if (isNaN(phVal)) return;
+        const fIdx = filasKeys.indexOf(p.fila);
+        const cMatch = p.columna.match(/([1-5])/);
+        const colNum = cMatch ? parseInt(cMatch[1], 10) : 3;
+        const cx = 70 + fIdx * 100 + (colNum - 3) * 6;
+        const cy = Math.max(15, Math.min(115, getYPh(phVal)));
+        const color = phVal >= 6.0 && phVal <= 6.8 ? '#10B981' : phVal >= 5.5 && phVal <= 7.2 ? '#F59E0B' : '#EF4444';
+        dotsSvg += `<circle cx="${cx}" cy="${cy}" r="3" fill="${color}"><title>${p.plantId} (${p.fila} ${p.columna}): ${phVal.toFixed(1)} pH</title></circle>`;
+      });
+
+      svgPh.innerHTML = `
+        <rect x="40" y="53" width="390" height="32" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
+        <text x="45" y="82" fill="#10B981" font-size="8.5" font-weight="bold">← Banda Óptima (6.0 - 6.8)</text>
+        <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="28" class="fill-green-400 text-[9px] font-mono">7.5</text>
+        <line x1="40" y1="65" x2="430" y2="65" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="68" class="fill-green-400 text-[9px] font-mono">6.5</text>
+        <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="108" class="fill-green-400 text-[9px] font-mono">5.5</text>
+        <path d="M 70,${y0} Q 120,${(y0 + y1) / 2} 170,${y1} T 270,${y2} T 370,${y3}" fill="none" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" />
+        <circle cx="70" cy="${y0}" r="5" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>Fila t0: ${rowMetrics[0].avgPh} pH</title></circle>
+        <text x="60" y="${y0 - 8}" fill="#1E40AF" class="dark:fill-blue-300 text-[10px] font-bold">${rowMetrics[0].avgPh}</text>
+        <circle cx="170" cy="${y1}" r="5" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>Fila t1: ${rowMetrics[1].avgPh} pH</title></circle>
+        <text x="160" y="${y1 - 8}" fill="#1E40AF" class="dark:fill-blue-300 text-[10px] font-bold">${rowMetrics[1].avgPh}</text>
+        <circle cx="270" cy="${y2}" r="5" fill="#3B82F6" stroke="#fff" stroke-width="2"><title>Fila t2: ${rowMetrics[2].avgPh} pH</title></circle>
+        <text x="260" y="${y2 - 8}" fill="#1E40AF" class="dark:fill-blue-300 text-[10px] font-bold">${rowMetrics[2].avgPh}</text>
+        <circle cx="370" cy="${y3}" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>Fila t3: ${rowMetrics[3].avgPh} pH</title></circle>
+        <text x="360" y="${y3 - 8}" fill="#047857" class="dark:fill-lime-300 text-[10px] font-bold">${rowMetrics[3].avgPh}</text>
+        <g opacity="0.6">${dotsSvg}</g>
+      `;
+    }
+
+    // Gráfico 2: Temp Interna
+    const badgeTin = document.getElementById('general-badge-tin');
+    if (badgeTin) badgeTin.textContent = globalAvgTin !== null ? `${globalAvgTin}°C Promedio` : 'N/D Promedio';
+
+    const svgTin = document.getElementById('general-svg-tin');
+    if (svgTin) {
+      const getYTin = (v: number) => 105 - ((v - 22) / 8.0) * 80;
+      let nodesSvg = '';
+      let curvePath = '';
+
+      if (globalAvgTin !== null) {
+        const y0 = rowMetrics[0].avgTin !== null ? getYTin(rowMetrics[0].avgTin) : 80;
+        const y1 = rowMetrics[1].avgTin !== null ? getYTin(rowMetrics[1].avgTin) : 80;
+        const y2 = rowMetrics[2].avgTin !== null ? getYTin(rowMetrics[2].avgTin) : 80;
+        const y3 = rowMetrics[3].avgTin !== null ? getYTin(rowMetrics[3].avgTin) : 80;
+        curvePath = `<path d="M 70,${y0} Q 120,${(y0 + y1) / 2} 170,${y1} T 270,${y2} T 370,${y3}" fill="none" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" />`;
+
+        rowMetrics.forEach((rm, i) => {
+          const cx = 70 + i * 100;
+          const cy = rm.avgTin !== null ? getYTin(rm.avgTin) : 80;
+          const valStr = rm.avgTin !== null ? `${rm.avgTin}°` : 'N/D';
+          const fill = rm.avgTin !== null ? '#F59E0B' : '#9CA3AF';
+          nodesSvg += `
+            <circle cx="${cx}" cy="${cy}" r="5" fill="${fill}" stroke="#fff" stroke-width="2"><title>Fila ${rm.fila}: ${rm.avgTin !== null ? `${rm.avgTin}°C` : 'N/D'}</title></circle>
+            <text x="${cx - 10}" y="${cy - 8}" fill="${fill}" class="dark:fill-green-300 text-[10px] font-bold">${valStr}</text>
+          `;
+        });
+      } else {
+        rowMetrics.forEach((rm, i) => {
+          const cx = 70 + i * 100;
+          const cy = 75;
+          nodesSvg += `
+            <circle cx="${cx}" cy="${cy}" r="4" fill="#9CA3AF" stroke="#fff" stroke-width="1.5" stroke-dasharray="2,2"><title>Fila ${rm.fila}: Sin registro térmico (N/D)</title></circle>
+            <text x="${cx}" y="${cy - 8}" fill="#6B7280" font-size="9" font-weight="bold" text-anchor="middle">N/D</text>
+          `;
+        });
+      }
+
+      svgTin.innerHTML = `
+        <rect x="40" y="65" width="390" height="30" fill="rgba(245, 158, 11, 0.12)" rx="4"></rect>
+        <text x="45" y="92" fill="#D97706" font-size="8.5" font-weight="bold">← Confort Térmico (23°C - 26°C)</text>
+        <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="28" class="fill-green-400 text-[9px] font-mono">30°</text>
+        <line x1="40" y1="65" x2="430" y2="65" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="68" class="fill-green-400 text-[9px] font-mono">26°</text>
+        <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="108" class="fill-green-400 text-[9px] font-mono">22°</text>
+        ${curvePath}
+        ${nodesSvg}
+      `;
+    }
+
+    // Gráfico 3: Temp Externa
+    const badgeTout = document.getElementById('general-badge-tout');
+    if (badgeTout) badgeTout.textContent = `${globalAvgTout}°C Promedio`;
+
+    const svgTout = document.getElementById('general-svg-tout');
+    if (svgTout) {
+      const getYTout = (v: number) => 105 - ((v - 18) / 6.0) * 80;
+      const y0 = getYTout(rowMetrics[0].avgTout);
+      const y1 = getYTout(rowMetrics[1].avgTout);
+      const y2 = getYTout(rowMetrics[2].avgTout);
+      const y3 = getYTout(rowMetrics[3].avgTout);
+
+      svgTout.innerHTML = `
+        <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="28" class="fill-green-400 text-[9px] font-mono">24°</text>
+        <line x1="40" y1="65" x2="430" y2="65" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="68" class="fill-green-400 text-[9px] font-mono">21°</text>
+        <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="108" class="fill-green-400 text-[9px] font-mono">18°</text>
+        <path d="M 70,${y0} Q 120,${(y0 + y1) / 2} 170,${y1} T 270,${y2} T 370,${y3}" fill="none" stroke="#0EA5E9" stroke-width="3" stroke-linecap="round" stroke-dasharray="6,3" />
+        <circle cx="70" cy="${y0}" r="5" fill="#0EA5E9" stroke="#fff" stroke-width="2"><title>t0 Ext: ${rowMetrics[0].avgTout}°C</title></circle>
+        <text x="60" y="${y0 - 8}" fill="#0369A1" class="dark:fill-sky-300 text-[10px] font-bold">${rowMetrics[0].avgTout}°</text>
+        <circle cx="170" cy="${y1}" r="5" fill="#0EA5E9" stroke="#fff" stroke-width="2"><title>t1 Ext: ${rowMetrics[1].avgTout}°C</title></circle>
+        <text x="160" y="${y1 - 8}" fill="#0369A1" class="dark:fill-sky-300 text-[10px] font-bold">${rowMetrics[1].avgTout}°</text>
+        <circle cx="270" cy="${y2}" r="5" fill="#0EA5E9" stroke="#fff" stroke-width="2"><title>t2 Ext: ${rowMetrics[2].avgTout}°C</title></circle>
+        <text x="260" y="${y2 - 8}" fill="#0369A1" class="dark:fill-sky-300 text-[10px] font-bold">${rowMetrics[2].avgTout}°</text>
+        <circle cx="370" cy="${y3}" r="5" fill="#0EA5E9" stroke="#fff" stroke-width="2"><title>t3 Ext: ${rowMetrics[3].avgTout}°C</title></circle>
+        <text x="360" y="${y3 - 8}" fill="#0369A1" class="dark:fill-sky-300 text-[10px] font-bold">${rowMetrics[3].avgTout}°</text>
+      `;
+    }
+
+    // Gráfico 4: Temp Suelo
+    const badgeTsoil = document.getElementById('general-badge-tsoil');
+    if (badgeTsoil) badgeTsoil.textContent = `${globalAvgTsoil}°C Promedio`;
+
+    const svgTsoil = document.getElementById('general-svg-tsoil');
+    if (svgTsoil) {
+      const getYTsoil = (v: number) => 105 - ((v - 18) / 8.0) * 80;
+      const y0 = getYTsoil(rowMetrics[0].avgTsoil);
+      const y1 = getYTsoil(rowMetrics[1].avgTsoil);
+      const y2 = getYTsoil(rowMetrics[2].avgTsoil);
+      const y3 = getYTsoil(rowMetrics[3].avgTsoil);
+
+      svgTsoil.innerHTML = `
+        <rect x="40" y="65" width="390" height="30" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
+        <text x="45" y="92" fill="#10B981" font-size="8.5" font-weight="bold">← Zona Radicular Óptima (19°C - 22°C)</text>
+        <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="28" class="fill-green-400 text-[9px] font-mono">26°</text>
+        <line x1="40" y1="65" x2="430" y2="65" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="68" class="fill-green-400 text-[9px] font-mono">22°</text>
+        <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="108" class="fill-green-400 text-[9px] font-mono">18°</text>
+        <path d="M 70,${y0} Q 120,${(y0 + y1) / 2} 170,${y1} T 270,${y2} T 370,${y3}" fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" />
+        <circle cx="70" cy="${y0}" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>t0 Suelo: ${rowMetrics[0].avgTsoil}°C</title></circle>
+        <text x="60" y="${y0 - 8}" fill="#047857" class="dark:fill-lime-300 text-[10px] font-bold">${rowMetrics[0].avgTsoil}°</text>
+        <circle cx="170" cy="${y1}" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>t1 Suelo: ${rowMetrics[1].avgTsoil}°C</title></circle>
+        <text x="160" y="${y1 - 8}" fill="#047857" class="dark:fill-lime-300 text-[10px] font-bold">${rowMetrics[1].avgTsoil}°</text>
+        <circle cx="270" cy="${y2}" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>t2 Suelo: ${rowMetrics[2].avgTsoil}°C</title></circle>
+        <text x="260" y="${y2 - 8}" fill="#047857" class="dark:fill-lime-300 text-[10px] font-bold">${rowMetrics[2].avgTsoil}°</text>
+        <circle cx="370" cy="${y3}" r="5" fill="#10B981" stroke="#fff" stroke-width="2"><title>t3 Suelo: ${rowMetrics[3].avgTsoil}°C</title></circle>
+        <text x="360" y="${y3 - 8}" fill="#047857" class="dark:fill-lime-300 text-[10px] font-bold">${rowMetrics[3].avgTsoil}°</text>
+      `;
+    }
+
+    // Gráfico 5: Crecimiento
+    const badgeGrowth = document.getElementById('general-badge-growth');
+    if (badgeGrowth) badgeGrowth.textContent = `${globalAvgGrowth}%`;
+
+    const svgGrowth = document.getElementById('general-svg-growth');
+    if (svgGrowth) {
+      let barsSvg = '';
+      rowMetrics.forEach((rm, i) => {
+        const x = 52 + i * 100;
+        const g = rm.avgGrowth;
+        const barH = (g / 100) * 75;
+        const y = 105 - barH;
+        barsSvg += `
+          <rect x="${x}" y="${y}" width="36" height="${barH}" rx="6" fill="#14B8A6" opacity="0.88"><title>Fila ${rm.fila}: ${g}%</title></rect>
+          <text x="${x + 18}" y="${y - 6}" fill="#0F766E" class="dark:fill-teal-300 text-[10px] font-black text-center" text-anchor="middle">${g}%</text>
+        `;
+      });
+
+      svgGrowth.innerHTML = `
+        <line x1="40" y1="20" x2="430" y2="20" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="23" class="fill-green-400 text-[9px] font-mono">100%</text>
+        <line x1="40" y1="62" x2="430" y2="62" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="65" class="fill-green-400 text-[9px] font-mono">50%</text>
+        <line x1="40" y1="105" x2="430" y2="105" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="108" class="fill-green-400 text-[9px] font-mono">0%</text>
+        ${barsSvg}
+      `;
+    }
+
+    // Gráfico 6: Humedad Relativa
+    const badgeHumedad = document.getElementById('general-badge-humedad');
+    if (badgeHumedad) badgeHumedad.textContent = globalAvgHumedad !== null ? `${globalAvgHumedad}%` : 'N/D';
+
+    const kpiHumedad = document.getElementById('kpi-global-humedad');
+    if (kpiHumedad) kpiHumedad.textContent = globalAvgHumedad !== null ? `${globalAvgHumedad}` : '--';
+
+    const svgHumedad = document.getElementById('general-svg-humedad');
+    if (svgHumedad) {
+      // Escala: 30% = 115px, 100% = 15px (zona visible 30–100%)
+      const getYHum = (v: number) => 115 - ((v - 30) / 70) * 100;
+      const optTop = getYHum(80);
+      const optBottom = getYHum(60);
+      const optH = Math.abs(optBottom - optTop);
+
+      let barsSvg = '';
+      rowMetrics.forEach((rm: any, i: number) => {
+        const x = 52 + i * 100;
+        const hVal = rm.avgHumedad;
+        if (hVal === null) {
+          barsSvg += `
+            <text x="${x + 18}" y="90" fill="#9CA3AF" font-size="9" text-anchor="middle">N/D</text>
+          `;
+          return;
+        }
+        const barBottom = getYHum(30);
+        const barTop = getYHum(hVal);
+        const barH = Math.max(2, barBottom - barTop);
+        const color = hVal >= 60 && hVal <= 80 ? '#06B6D4' : hVal < 60 ? '#F59E0B' : '#3B82F6';
+        barsSvg += `
+          <rect x="${x}" y="${barTop}" width="36" height="${barH}" rx="5" fill="${color}" opacity="0.85"><title>Fila ${rm.fila}: ${hVal}%</title></rect>
+          <text x="${x + 18}" y="${barTop - 4}" fill="${color}" class="dark:fill-cyan-300 text-[10px] font-black" text-anchor="middle">${hVal}%</text>
+        `;
+      });
+
+      svgHumedad.innerHTML = `
+        <rect x="40" y="${optTop}" width="390" height="${optH}" fill="rgba(6, 182, 212, 0.12)" rx="4"></rect>
+        <text x="45" y="${optBottom + 8}" fill="#0891B2" font-size="8.5" font-weight="bold">← Zona Óptima (60% – 80%)</text>
+        <line x1="40" y1="${getYHum(100)}" x2="430" y2="${getYHum(100)}" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="12" y="${getYHum(100) + 3}" class="fill-green-400 text-[9px] font-mono">100%</text>
+        <line x1="40" y1="${optTop}" x2="430" y2="${optTop}" stroke="currentColor" stroke-dasharray="3,3" class="text-cyan-400 dark:text-cyan-700" stroke-width="1" />
+        <text x="15" y="${optTop + 3}" class="fill-cyan-500 text-[9px] font-mono">80%</text>
+        <line x1="40" y1="${optBottom}" x2="430" y2="${optBottom}" stroke="currentColor" stroke-dasharray="3,3" class="text-cyan-400 dark:text-cyan-700" stroke-width="1" />
+        <text x="15" y="${optBottom + 3}" class="fill-cyan-500 text-[9px] font-mono">60%</text>
+        <line x1="40" y1="${getYHum(30)}" x2="430" y2="${getYHum(30)}" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
+        <text x="15" y="${getYHum(30) + 3}" class="fill-green-400 text-[9px] font-mono">30%</text>
+        ${barsSvg}
+      `;
+    }
+  }
+
+  function purgeMockStorage() {
+    const keys = [STORAGE_KEY_RECORDS, STORAGE_KEY_RECORDS_ALT];
+    keys.forEach(k => {
+      try {
+        const stored = localStorage.getItem(k);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const realOnly = parsed.filter((r: any) => r && typeof r.id === 'string' && r.id.startsWith('MET-GS-'));
+          if (realOnly.length === 0) {
+            localStorage.removeItem(k);
+          } else if (realOnly.length !== parsed.length) {
+            localStorage.setItem(k, JSON.stringify(realOnly));
+          }
+        }
+      } catch {
+        localStorage.removeItem(k);
+      }
+    });
+  }
+
+  function syncMetricsWithRealRecords() {
+    try {
+      purgeMockStorage();
+      const stored = localStorage.getItem(STORAGE_KEY_RECORDS) || localStorage.getItem(STORAGE_KEY_RECORDS_ALT);
+      if (!stored) return;
+      const records = JSON.parse(stored);
+      if (!Array.isArray(records) || records.length === 0) return;
+
+      const dates = Array.from(new Set(records.map((r: any) => r.fecha))).sort((a: any, b: any) => b.localeCompare(a));
+      const latestDate = dates[0] || '2026-09-30';
+
+      const liveBadge = document.getElementById('metrics-live-badge');
+      if (liveBadge) {
+        liveBadge.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-lime-500 animate-pulse"></span>
+          Mediciones en Vivo (${latestDate})
+        `;
+      }
+
+      plantsState.forEach((plant: any) => {
+        const plantRecords = records.filter((r: any) => {
+          if (r.code && r.code === plant.code) return true;
+          if (r.plantId && r.plantId === plant.plantId) return true;
+          if (r.fila === plant.fila && r.columna === plant.columna) return true;
+          const parsed = resolveCoordsMetrics(r.code || r.plantId, r.fila, r.columna);
+          return parsed.fila === plant.fila && parsed.columna === plant.columna;
+        }).sort((a: any, b: any) => a.fecha.localeCompare(b.fecha));
+
+        if (plantRecords.length === 0) return;
+
+        plant.history = plantRecords;
+        plant.latestMetric = plantRecords[plantRecords.length - 1];
+        const m = plant.latestMetric;
+
+        // 1. Actualizar botón del Selector Rápido
+        const btn = document.querySelector(`.plant-card-btn[data-fila="${plant.fila}"][data-columna="${plant.columna}"]`) as HTMLElement | null;
+        if (btn) {
+          const isCritical = m.sanidad === 'Crítica';
+          const isWarning = m.sanidad === 'Vulnerable';
+          const dotColor = isCritical ? 'bg-rose-500' : isWarning ? 'bg-green-400' : 'bg-lime-500';
+          const plantIcon = isCritical ? '🥀' : isWarning ? '🌿' : '🪴';
+          const statusBorder = isCritical
+            ? 'border-rose-300 dark:border-rose-800 bg-rose-50/60 dark:bg-rose-950/20 hover:border-rose-500'
+            : isWarning
+              ? 'border-green-300 dark:border-stone-800 bg-green-50/60 dark:bg-stone-950/20 hover:border-green-500'
+              : 'border-lime-200 dark:border-lime-800/40 bg-lime-50/50 dark:bg-lime-950/10 hover:border-lime-500';
+
+          btn.className = `plant-card-btn text-left p-3 rounded-xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-md cursor-pointer relative group ${statusBorder}`;
+
+          const tag = btn.querySelector('.plant-card-tag');
+          if (tag) tag.textContent = `${plant.plantId} • ${plant.fila}`;
+
+          const dot = btn.querySelector('.plant-card-dot');
+          if (dot) dot.className = `plant-card-dot w-2.5 h-2.5 rounded-full ${dotColor} shadow-xs`;
+
+          const icon = btn.querySelector('.plant-card-icon');
+          if (icon) icon.textContent = plantIcon;
+
+          const growth = btn.querySelector('.plant-card-growth');
+          if (growth) {
+            growth.textContent = (m.alturaCm !== undefined && m.alturaCm !== null) ? `${m.alturaCm}cm` : `${m.crecimiento}%`;
+          }
+
+          const phEl = btn.querySelector('.plant-card-ph');
+          if (phEl) phEl.textContent = `${Number(m.phSuelo).toFixed(1)} pH`;
+
+          const tinEl = btn.querySelector('.plant-card-tin');
+          if (tinEl) {
+            tinEl.textContent = (m.tempInterna !== null && m.tempInterna !== undefined)
+              ? `${Number(m.tempInterna).toFixed(1)}°C`
+              : 'N/D';
+          }
+        }
+
+        // 2. Actualizar fila de la tabla Excel
+        const row = document.querySelector(`.plant-table-row[data-fila="${plant.fila}"][data-columna="${plant.columna}"]`) as HTMLElement | null;
+        if (row) {
+          row.dataset.health = m.sanidad;
+          row.dataset.prod = m.productividad;
+          row.dataset.resp = m.responsable;
+          row.dataset.ph = m.phSuelo.toString();
+          row.dataset.tin = (m.tempInterna !== null && m.tempInterna !== undefined) ? m.tempInterna.toString() : '';
+          row.dataset.tout = (m.tempExterna !== null && m.tempExterna !== undefined) ? m.tempExterna.toString() : '';
+          row.dataset.tsoil = (m.tempSuelo !== null && m.tempSuelo !== undefined) ? m.tempSuelo.toString() : '';
+          row.dataset.growth = m.crecimiento.toString();
+          row.dataset.altura = (m.alturaCm !== undefined && m.alturaCm !== null) ? m.alturaCm.toString() : '';
+          row.dataset.humedad = (m.humedad !== undefined && m.humedad !== null) ? m.humedad.toString() : '';
+          row.dataset.fase = m.faseCrecimiento;
+          row.dataset.obs = m.observaciones || '';
+          row.dataset.hora = m.hora;
+          row.dataset.fecha = m.fecha;
+
+          const cellFecha = row.querySelector('.table-cell-fecha');
+          if (cellFecha) {
+            cellFecha.innerHTML = `<span class="font-semibold text-green-950 dark:text-white block text-xs">${m.fecha}</span><span class="text-[11px] text-green-600 dark:text-stone-400 font-mono">${m.hora}</span>`;
+          }
+
+          const cellPh = row.querySelector('.table-cell-ph');
+          if (cellPh) {
+            const phBadge = getPhBadgeClient(Number(m.phSuelo));
+            cellPh.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black border ${phBadge.class}"><span>${Number(m.phSuelo).toFixed(1)}</span><span class="text-[9px] opacity-75">pH</span></span>`;
+          }
+
+          const cellTin = row.querySelector('.table-cell-tin');
+          if (cellTin) {
+            const tinValStr = (m.tempInterna !== null && m.tempInterna !== undefined) ? `${Number(m.tempInterna).toFixed(1)}°C` : 'N/D';
+            cellTin.innerHTML = `<span class="px-2 py-0.5 rounded bg-green-50 dark:bg-stone-900/20 font-mono">${tinValStr}</span>`;
+          }
+
+          const cellTout = row.querySelector('.table-cell-tout');
+          if (cellTout) {
+            const toutValStr = (m.tempExterna !== null && m.tempExterna !== undefined && !isNaN(Number(m.tempExterna))) ? `${Number(m.tempExterna).toFixed(1)}°C` : 'N/D';
+            cellTout.innerHTML = `<span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 font-mono text-xs font-bold">${toutValStr}</span>`;
+          }
+
+          const cellTsoil = row.querySelector('.table-cell-tsoil');
+          if (cellTsoil) {
+            const tsoilValStr = (m.tempSuelo !== null && m.tempSuelo !== undefined && !isNaN(Number(m.tempSuelo))) ? `${Number(m.tempSuelo).toFixed(1)}°C` : 'N/D';
+            cellTsoil.innerHTML = `<span class="px-2 py-0.5 rounded bg-lime-50 dark:bg-lime-900/20 font-mono text-xs font-bold">${tsoilValStr}</span>`;
+          }
+
+          const cellGrowth = row.querySelector('.table-cell-growth');
+          if (cellGrowth) {
+            const growthText = (m.alturaCm !== undefined && m.alturaCm !== null) ? `${m.alturaCm}cm` : `${m.crecimiento}%`;
+            cellGrowth.innerHTML = `<div class="flex items-center justify-between text-xs font-bold text-green-800 dark:text-stone-300 mb-1"><span class="text-[11px] truncate max-w-[80px]">${m.faseCrecimiento}</span><span class="text-lime-600 dark:text-lime-400 font-mono">${growthText}</span></div><div class="w-full bg-green-200 dark:bg-stone-700 h-1.5 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-teal-500 to-lime-500 h-full rounded-full" style="width: ${m.crecimiento}%"></div></div>`;
+          }
+
+          const cellProd = row.querySelector('.table-cell-prod');
+          if (cellProd) {
+            const prodCls = getProdBadgeClient(m.productividad);
+            cellProd.innerHTML = `<span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${prodCls}">${m.productividad}</span>`;
+          }
+
+          const cellHealth = row.querySelector('.table-cell-health');
+          if (cellHealth) {
+            const healthBadge = getHealthBadgeClient(m.sanidad);
+            cellHealth.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${healthBadge.class}"><span>${healthBadge.icon}</span><span>${m.sanidad}</span></span>`;
+          }
+
+          const cellResp = row.querySelector('.table-cell-resp');
+          if (cellResp) {
+            const initials = m.responsable.split(' ').map((n: string) => n[0]).slice(0, 2).join('');
+            cellResp.innerHTML = `<div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full ${m.avatarColor || 'bg-green-600'} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0">${initials}</div><div><span class="font-bold text-green-950 dark:text-white text-xs block">${m.responsable}</span><span class="text-[10px] text-green-600 dark:text-stone-400 block font-normal">${m.responsableRol || ''}</span></div></div>`;
+          }
+        }
+      });
+
+      // 3. Renderizar las 6 gráficas generales dinámicamente con los datos actualizados
+      renderGeneralChartsDynamic(plantsState);
+
+      // 4. Si el modal individual de una planta está abierto, refrescarlo con los nuevos datos
+      if (currentOpenPlant) {
+        openPlantModal(currentOpenPlant.fila, currentOpenPlant.columna);
+      }
+    } catch (err) {
+      console.error('Error al sincronizar métricas con registros reales:', err);
+    }
+  }
+
+  // Inicializar sincronización en tiempo real
+  syncMetricsWithRealRecords();
+  window.addEventListener('storage', syncMetricsWithRealRecords);
+  window.addEventListener('aquasens:data-synced', syncMetricsWithRealRecords);
 </script>

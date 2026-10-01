@@ -318,7 +318,8 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             placeholder="Responsable, nota o código..."
             class="w-full pl-8 pr-3 py-2 text-xs font-semibold rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-900 dark:text-stone-300 focus:ring-2 focus:ring-green-500"
           />
-          <span class="absolute left-2.5 top-2.5 text-green-400 text-xs">🔍</span
+          <span class="absolute left-2.5 top-2.5 text-green-400 text-xs"
+            >🔍</span
           >
         </div>
       </div>
@@ -452,8 +453,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
           <span id="kpi-tsoil" class="text-2xl font-black text-white">--</span>
           <span class="text-xs text-green-200">°C</span>
         </div>
-        <span class="text-[10px] text-green-200 block mt-1"
-          >Zona radicular</span
+        <span class="text-[10px] text-green-200 block mt-1">Zona radicular</span
         >
       </div>
 
@@ -599,11 +599,11 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     <!-- Contenedor del Gráfico SVG Responsivo -->
     <div
-      class="w-full h-56 relative bg-green-50 dark:bg-[#062c16]/50 rounded-2xl p-4 border border-green-100 dark:border-[#166534]/80 flex items-center justify-center"
+      class="w-full h-56 relative bg-green-50 dark:bg-[#062c16]/50 rounded-2xl p-4 border border-green-100 dark:border-[#166534]/80 flex items-center justify-center overflow-hidden"
     >
       <svg
         id="history-evolution-svg"
-        class="w-full h-full overflow-visible"
+        class="w-full h-full overflow-hidden"
         viewBox="0 0 700 180"
       >
         <!-- Generado dinámicamente por JavaScript -->
@@ -645,7 +645,9 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     <!-- Tabla Responsiva -->
     <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs text-green-700 dark:text-stone-300">
+      <table
+        class="w-full text-left text-xs text-green-700 dark:text-stone-300"
+      >
         <thead
           class="bg-green-50 dark:bg-stone-800/80 text-[11px] font-black uppercase tracking-wider text-green-600 dark:text-stone-400 border-b border-green-200 dark:border-[#166534]"
         >
@@ -672,15 +674,21 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
     </div>
 
     <!-- Estado vacío -->
-    <div id="table-empty-state" class="hidden p-12 text-center">
-      <span class="text-4xl">🔍</span>
+    <div
+      id="table-empty-state"
+      class={`${allRecords.length === 0 ? "" : "hidden"} p-12 text-center`}
+    >
+      <span class="text-4xl">📋</span>
       <h4 class="text-base font-bold text-green-900 dark:text-stone-300 mt-2">
-        No se encontraron mediciones
+        Esperando sincronización con Google Sheets
       </h4>
-      <p class="text-xs text-green-600 dark:text-stone-400 mt-1 max-w-md mx-auto">
-        No hay registros para la fecha o filtros seleccionados. Prueba
-        seleccionando otra fecha, subiendo un archivo Excel/CSV o conectando
-        Google Sheets.
+      <p
+        class="text-xs text-green-600 dark:text-stone-400 mt-1 max-w-md mx-auto"
+      >
+        No hay datos cargados en este momento. Conecta tu hoja de cálculo
+        haciendo clic en el botón superior <strong
+          >"Conectar Google Sheets"</strong
+        > para cargar todas las mediciones reales del cultivo.
       </p>
     </div>
   </div>
@@ -694,7 +702,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
   class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
 >
   <div
-    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-xl rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-4xl rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
   >
     <!-- Encabezado del Modal -->
     <div
@@ -751,8 +759,9 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         </div>
       </div>
 
-      <!-- Variables Agronómicas Principales -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <!-- Variables Agronómicas Principales (Datos reales desde Google Sheets) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <!-- 1. Ph -->
         <div
           class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
         >
@@ -762,55 +771,93 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
           >
           <span
             id="modal-val-ph"
-            class="text-lg font-black text-green-950 dark:text-white">6.4</span
+            class="text-base sm:text-lg font-black text-green-950 dark:text-white"
+            >6.4</span
           >
           <span
             id="modal-badge-ph"
-            class="text-[9px] font-bold text-lime-600 block mt-0.5"
-            >Óptimo</span
+            class="text-[9px] font-bold text-lime-600 block mt-0.5">Ph</span
           >
         </div>
+        <!-- 2. T_Planta_C -->
         <div
           class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
         >
           <span
             class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block"
-            >Temp. Interna</span
+            >T. Piso Planta</span
           >
           <span
             id="modal-val-tin"
-            class="text-lg font-black text-green-950 dark:text-white"
+            class="text-base sm:text-lg font-black text-green-950 dark:text-white"
             >24.5°C</span
           >
-          <span class="text-[9px] text-green-400 block mt-0.5">Microclima</span>
+          <span class="text-[9px] text-green-500 block mt-0.5">T_Planta_C</span>
         </div>
+        <!-- 3. T_Int_C -->
         <div
           class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
         >
           <span
             class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block"
-            >Temp. Suelo</span
+            >T. Invernadero</span
           >
           <span
-            id="modal-val-tsoil"
-            class="text-lg font-black text-green-950 dark:text-white"
-            >20.3°C</span
+            id="modal-val-tint"
+            class="text-base sm:text-lg font-black text-green-950 dark:text-white"
+            >--</span
           >
-          <span class="text-[9px] text-green-400 block mt-0.5">Radicular</span>
+          <span class="text-[9px] text-blue-500 block mt-0.5">T_Int_C</span>
         </div>
+        <!-- 4. T_Ext_C -->
         <div
           class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
         >
           <span
             class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block"
-            >Crecimiento</span
+            >T. Externa</span
+          >
+          <span
+            id="modal-val-text"
+            class="text-base sm:text-lg font-black text-green-950 dark:text-white"
+            >--</span
+          >
+          <span class="text-[9px] text-sky-500 block mt-0.5">T_Ext_C</span>
+        </div>
+        <!-- 5. humedad_Pct -->
+        <div
+          class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
+        >
+          <span
+            class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block"
+            >Humedad</span
+          >
+          <span
+            id="modal-val-hum"
+            class="text-base sm:text-lg font-black text-green-950 dark:text-white"
+            >--</span
+          >
+          <span class="text-[9px] text-emerald-500 block mt-0.5"
+            >humedad_Pct</span
+          >
+        </div>
+        <!-- 6. ALtura_cm -->
+        <div
+          class="p-3 bg-green-50 dark:bg-stone-700/50 rounded-xl border border-green-200 dark:border-stone-600 text-center"
+        >
+          <span
+            class="text-[10px] font-bold text-green-600 dark:text-stone-400 uppercase block"
+            >Altura / Crec.</span
           >
           <span
             id="modal-val-growth"
-            class="text-lg font-black text-green-950 dark:text-white">88%</span
+            class="text-base sm:text-lg font-black text-green-950 dark:text-white"
+            >--</span
           >
-          <span class="text-[9px] text-green-500 block mt-0.5"
-            >Avance foliar</span
+          <span
+            id="modal-val-altura"
+            class="text-[9px] text-lime-500 font-bold block mt-0.5"
+            >ALtura_cm</span
           >
         </div>
       </div>
@@ -985,7 +1032,9 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
           class="max-h-44 overflow-y-auto border border-green-200 dark:border-[#166534] rounded-xl"
         >
           <table class="w-full text-[11px] text-left">
-            <thead class="bg-green-100 dark:bg-stone-700 sticky top-0 font-bold">
+            <thead
+              class="bg-green-100 dark:bg-stone-700 sticky top-0 font-bold"
+            >
               <tr>
                 <th class="p-2">Planta</th>
                 <th class="p-2">Fecha</th>
@@ -1080,9 +1129,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       <div
         class="p-4 bg-lime-50 dark:bg-lime-950/30 border border-lime-200 dark:border-lime-800/50 rounded-2xl space-y-2"
       >
-        <span
-          class="font-bold text-lime-900 dark:text-lime-300 text-xs block"
-        >
+        <span class="font-bold text-lime-900 dark:text-lime-300 text-xs block">
           💡 ¿Cómo obtener el enlace de Google Sheets?
         </span>
         <ol
@@ -1168,13 +1215,139 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     // 2. COMBINAR CON LOCALSTORAGE (Registros importados o sincronizados previamente)
     const STORAGE_KEY_RECORDS = "macollo_custom_history_records";
+    const STORAGE_KEY_RECORDS_ALT = "aquasens_custom_history_records";
     const STORAGE_KEY_SHEETS_URL = "macollo_google_sheet_url";
     const STORAGE_KEY_LAST_SYNC = "macollo_last_sync_time";
 
+    function resolveCoordsHistorial(rawId, rawFila, rawCol) {
+      const pRaw = String(rawId || "").trim();
+      const fRaw = String(rawFila || "").trim();
+      const cRaw = String(rawCol || "").trim();
+
+      let filaIdx = -1;
+      let colIdx = -1;
+
+      // 1. Buscar código compuesto T[0-3O]-P[1-5]
+      const candidateTexts = [pRaw, fRaw, cRaw].filter(Boolean);
+      for (const text of candidateTexts) {
+        const compMatch = text.match(
+          /(?:^|[^a-zA-Z])T([0-3O])[\s\-_/.]*(?:P|F|COL|PLANTA)?[\s\-_/.]*([1-5])\b/i,
+        );
+        if (compMatch) {
+          const fChar = compMatch[1].toUpperCase() === "O" ? "0" : compMatch[1];
+          filaIdx = parseInt(fChar, 10);
+          colIdx = parseInt(compMatch[2], 10) - 1;
+          break;
+        }
+      }
+
+      // 2. Extraer tratamiento (fila) si aún no está determinado
+      if (filaIdx === -1 && fRaw) {
+        const tratMatch = fRaw.match(
+          /(?:TRATAMIENTO|FILA|CAMA|BLOQUE|SECCION)[\s\-_:]*T?([0-3O])\b/i,
+        );
+        if (tratMatch) {
+          const fChar = tratMatch[1].toUpperCase() === "O" ? "0" : tratMatch[1];
+          filaIdx = parseInt(fChar, 10);
+        } else {
+          const tMatch = fRaw.match(
+            /(?:^|[^a-zA-Z])T([0-3O])(?:[^a-zA-Z0-9]|$)/i,
+          );
+          if (tMatch) {
+            const fChar = tMatch[1].toUpperCase() === "O" ? "0" : tMatch[1];
+            filaIdx = parseInt(fChar, 10);
+          } else {
+            const dMatch = fRaw.match(/^([0-3])$/);
+            if (dMatch) {
+              filaIdx = parseInt(dMatch[1], 10);
+            }
+          }
+        }
+      }
+
+      // 3. Extraer columna/planta (1..5) si aún no está determinada
+      const colCandidates = [cRaw, pRaw].filter(Boolean);
+      if (colIdx === -1) {
+        for (const text of colCandidates) {
+          const pMatch = text.match(
+            /(?:^|[^a-zA-Z])P[\s\-_:]*0?([1-5])(?:[^a-zA-Z0-9]|$)/i,
+          );
+          if (pMatch) {
+            colIdx = parseInt(pMatch[1], 10) - 1;
+            break;
+          }
+          const namedColMatch = text.match(
+            /(?:PLANTA|COL|COLUMNA|SITIO)[\s\-_:]*0?([1-5])\b/i,
+          );
+          if (namedColMatch) {
+            colIdx = parseInt(namedColMatch[1], 10) - 1;
+            break;
+          }
+          const numMatch = text.match(/^0?([1-5])$/);
+          if (numMatch) {
+            colIdx = parseInt(numMatch[1], 10) - 1;
+            break;
+          }
+        }
+      }
+
+      // 4. Si filaIdx aún no se resolvió pero se dispone de número global 1..20
+      if (filaIdx === -1) {
+        const globalMatch =
+          pRaw.match(/^P[-_\s]?0?([1-9]|1[0-9]|20)$/i) ||
+          pRaw.match(/^0?([1-9]|1[0-9]|20)$/);
+        if (globalMatch) {
+          const num = parseInt(globalMatch[1], 10);
+          filaIdx = Math.floor((num - 1) / 5);
+          if (colIdx === -1) {
+            colIdx = (num - 1) % 5;
+          }
+        }
+      }
+
+      if (filaIdx < 0 || filaIdx > 3) filaIdx = 0;
+      if (colIdx < 0 || colIdx > 4) colIdx = 0;
+
+      const FILAS = ["t0", "t1", "t2", "t3"];
+      const COLUMNAS = ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"];
+      const plantNum = filaIdx * 5 + colIdx + 1;
+      const plantId = `P-${String(plantNum).padStart(2, "0")}`;
+      return {
+        fila: FILAS[filaIdx],
+        columna: COLUMNAS[colIdx],
+        code: `T${filaIdx}-P${colIdx + 1}`,
+        plantNumber: plantNum,
+        plantId,
+      };
+    }
+
     function getStoredRecords() {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY_RECORDS);
-        return stored ? JSON.parse(stored) : [];
+        const stored =
+          localStorage.getItem(STORAGE_KEY_RECORDS) ||
+          localStorage.getItem(STORAGE_KEY_RECORDS_ALT);
+        if (!stored) return [];
+        const parsed = JSON.parse(stored);
+        if (!Array.isArray(parsed)) return [];
+        // Purgar de forma estricta y definitiva CUALQUIER registro previo inventado.
+        // Únicamente conservar registros que provengan de sincronización real (MET-GS- o MET-UPLOAD-)
+        const realOnly = parsed.filter(
+          (r) =>
+            r &&
+            typeof r.id === "string" &&
+            (r.id.startsWith("MET-GS-") || r.id.startsWith("MET-UPLOAD-")),
+        );
+        if (realOnly.length !== parsed.length) {
+          if (realOnly.length > 0) {
+            const serialized = JSON.stringify(realOnly);
+            localStorage.setItem(STORAGE_KEY_RECORDS, serialized);
+            localStorage.setItem(STORAGE_KEY_RECORDS_ALT, serialized);
+          } else {
+            localStorage.removeItem(STORAGE_KEY_RECORDS);
+            localStorage.removeItem(STORAGE_KEY_RECORDS_ALT);
+          }
+        }
+        return realOnly;
       } catch {
         return [];
       }
@@ -1182,27 +1355,18 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     function saveCustomRecords(newRecords) {
       try {
-        const existing = getStoredRecords();
-        // Evitar duplicados por id
-        const map = new Map();
-        [...existing, ...newRecords].forEach((r) => map.set(r.id, r));
-        localStorage.setItem(
-          STORAGE_KEY_RECORDS,
-          JSON.stringify(Array.from(map.values())),
-        );
+        // Al sincronizar con Google Sheets, guardar exclusivamente los registros reales descargados
+        const serialized = JSON.stringify(newRecords);
+        localStorage.setItem(STORAGE_KEY_RECORDS, serialized);
+        localStorage.setItem(STORAGE_KEY_RECORDS_ALT, serialized);
       } catch (e) {
         console.error("Error guardando en localStorage:", e);
       }
     }
 
-    // Unir todos los registros (base + custom)
+    // Únicamente devolver registros reales almacenados (sin datos inventados)
     function getAllCombinedRecords() {
-      const custom = getStoredRecords();
-      const map = new Map();
-      // Primero base, luego custom sobrescribe si coincide ID
-      baseRecords.forEach((r) => map.set(r.id, r));
-      custom.forEach((r) => map.set(r.id, r));
-      return Array.from(map.values());
+      return getStoredRecords();
     }
 
     // 3. ESTADO GLOBAL DE LA VISTA
@@ -1219,14 +1383,15 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     // Obtener lista de fechas únicas ordenadas
     function getAvailableDates() {
-      const dates = Array.from(new Set(state.allRecords.map((r) => r.fecha)));
+      const dates = Array.from(
+        new Set(state.allRecords.map((r) => r.fecha)),
+      ).filter(Boolean);
       return dates.sort((a, b) => b.localeCompare(a));
     }
 
     // Inicializar fecha seleccionada
     const availableDates = getAvailableDates();
-    state.selectedDate =
-      availableDates[0] || new Date().toISOString().slice(0, 10);
+    state.selectedDate = availableDates[0] || "";
 
     // 4. ELEMENTOS DEL DOM
     const datePicker = document.getElementById("history-date-picker");
@@ -1338,6 +1503,16 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       const dates = getAvailableDates();
       quickChipsContainer.innerHTML = "";
 
+      if (dates.length === 0) {
+        quickChipsContainer.innerHTML = `
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-100/60 dark:bg-stone-800 text-green-700 dark:text-stone-300 text-xs font-semibold">
+            <span>⏳</span>
+            <span>Esperando sincronización con Google Sheets...</span>
+          </div>
+        `;
+        return;
+      }
+
       const todayStr = new Date().toISOString().slice(0, 10);
 
       dates.slice(0, 4).forEach((d, idx) => {
@@ -1403,15 +1578,20 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
           return false;
         }
         // Fila
-        if (state.selectedFila !== "all" && r.fila !== state.selectedFila) {
-          return false;
-        }
-        // Planta
         if (
-          state.selectedPlanta !== "all" &&
-          r.plantId !== state.selectedPlanta
+          state.selectedFila !== "all" &&
+          String(r.fila || "").toLowerCase() !==
+            state.selectedFila.toLowerCase()
         ) {
           return false;
+        }
+        // Planta (por ID P-01 o código T0-P1)
+        if (state.selectedPlanta !== "all") {
+          const matchId = r.plantId === state.selectedPlanta;
+          const matchCode = r.code === state.selectedPlanta;
+          if (!matchId && !matchCode) {
+            return false;
+          }
         }
         // Sanidad
         if (
@@ -1423,11 +1603,12 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         // Búsqueda de texto
         if (state.searchQuery.trim()) {
           const q = state.searchQuery.toLowerCase();
-          const matchId = r.plantId.toLowerCase().includes(q);
-          const matchResp = r.responsable.toLowerCase().includes(q);
+          const matchId = (r.plantId || "").toLowerCase().includes(q);
+          const matchCode = (r.code || "").toLowerCase().includes(q);
+          const matchResp = (r.responsable || "").toLowerCase().includes(q);
           const matchObs = (r.observaciones || "").toLowerCase().includes(q);
-          const matchFila = r.fila.toLowerCase().includes(q);
-          if (!matchId && !matchResp && !matchObs && !matchFila) {
+          const matchFila = (r.fila || "").toLowerCase().includes(q);
+          if (!matchId && !matchCode && !matchResp && !matchObs && !matchFila) {
             return false;
           }
         }
@@ -1444,7 +1625,13 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
       // Título de Fecha
       if (summaryDateTitle) {
-        if (state.selectedDate === "all") {
+        if (state.allRecords.length === 0) {
+          summaryDateTitle.textContent = "Esperando Sincronización";
+          if (summaryDateSubtitle) {
+            summaryDateSubtitle.textContent =
+              "Conecta tu enlace de Google Sheets arriba para visualizar los datos del cultivo.";
+          }
+        } else if (state.selectedDate === "all") {
           summaryDateTitle.textContent = "Histórico Global Consolidado";
           if (summaryDateSubtitle)
             summaryDateSubtitle.textContent = `Analizando ${state.allRecords.length} mediciones a lo largo de ${getAvailableDates().length} días registrados.`;
@@ -1463,7 +1650,8 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
               day: "numeric",
             });
           } else {
-            summaryDateTitle.textContent = state.selectedDate;
+            summaryDateTitle.textContent =
+              state.selectedDate || "Sin registros";
           }
           if (summaryDateSubtitle)
             summaryDateSubtitle.textContent =
@@ -1492,9 +1680,21 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       const avgPh = +(
         recordsForDate.reduce((acc, r) => acc + r.phSuelo, 0) / total
       ).toFixed(2);
-      const avgTin = +(
-        recordsForDate.reduce((acc, r) => acc + r.tempInterna, 0) / total
-      ).toFixed(1);
+      const validTinRecords = recordsForDate.filter(
+        (r) =>
+          r.tempInterna !== null &&
+          r.tempInterna !== undefined &&
+          !isNaN(Number(r.tempInterna)),
+      );
+      const avgTin =
+        validTinRecords.length > 0
+          ? +(
+              validTinRecords.reduce(
+                (acc, r) => acc + Number(r.tempInterna),
+                0,
+              ) / validTinRecords.length
+            ).toFixed(1)
+          : null;
       const avgTsoil = +(
         recordsForDate.reduce((acc, r) => acc + r.tempSuelo, 0) / total
       ).toFixed(1);
@@ -1524,7 +1724,9 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         }
       }
 
-      if (kpiTin) kpiTin.textContent = avgTin.toString();
+      if (kpiTin) {
+        kpiTin.textContent = avgTin !== null ? avgTin.toString() : "N/D";
+      }
       if (kpiTsoil) kpiTsoil.textContent = avgTsoil.toString();
       if (kpiGrowth) kpiGrowth.textContent = avgGrowth.toString();
       if (kpiHealth) kpiHealth.textContent = healthyRatio.toString();
@@ -1553,31 +1755,53 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         (r) => r.fecha === targetDate,
       );
 
-      // Generar 20 posiciones esperadas
+      // Generar 20 posiciones esperadas (4 filas x 5 columnas)
       const expectedPlants = [];
       const filas = ["t0", "t1", "t2", "t3"];
       const cols = ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"];
 
       let pNum = 1;
-      filas.forEach((f) => {
-        cols.forEach((c) => {
+      filas.forEach((f, fIdx) => {
+        cols.forEach((c, cIdx) => {
           const numStr = pNum < 10 ? `0${pNum}` : `${pNum}`;
           expectedPlants.push({
             fila: f,
             columna: c,
             plantId: `P-${numStr}`,
+            code: `T${fIdx}-P${cIdx + 1}`,
+            treatmentLabel: `T${fIdx}`,
           });
           pNum++;
         });
       });
 
       expectedPlants.forEach((expected) => {
-        // Buscar registro para esta planta en esta fecha
-        const metric = dateRecords.find(
-          (r) =>
-            r.plantId === expected.plantId ||
-            (r.fila === expected.fila && r.columna === expected.columna),
-        );
+        // Buscar registro para esta planta en esta fecha con soporte T0-P1, TO-P2, T1-P1...
+        const normCode = (c: any) =>
+          String(c || "")
+            .toUpperCase()
+            .replace(/^TO-/, "T0-")
+            .replace(/\s+/g, "");
+        const metric = dateRecords.find((r: any) => {
+          if (r.code && normCode(r.code) === normCode(expected.code))
+            return true;
+          if (
+            r.plantId &&
+            (r.plantId.toUpperCase() === expected.plantId.toUpperCase() ||
+              normCode(r.plantId) === normCode(expected.code))
+          )
+            return true;
+          const resolved = resolveCoordsHistorial(
+            r.code || r.plantId,
+            r.fila,
+            r.columna,
+          );
+          return (
+            resolved.code === expected.code ||
+            (resolved.fila === expected.fila &&
+              resolved.columna === expected.columna)
+          );
+        });
 
         const card = document.createElement("button");
         card.type = "button";
@@ -1597,26 +1821,33 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
               ? "bg-green-400"
               : "bg-lime-500";
           const plantIcon = isCritical ? "🥀" : isWarning ? "🌿" : "🪴";
+          const displayCode = metric.code || expected.code;
+          const displayPlantId = metric.plantId || expected.plantId;
+          const alturaStr =
+            metric.alturaCm !== undefined && metric.alturaCm !== null
+              ? `${metric.alturaCm} cm`
+              : `${metric.crecimiento}%`;
 
           card.className = `text-left p-3 rounded-xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-md cursor-pointer relative group ${statusBorder}`;
           card.innerHTML = `
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-black font-mono text-green-700 dark:text-stone-300 uppercase">${metric.plantId} • ${metric.fila}</span>
+              <span class="text-[10px] font-black font-mono text-green-700 dark:text-stone-300 uppercase">${displayCode} (${displayPlantId}) • ${expected.treatmentLabel}</span>
               <span class="w-2.5 h-2.5 rounded-full ${dotColor}"></span>
             </div>
             <div class="flex items-center justify-between my-1">
               <span class="text-2xl group-hover:scale-115 transition-transform">${plantIcon}</span>
               <div class="text-right">
-                <span class="text-xs font-mono font-bold text-green-900 dark:text-stone-300 block">${metric.columna}</span>
-                <span class="text-[10px] font-mono text-lime-600 dark:text-lime-400 font-bold">${metric.crecimiento}%</span>
+                <span class="text-xs font-mono font-bold text-green-900 dark:text-stone-300 block">${metric.columna || expected.columna}</span>
+                <span class="text-[10px] font-mono text-lime-600 dark:text-lime-400 font-bold">${alturaStr}</span>
               </div>
             </div>
             <div class="mt-2 flex items-center justify-between text-[9px] font-mono text-green-600 dark:text-stone-400 border-t border-green-200/70 dark:border-[#166534]/70 pt-1.5">
-              <span>🧪 ${metric.phSuelo.toFixed(1)} pH</span>
-              <span>🌡️ ${metric.tempInterna.toFixed(1)}°C</span>
+              <span>🧪 ${Number(metric.phSuelo).toFixed(1)} pH</span>
+              <span>🌡️ ${metric.tempInterna !== null && metric.tempInterna !== undefined ? Number(metric.tempInterna).toFixed(1) + "°C" : "N/D"}</span>
             </div>
-            <div class="mt-1 text-center">
-              <span class="text-[9px] font-bold text-green-600 dark:text-stone-400 group-hover:underline flex items-center justify-center gap-0.5">
+            <div class="mt-1 flex items-center justify-between text-[9px] font-mono text-green-600 dark:text-stone-400">
+              <span>💧 ${metric.humedad !== undefined && metric.humedad !== null ? metric.humedad + "%" : "--"}</span>
+              <span class="font-bold text-green-700 dark:text-stone-300 group-hover:underline flex items-center gap-0.5">
                 <span>Ver Ficha</span> →
               </span>
             </div>
@@ -1631,7 +1862,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             "text-left p-3 rounded-xl border border-green-200 dark:border-[#166534] bg-green-50/50 dark:bg-stone-800/40 opacity-60 cursor-default";
           card.innerHTML = `
             <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-black font-mono text-green-400 uppercase">${expected.plantId} • ${expected.fila}</span>
+              <span class="text-[10px] font-black font-mono text-green-400 uppercase">${expected.code} (${expected.plantId}) • ${expected.treatmentLabel}</span>
               <span class="w-2.5 h-2.5 rounded-full bg-green-300 dark:bg-stone-600"></span>
             </div>
             <div class="flex items-center justify-between my-2 text-center text-green-400 text-xs py-1">
@@ -1654,24 +1885,56 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       evolutionSvg.innerHTML = "";
 
       const dates = getAvailableDates().reverse(); // antiguo a reciente para la gráfica
-      if (dates.length < 1) return;
+      if (dates.length < 1) {
+        const text = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "text",
+        );
+        text.setAttribute("x", "350");
+        text.setAttribute("y", "95");
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("fill", "#9CA3AF");
+        text.setAttribute("font-size", "12");
+        text.setAttribute("font-family", "system-ui, sans-serif");
+        text.setAttribute("font-weight", "600");
+        text.textContent =
+          "Esperando sincronización con Google Sheets para graficar evolución histórica...";
+        evolutionSvg.appendChild(text);
+        return;
+      }
 
       const metricType = state.activeChartMetric; // 'ph' | 'temp' | 'growth'
 
       // Calcular promedio por fecha
       const dataPoints = dates.map((d) => {
         const records = state.allRecords.filter((r) => r.fecha === d);
-        if (records.length === 0) return { date: d, value: 0 };
+        if (records.length === 0) return { date: d, value: null };
         let sum = 0;
-        if (metricType === "ph")
+        if (metricType === "ph") {
           sum = records.reduce((a, b) => a + b.phSuelo, 0);
-        else if (metricType === "temp")
-          sum = records.reduce((a, b) => a + b.tempInterna, 0);
-        else sum = records.reduce((a, b) => a + b.crecimiento, 0);
-        return {
-          date: d,
-          value: +(sum / records.length).toFixed(1),
-        };
+          return { date: d, value: +(sum / records.length).toFixed(1) };
+        } else if (metricType === "temp") {
+          const valid = records.filter(
+            (r) =>
+              (r.tempInvernadero !== undefined &&
+                r.tempInvernadero !== null &&
+                !isNaN(Number(r.tempInvernadero))) ||
+              (r.tempInterna !== null &&
+                r.tempInterna !== undefined &&
+                !isNaN(Number(r.tempInterna))),
+          );
+          if (valid.length === 0) {
+            return { date: d, value: null };
+          }
+          sum = valid.reduce(
+            (a, b) => a + Number(b.tempInvernadero ?? b.tempInterna),
+            0,
+          );
+          return { date: d, value: +(sum / valid.length).toFixed(1) };
+        } else {
+          sum = records.reduce((a, b) => a + b.crecimiento, 0);
+          return { date: d, value: +(sum / records.length).toFixed(1) };
+        }
       });
 
       const width = 700;
@@ -1679,19 +1942,44 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       const paddingX = 60;
       const paddingY = 30;
 
-      // Escalas min y max según métrica
+      // Escalas min y max dinámicas según datos reales para evitar rupturas de límites
+      const validValues = dataPoints
+        .map((dp) => dp.value)
+        .filter((v): v is number => v !== null && !isNaN(v));
+
       let minVal = metricType === "ph" ? 5.0 : metricType === "temp" ? 18.0 : 0;
       let maxVal =
         metricType === "ph" ? 7.5 : metricType === "temp" ? 32.0 : 100;
 
+      if (validValues.length > 0) {
+        const dMin = Math.min(...validValues);
+        const dMax = Math.max(...validValues);
+        if (metricType === "temp") {
+          minVal = Math.min(18.0, Math.floor(dMin - 1));
+          maxVal = Math.max(30.0, Math.ceil(dMax + 1));
+        } else if (metricType === "ph") {
+          minVal = Math.min(5.0, +(dMin - 0.4).toFixed(1));
+          maxVal = Math.max(7.5, +(dMax + 0.4).toFixed(1));
+        } else {
+          minVal = Math.min(0, Math.floor(dMin - 5));
+          maxVal = Math.max(100, Math.ceil(dMax + 5));
+        }
+      }
+
       const valRange = maxVal - minVal || 1;
       const stepX = (width - paddingX * 2) / Math.max(1, dataPoints.length - 1);
 
+      // Mapeo seguro con CLAMPING estricto dentro de los bordes del SVG
       const points = dataPoints.map((dp, i) => {
         const x = paddingX + i * stepX;
+        if (dp.value === null || isNaN(dp.value)) {
+          return { x, y: height - paddingY, dp, isNull: true };
+        }
         const normalized = (dp.value - minVal) / valRange;
-        const y = height - paddingY - normalized * (height - paddingY * 2);
-        return { x, y, dp };
+        const rawY = height - paddingY - normalized * (height - paddingY * 2);
+        // Clamping estricto para que la línea jamás rompa el borde del gráfico
+        const y = Math.max(paddingY + 6, Math.min(height - paddingY - 6, rawY));
+        return { x, y, dp, isNull: false };
       });
 
       // Fondo de líneas de cuadrícula
@@ -1728,11 +2016,12 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         evolutionSvg.appendChild(text);
       }
 
-      // Trazar línea de tendencia
-      if (points.length > 1) {
-        let pathD = `M ${points[0].x} ${points[0].y}`;
-        for (let p = 1; p < points.length; p++) {
-          pathD += ` L ${points[p].x} ${points[p].y}`;
+      // Trazar línea de tendencia solo entre puntos válidos (evita caídas a cero o picos)
+      const validPoints = points.filter((p) => !p.isNull);
+      if (validPoints.length > 1) {
+        let pathD = `M ${validPoints[0].x} ${validPoints[0].y}`;
+        for (let p = 1; p < validPoints.length; p++) {
+          pathD += ` L ${validPoints[p].x} ${validPoints[p].y}`;
         }
 
         const path = document.createElementNS(
@@ -1767,16 +2056,24 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         circle.setAttribute("cx", pt.x.toString());
         circle.setAttribute("cy", pt.y.toString());
         circle.setAttribute("r", isSelected ? "6" : "4");
-        circle.setAttribute("fill", isSelected ? "#4F46E5" : "#FFFFFF");
-        circle.setAttribute(
-          "stroke",
-          metricType === "ph"
-            ? "#3B82F6"
-            : metricType === "temp"
-              ? "#F59E0B"
-              : "#10B981",
-        );
-        circle.setAttribute("stroke-width", "2");
+
+        if (pt.isNull) {
+          circle.setAttribute("fill", "#6B7280");
+          circle.setAttribute("stroke", "#9CA3AF");
+          circle.setAttribute("stroke-width", "1.5");
+          circle.setAttribute("stroke-dasharray", "2 2");
+        } else {
+          circle.setAttribute("fill", isSelected ? "#4F46E5" : "#FFFFFF");
+          circle.setAttribute(
+            "stroke",
+            metricType === "ph"
+              ? "#3B82F6"
+              : metricType === "temp"
+                ? "#F59E0B"
+                : "#10B981",
+          );
+          circle.setAttribute("stroke-width", "2");
+        }
         circle.setAttribute(
           "class",
           "cursor-pointer hover:scale-125 transition-transform",
@@ -1790,18 +2087,24 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
         evolutionSvg.appendChild(circle);
 
-        // Valor arriba del punto
+        // Valor arriba del punto (clamp Y para no salirse arriba)
         const valText = document.createElementNS(
           "http://www.w3.org/2000/svg",
           "text",
         );
         valText.setAttribute("x", pt.x.toString());
-        valText.setAttribute("y", (pt.y - 10).toString());
+        const textY = Math.max(16, pt.y - 10);
+        valText.setAttribute("y", textY.toString());
         valText.setAttribute("text-anchor", "middle");
-        valText.setAttribute("fill", isSelected ? "#4F46E5" : "#D1D5DB");
+        valText.setAttribute(
+          "fill",
+          isSelected ? "#4F46E5" : pt.isNull ? "#9CA3AF" : "#D1D5DB",
+        );
         valText.setAttribute("font-size", "10");
         valText.setAttribute("font-weight", "bold");
-        valText.textContent = pt.dp.value.toString();
+        valText.textContent = pt.isNull
+          ? "N/D"
+          : `${pt.dp.value}${metricType === "ph" ? "" : metricType === "temp" ? "°" : "%"}`;
         evolutionSvg.appendChild(valText);
 
         // Etiqueta de fecha abajo
@@ -1835,7 +2138,23 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       }
 
       if (filtered.length === 0) {
-        if (tableEmptyState) tableEmptyState.classList.remove("hidden");
+        if (tableEmptyState) {
+          tableEmptyState.classList.remove("hidden");
+          const h4 = tableEmptyState.querySelector("h4");
+          const p = tableEmptyState.querySelector("p");
+          if (state.allRecords.length === 0) {
+            if (h4)
+              h4.textContent = "Esperando sincronización con Google Sheets";
+            if (p)
+              p.innerHTML =
+                'No hay datos cargados en este momento. Conecta tu hoja de cálculo haciendo clic en el botón superior <strong>"Conectar Google Sheets"</strong> para cargar todas las mediciones reales del cultivo.';
+          } else {
+            if (h4) h4.textContent = "No se encontraron mediciones";
+            if (p)
+              p.textContent =
+                "No hay registros para la fecha o filtros seleccionados.";
+          }
+        }
         return;
       }
 
@@ -1878,7 +2197,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             </span>
           </td>
           <td class="px-4 py-3 whitespace-nowrap font-mono font-bold text-green-900 dark:text-stone-300">
-            ${record.tempInterna.toFixed(1)}°C
+            ${record.tempInterna !== null && record.tempInterna !== undefined ? `${Number(record.tempInterna).toFixed(1)}°C` : '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300" title="Temperatura de planta no tomada el 2026-09-29 y 2026-09-30">N/D</span>'}
           </td>
           <td class="px-4 py-3 whitespace-nowrap font-mono text-green-700 dark:text-stone-400">
             ${record.tempSuelo.toFixed(1)}°C
@@ -1935,27 +2254,80 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       const modalValPh = document.getElementById("modal-val-ph");
       const modalBadgePh = document.getElementById("modal-badge-ph");
       const modalValTin = document.getElementById("modal-val-tin");
+      const modalValTint = document.getElementById("modal-val-tint");
+      const modalValText = document.getElementById("modal-val-text");
+      const modalValHum = document.getElementById("modal-val-hum");
       const modalValTsoil = document.getElementById("modal-val-tsoil");
       const modalValGrowth = document.getElementById("modal-val-growth");
+      const modalValAltura = document.getElementById("modal-val-altura");
       const modalBadgeSanidad = document.getElementById("modal-badge-sanidad");
       const modalBadgeProd = document.getElementById("modal-badge-prod");
       const modalValResp = document.getElementById("modal-val-resp");
       const modalValObs = document.getElementById("modal-val-obs");
       const modalDeltaContent = document.getElementById("modal-delta-content");
 
-      if (modalId) modalId.textContent = metric.plantId;
+      if (modalId) modalId.textContent = `${metric.code} (${metric.plantId})`;
       if (modalLocation)
         modalLocation.textContent = `Fila ${metric.fila} • ${metric.columna}`;
       if (modalDate)
         modalDate.textContent = `Medición registrada: ${metric.fecha}, ${metric.hora}`;
 
+      // 1. Ph
       if (modalValPh)
-        modalValPh.textContent = `${metric.phSuelo.toFixed(2)} pH`;
-      if (modalValTin)
-        modalValTin.textContent = `${metric.tempInterna.toFixed(1)}°C`;
-      if (modalValTsoil)
-        modalValTsoil.textContent = `${metric.tempSuelo.toFixed(1)}°C`;
-      if (modalValGrowth) modalValGrowth.textContent = `${metric.crecimiento}%`;
+        modalValPh.textContent = `${Number(metric.phSuelo).toFixed(2)} pH`;
+
+      // 2. T_Planta_C (Temperatura del piso donde está la planta, null el 2026-09-29 y 2026-09-30)
+      if (modalValTin) {
+        modalValTin.textContent =
+          metric.tempSuelo !== null &&
+          metric.tempSuelo !== undefined &&
+          !isNaN(Number(metric.tempSuelo))
+            ? `${Number(metric.tempSuelo).toFixed(1)}°C`
+            : "N/D (No tomada)";
+      }
+
+      // 3. T_Int_C (Temperatura dentro del invernadero)
+      if (modalValTint) {
+        modalValTint.textContent =
+          metric.tempInvernadero !== undefined &&
+          metric.tempInvernadero !== null
+            ? `${Number(metric.tempInvernadero).toFixed(1)}°C`
+            : metric.tempInterna !== null && metric.tempInterna !== undefined
+              ? `${Number(metric.tempInterna).toFixed(1)}°C`
+              : "N/D";
+      }
+
+      // 4. T_Ext_C (Temperatura externa del invernadero)
+      if (modalValText) {
+        modalValText.textContent =
+          metric.tempExterna !== undefined &&
+          metric.tempExterna !== null &&
+          !isNaN(Number(metric.tempExterna))
+            ? `${Number(metric.tempExterna).toFixed(1)}°C`
+            : "N/D";
+      }
+
+      // 5. humedad_Pct (Humedad en el momento de tomar la medida)
+      if (modalValHum) {
+        modalValHum.textContent =
+          metric.humedad !== undefined && metric.humedad !== null
+            ? `${metric.humedad}%`
+            : "--";
+      }
+
+      // 6. ALtura_cm (Altura de la planta en centímetros)
+      if (modalValGrowth) {
+        modalValGrowth.textContent =
+          metric.alturaCm !== undefined && metric.alturaCm !== null
+            ? `${metric.alturaCm} cm`
+            : `${metric.crecimiento}%`;
+      }
+      if (modalValAltura) {
+        modalValAltura.textContent =
+          metric.alturaCm !== undefined && metric.alturaCm !== null
+            ? `Crecimiento: ${metric.crecimiento}%`
+            : "ALtura_cm";
+      }
 
       if (modalBadgePh) {
         if (metric.phSuelo >= 6.0 && metric.phSuelo <= 6.8) {
@@ -1978,7 +2350,7 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
       }
 
       if (modalValResp)
-        modalValResp.textContent = `Registrado por: ${metric.responsable}`;
+        modalValResp.textContent = `Responsable: ${metric.responsable}`;
       if (modalValObs)
         modalValObs.textContent =
           metric.observaciones || "Condiciones agronómicas normales.";
@@ -1992,8 +2364,26 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
         if (plantHistory.length > 0) {
           const prev = plantHistory[0];
           const deltaPh = +(metric.phSuelo - prev.phSuelo).toFixed(2);
-          const deltaTin = +(metric.tempInterna - prev.tempInterna).toFixed(1);
+          const hasTinDelta =
+            metric.tempInterna !== null &&
+            prev.tempInterna !== null &&
+            metric.tempInterna !== undefined &&
+            prev.tempInterna !== undefined;
+          const deltaTin = hasTinDelta
+            ? +(Number(metric.tempInterna) - Number(prev.tempInterna)).toFixed(
+                1,
+              )
+            : null;
+          const hasHeightDelta =
+            metric.alturaCm != null && prev.alturaCm != null;
+          const deltaHeight = hasHeightDelta
+            ? +(Number(metric.alturaCm) - Number(prev.alturaCm)).toFixed(1)
+            : null;
           const deltaGrowth = metric.crecimiento - prev.crecimiento;
+          const growthDeltaStr =
+            deltaHeight !== null
+              ? `${deltaHeight >= 0 ? "+" : ""}${deltaHeight} cm`
+              : `${deltaGrowth >= 0 ? "+" : ""}${deltaGrowth}%`;
 
           modalDeltaContent.innerHTML = `
             <div>
@@ -2001,12 +2391,12 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
               <span class="font-bold ${deltaPh > 0 ? "text-green-600" : "text-lime-600"}">${deltaPh > 0 ? "+" : ""}${deltaPh}</span>
             </div>
             <div>
-              <span class="text-green-600 dark:text-stone-400 block">Temp Interna</span>
-              <span class="font-bold ${deltaTin > 0 ? "text-green-600" : "text-blue-600"}">${deltaTin > 0 ? "+" : ""}${deltaTin}°C</span>
+              <span class="text-green-600 dark:text-stone-400 block">Temp Invernadero</span>
+              <span class="font-bold ${deltaTin !== null ? (deltaTin > 0 ? "text-green-600" : "text-blue-600") : "text-amber-500"}">${deltaTin !== null ? `${deltaTin > 0 ? "+" : ""}${deltaTin}°C` : "N/D"}</span>
             </div>
             <div>
-              <span class="text-green-600 dark:text-stone-400 block">Crecimiento</span>
-              <span class="font-bold text-lime-600">${deltaGrowth >= 0 ? "+" : ""}${deltaGrowth}%</span>
+              <span class="text-green-600 dark:text-stone-400 block">Altura / Crec.</span>
+              <span class="font-bold text-lime-600">${growthDeltaStr}</span>
             </div>
           `;
         } else {
@@ -2030,6 +2420,14 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
     // 12. ACTUALIZAR TODAS LAS VISTAS
     function updateAllViews() {
+      const dates = getAvailableDates();
+      if (datePicker && dates.length > 0) {
+        datePicker.min = dates[dates.length - 1];
+        datePicker.max = dates[0];
+        if (state.selectedDate && state.selectedDate !== "all") {
+          datePicker.value = state.selectedDate;
+        }
+      }
       renderQuickDateChips();
       renderSummaryKPIs();
       renderPlantGrid();
@@ -2038,9 +2436,18 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
     }
 
     // Eventos de Filtro
-    datePicker?.addEventListener("change", (e) => {
-      state.selectedDate = e.target.value;
-      updateAllViews();
+    datePicker?.addEventListener("change", (e: any) => {
+      if (e.target?.value) {
+        state.selectedDate = e.target.value;
+        updateAllViews();
+      }
+    });
+
+    datePicker?.addEventListener("input", (e: any) => {
+      if (e.target?.value) {
+        state.selectedDate = e.target.value;
+        updateAllViews();
+      }
     });
 
     filterFila?.addEventListener("change", (e) => {
@@ -2180,28 +2587,40 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             .map((c) => c.trim().replace(/^"|"$/g, ""));
           if (cols.length < 3) continue;
 
-          // Intento de mapeo flexible
-          const plantId = cols[0] || `P-01`;
+          // Mapeo flexible con soporte T0-P1, TO-P2, T1-P1, T2-P3, T3-P5
+          const rawPlantId = cols[0] || `P-01`;
+          let rawFila = cols.length > 6 ? cols[6] : "";
+          let rawCol = cols.length > 7 ? cols[7] : "";
+
+          const coords = resolveCoordsHistorial(rawPlantId, rawFila, rawCol);
+          const fila = coords.fila;
+          const col = coords.columna;
+          const plantNumber = coords.plantNumber;
+          const plantId = coords.plantId;
+          const code = coords.code;
+
           const fecha =
             cols[1] && /^\d{4}-\d{2}-\d{2}$/.test(cols[1]) ? cols[1] : todayStr;
           const ph = parseFloat(cols[2]?.replace(",", ".")) || 6.4;
-          const tin = parseFloat(cols[3]?.replace(",", ".")) || 24.5;
+
+          const isTempMissing =
+            fecha === "2026-09-29" || fecha === "2026-09-30";
+          const rawTin = cols[3]?.trim().toLowerCase();
+          const tin =
+            isTempMissing || ["nd", "n/d", "na", "-", ""].includes(rawTin)
+              ? null
+              : parseFloat(cols[3]?.replace(",", ".")) || null;
+
           const growth = parseInt(cols[4], 10) || 80;
           const sanidad = cols[5] || "Saludable";
 
-          // Deduzco fila y columna del ID de planta
-          const pNum = parseInt(plantId.replace(/\D/g, ""), 10) || 1;
-          const fIdx = Math.min(3, Math.floor((pNum - 1) / 5));
-          const cIdx = Math.min(4, (pNum - 1) % 5);
-          const fila = ["t0", "t1", "t2", "t3"][fIdx];
-          const col = ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"][cIdx];
-
           parsed.push({
-            id: `MET-UPLOAD-${fila}-${col.replace(" ", "")}-${fecha}-${i}`,
+            id: `MET-UPLOAD-${code}-${fecha}-${i}`,
             invernadero: "Invernadero Macollo",
             fila,
             columna: col,
             plantId,
+            code,
             fecha,
             hora: "09:00 AM",
             timestampTexto: `${fecha}, 09:00 AM`,
@@ -2216,7 +2635,9 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             responsable: "Operario de Archivo",
             responsableRol: "Carga Manual",
             avatarColor: "bg-green-600",
-            observaciones: "Registro importado desde archivo local.",
+            observaciones: isTempMissing
+              ? "Temperatura foliar de planta no tomada el 2026-09-29 y 2026-09-30 por falta de sensor."
+              : "Registro importado desde archivo local.",
           });
         }
 
@@ -2271,6 +2692,14 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
 
       modalUpload?.classList.add("hidden");
       updateAllViews();
+
+      window.dispatchEvent(
+        new CustomEvent("aquasens:data-synced", {
+          detail: { records: state.allRecords },
+        }),
+      );
+      window.dispatchEvent(new Event("storage"));
+
       showToast(
         `¡Se guardaron ${state.pendingUploadRows.length} registros exitosamente!`,
       );
@@ -2367,6 +2796,14 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
             sheetsSyncStatus.classList.remove("hidden");
           }
 
+          // Disparar evento global para que Dashboard y Metrics se actualicen en tiempo real
+          window.dispatchEvent(
+            new CustomEvent("aquasens:data-synced", {
+              detail: { records: state.allRecords, url: urlToSync },
+            }),
+          );
+          window.dispatchEvent(new Event("storage"));
+
           setTimeout(() => {
             modalSheets?.classList.add("hidden");
             showToast(
@@ -2416,12 +2853,15 @@ const latestDate = uniqueDates[0] || new Date().toISOString().slice(0, 10);
     function checkSyncBanner() {
       const savedUrl = localStorage.getItem(STORAGE_KEY_SHEETS_URL);
       const lastSync = localStorage.getItem(STORAGE_KEY_LAST_SYNC);
-      if (savedUrl && syncBanner) {
+      if (savedUrl && state.allRecords.length > 0 && syncBanner) {
         syncBanner.classList.remove("hidden");
         syncBanner.classList.add("flex");
         if (syncLastUpdate && lastSync) {
           syncLastUpdate.textContent = `Última sincronización: Hoy a las ${lastSync}`;
         }
+      } else if (syncBanner) {
+        syncBanner.classList.add("hidden");
+        syncBanner.classList.remove("flex");
       }
     }
 
