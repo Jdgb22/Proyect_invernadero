@@ -21,7 +21,7 @@ export const pool = new Pool({
   user: process.env.POSTGRES_USER || 'postgres',
   password: process.env.POSTGRES_PASSWORD || '',
   database: process.env.POSTGRES_DATABASE || 'astro_auth_db',
-  max: 10,
+  max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });

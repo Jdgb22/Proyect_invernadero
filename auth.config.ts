@@ -20,6 +20,14 @@ import { pool } from './src/db/client';
  *
  * @see db/auth-schema.sql para el esquema de tablas requerido en pgAdmin
  */
+const authSecret = process.env.AUTH_SECRET || (import.meta as any).env?.AUTH_SECRET;
+if (!authSecret && process.env.NODE_ENV === 'production') {
+  throw new Error('[Auth] Falta AUTH_SECRET en variables de entorno (.env)');
+}
+if (!authSecret) {
+  console.warn('[Auth] AUTH_SECRET no definido. Usando clave temporal solo para desarrollo. Crea tu .env (ver .env.example).');
+}
+
 export default defineConfig({
   trustHost: true,
   adapter: PostgresAdapter(pool),
@@ -71,11 +79,6 @@ export default defineConfig({
             console.warn('[Auth] Error comparando hash bcrypt:', bcryptErr);
           }
 
-          // Fallback: comparación directa (para usuarios legacy sin hash)
-          if (!isValidPassword && user.password === password) {
-            isValidPassword = true;
-          }
-
           if (isValidPassword) {
             console.log(`[Auth] Login exitoso: ${user.email || user.phone || user.name} (Rol: ${user.role || 'Campesino'})`);
             return {
@@ -99,7 +102,7 @@ export default defineConfig({
   session: {
     strategy: 'jwt',
   },
-  secret: process.env.AUTH_SECRET || 'super-secret-key-for-development-only-1234567890',
+  secret: authSecret || 'dev-only-insecure-key-do-not-use-in-production',
   pages: {
     signIn: '/',
   },
