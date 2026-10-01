@@ -23,6 +23,7 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^18.0.3",
     "exceljs": "^4.4.0",
+    "nodemailer": "^10.0.13",
     "pg": "^8.23.0",
     "tailwindcss": "^4.3.3",
     "three": "^0.185.1"
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "@types/three": "^0.185.4",
     "typescript": "^5.9.3"

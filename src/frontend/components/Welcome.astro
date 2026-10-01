@@ -60,53 +60,93 @@
     </div>
   </div>
 
-  <!-- Right Side: Login Form -->
+  <!-- Right Side: Auth Forms Panel -->
   <div
-    class="flex flex-col justify-center w-full lg:w-1/2 p-8 sm:p-12 lg:p-24 bg-white dark:bg-stone-900"
+    class="flex flex-col justify-center w-full lg:w-1/2 p-6 sm:p-10 lg:p-20 bg-white dark:bg-stone-900 overflow-y-auto"
   >
     <div class="max-w-md w-full mx-auto">
-      <div class="text-center lg:text-left mb-10">
+      
+      <!-- Selector de Modo (Tabs Login / Registro) -->
+      <div id="auth-tabs-container" class="flex p-1 mb-8 bg-stone-100 dark:bg-stone-800 rounded-2xl border border-stone-200/80 dark:border-stone-700/80">
+        <button
+          id="tab-login-btn"
+          type="button"
+          class="flex-1 py-2.5 px-4 text-sm font-bold rounded-xl transition-all shadow-sm bg-white dark:bg-stone-700 text-stone-900 dark:text-white"
+        >
+          Iniciar Sesión
+        </button>
+        <button
+          id="tab-register-btn"
+          type="button"
+          class="flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"
+        >
+          Crear Cuenta
+        </button>
+      </div>
+
+      <!-- Encabezado dinámico -->
+      <div class="text-center lg:text-left mb-6">
         <h1
+          id="auth-title"
           class="text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight"
         >
           Acceder al Sistema
         </h1>
-        <p class="mt-3 text-sm text-stone-500 dark:text-stone-400">
+        <p id="auth-subtitle" class="mt-2 text-sm text-stone-500 dark:text-stone-400">
           Ingresa tus credenciales para continuar
         </p>
       </div>
 
-      <form id="login-form" class="space-y-5" novalidate>
+      <!-- ── FORMULARIO INICIAR SESIÓN ── -->
+      <form id="login-form" class="space-y-4" novalidate>
         <div>
           <label
             for="username"
-            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2"
-            >Usuario o Correo Electrónico</label
+            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+            >Usuario, Correo o Celular</label
           >
           <input
             id="username"
             name="username"
             type="text"
             autocomplete="username"
-            class="block w-full px-4 py-3.5 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
-            placeholder="admin@ejemplo.com o tu usuario"
+            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+            placeholder="admin@ejemplo.com, 3001234567 o usuario"
           />
         </div>
 
         <div>
           <label
             for="password"
-            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2"
+            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
             >Contraseña</label
           >
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            class="block w-full px-4 py-3.5 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
-            placeholder="••••••••"
-          />
+          <div class="relative">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              placeholder="••••••••"
+            />
+            <button
+              id="toggle-password-btn"
+              type="button"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 focus:outline-none"
+              aria-label="Mostrar u ocultar contraseña"
+            >
+              <!-- Ícono Mostrar (ojo abierto) -->
+              <svg id="eye-show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <!-- Ícono Ocultar (ojo tachado) -->
+              <svg id="eye-hide" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="flex items-center justify-between pt-1">
@@ -121,18 +161,20 @@
             />
             Recordarme
           </label>
-          <a
-            href="#"
-            class="text-sm font-medium text-amber-600 hover:text-amber-500 dark:text-stone-400"
-            >¿Olvidaste tu contraseña?</a
+          <button
+            id="forgot-password-link"
+            type="button"
+            class="text-sm font-medium text-amber-600 hover:text-amber-500 dark:text-amber-500 focus:outline-none hover:underline underline-offset-2"
           >
+            ¿Olvidaste tu contraseña?
+          </button>
         </div>
 
         <div class="pt-1">
           <button
             id="login-btn"
             type="submit"
-            class="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+            class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
           >
             <span id="btn-text">Iniciar Sesión</span>
             <svg
@@ -156,19 +198,324 @@
           </button>
         </div>
 
-        <!-- Divisor con opción Google -->
-        <div class="relative flex items-center justify-center my-3">
-          <div class="border-t border-stone-200 dark:border-stone-700 w-full">
-          </div>
-          <span
-            class="bg-white dark:bg-stone-900 px-3 text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wider font-medium"
-            >o continuar con</span
+        <div
+          id="error-message"
+          class="hidden p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400"
+        >
+          Credenciales incorrectas. Intenta nuevamente.
+        </div>
+
+        <!-- Enlace para ir a registro -->
+        <p class="text-center text-sm text-stone-500 dark:text-stone-400 pt-2">
+          ¿No tienes una cuenta?{" "}
+          <button
+            id="link-to-register"
+            type="button"
+            class="font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-500 underline underline-offset-2"
           >
-          <div class="border-t border-stone-200 dark:border-stone-700 w-full">
+            Regístrate aquí
+          </button>
+        </p>
+      </form>
+
+      <!-- ── FORMULARIO CREAR CUENTA ── -->
+      <form id="register-form" class="space-y-4 hidden" novalidate>
+        <!-- Nombre completo -->
+        <div>
+          <label
+            for="reg-name"
+            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+          >
+            Nombre Completo <span class="text-amber-600">*</span>
+          </label>
+          <input
+            id="reg-name"
+            name="name"
+            type="text"
+            autocomplete="name"
+            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+            placeholder="Ej: Juan Pérez"
+          />
+        </div>
+
+        <!-- Correo Electrónico y Celular -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label
+              for="reg-email"
+              class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+            >
+              Correo Electrónico
+            </label>
+            <input
+              id="reg-email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              placeholder="juan@ejemplo.com"
+            />
+          </div>
+
+          <div>
+            <label
+              for="reg-phone"
+              class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+            >
+              Número Celular
+            </label>
+            <input
+              id="reg-phone"
+              name="phone"
+              type="tel"
+              autocomplete="tel"
+              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              placeholder="300 123 4567"
+            />
+          </div>
+        </div>
+        <p class="text-xs text-stone-500 dark:text-stone-400 -mt-2">
+          * Puedes ingresar tu correo, tu número celular o ambos.
+        </p>
+
+        <!-- Fecha de Nacimiento -->
+        <div>
+          <label
+            for="reg-birthdate"
+            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+          >
+            Fecha de Nacimiento
+          </label>
+          <input
+            id="reg-birthdate"
+            name="birthDate"
+            type="date"
+            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+          />
+        </div>
+
+        <!-- Contraseña -->
+        <div>
+          <label
+            for="reg-password"
+            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+          >
+            Contraseña <span class="text-amber-600">*</span>
+          </label>
+          <div class="relative">
+            <input
+              id="reg-password"
+              name="password"
+              type="password"
+              autocomplete="new-password"
+              class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              placeholder="Mínimo 6 caracteres"
+            />
+            <button
+              id="toggle-reg-password-btn"
+              type="button"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 focus:outline-none"
+              aria-label="Mostrar u ocultar contraseña"
+            >
+              <svg id="eye-reg-show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <svg id="eye-reg-hide" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+              </svg>
+            </button>
           </div>
         </div>
 
-        <!-- Botón de Google -->
+        <div class="pt-1">
+          <button
+            id="register-btn"
+            type="submit"
+            class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            <span id="reg-btn-text">Crear Cuenta</span>
+            <svg
+              id="reg-btn-spinner"
+              class="hidden animate-spin h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div
+          id="reg-feedback-message"
+          class="hidden p-3 rounded-lg text-sm text-center border font-medium"
+        ></div>
+
+        <!-- Enlace para ir a login -->
+        <p class="text-center text-sm text-stone-500 dark:text-stone-400 pt-2">
+          ¿Ya tienes una cuenta?{" "}
+          <button
+            id="link-to-login"
+            type="button"
+            class="font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-500 underline underline-offset-2"
+          >
+            Inicia sesión aquí
+          </button>
+        </p>
+      </form>
+
+      <!-- ── FORMULARIO RECUPERAR CONTRASEÑA ── -->
+      <div id="forgot-container" class="space-y-4 hidden">
+        
+        <!-- Paso 1: Enviar Código -->
+        <form id="forgot-step1-form" class="space-y-4" novalidate>
+          <div>
+            <label
+              for="forgot-identifier"
+              class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+            >
+              Correo Electrónico o Celular Registrado
+            </label>
+            <input
+              id="forgot-identifier"
+              name="identifier"
+              type="text"
+              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              placeholder="tu@correo.com o 3001234567"
+            />
+          </div>
+
+          <div class="pt-1">
+            <button
+              id="btn-forgot-send"
+              type="submit"
+              class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              <span id="btn-forgot-send-text">Enviar Código de Seguridad</span>
+              <svg
+                id="btn-forgot-send-spinner"
+                class="hidden animate-spin h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+            </button>
+          </div>
+        </form>
+
+        <!-- Paso 2: Verificar Código y Crear Nueva Contraseña -->
+        <form id="forgot-step2-form" class="space-y-4 hidden" novalidate>
+          <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl text-xs text-amber-800 dark:text-amber-300">
+            <span id="forgot-step2-desc">Hemos enviado un código de 6 dígitos. Ingrésalo a continuación para crear tu nueva clave.</span>
+          </div>
+
+          <div>
+            <label
+              for="forgot-code"
+              class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+            >
+              Código de Verificación (6 dígitos)
+            </label>
+            <input
+              id="forgot-code"
+              name="code"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-lg tracking-widest text-center font-mono font-bold transition-all shadow-sm"
+              placeholder="123456"
+            />
+          </div>
+
+          <div>
+            <label
+              for="forgot-new-password"
+              class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+            >
+              Nueva Contraseña
+            </label>
+            <div class="relative">
+              <input
+                id="forgot-new-password"
+                name="newPassword"
+                type="password"
+                autocomplete="new-password"
+                class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+                placeholder="Mínimo 6 caracteres"
+              />
+              <button
+                id="toggle-forgot-password-btn"
+                type="button"
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 focus:outline-none"
+                aria-label="Mostrar u ocultar contraseña"
+              >
+                <svg id="eye-forgot-show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg id="eye-forgot-hide" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-1">
+            <button
+              id="btn-forgot-reset"
+              type="submit"
+              class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              <span id="btn-forgot-reset-text">Restablecer Contraseña</span>
+              <svg
+                id="btn-forgot-reset-spinner"
+                class="hidden animate-spin h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+            </button>
+          </div>
+        </form>
+
+        <div
+          id="forgot-feedback-message"
+          class="hidden p-3 rounded-lg text-sm text-center border font-medium"
+        ></div>
+
+        <!-- Enlace para volver a Iniciar Sesión -->
+        <p class="text-center text-sm text-stone-500 dark:text-stone-400 pt-2">
+          <button
+            id="link-forgot-back-to-login"
+            type="button"
+            class="font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-500 inline-flex items-center gap-1.5 hover:underline underline-offset-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Volver al inicio de sesión
+          </button>
+        </p>
+      </div>
+
+      <!-- ── DIVISOR Y BOTÓN GOOGLE COMÚN ── -->
+      <div id="google-auth-container">
+        <div class="my-4 border-t border-stone-200 dark:border-stone-700"></div>
+
         <div>
           <button
             id="google-btn"
@@ -193,17 +540,11 @@
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               ></path>
             </svg>
-            <span>Ingresar con Google</span>
+            <span>Continuar con Google</span>
           </button>
         </div>
+      </div>
 
-        <div
-          id="error-message"
-          class="hidden p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400"
-        >
-          Credenciales incorrectas. Intenta nuevamente.
-        </div>
-      </form>
     </div>
   </div>
 </div>
@@ -211,19 +552,104 @@
 <script>
   import { signIn } from "auth-astro/client";
 
-  const loginForm = document.getElementById("login-form")!;
+  // Elementos de pestañas y contenedores
+  const authTabsContainer = document.getElementById("auth-tabs-container")!;
+  const tabLoginBtn = document.getElementById("tab-login-btn") as HTMLButtonElement;
+  const tabRegisterBtn = document.getElementById("tab-register-btn") as HTMLButtonElement;
+  const linkToRegister = document.getElementById("link-to-register");
+  const linkToLogin = document.getElementById("link-to-login");
+  const forgotPasswordLink = document.getElementById("forgot-password-link");
+  const linkForgotBackToLogin = document.getElementById("link-forgot-back-to-login");
+  const authTitle = document.getElementById("auth-title")!;
+  const authSubtitle = document.getElementById("auth-subtitle")!;
+  const googleAuthContainer = document.getElementById("google-auth-container")!;
+
+  // Formularios
+  const loginForm = document.getElementById("login-form") as HTMLFormElement;
+  const registerForm = document.getElementById("register-form") as HTMLFormElement;
+  const forgotContainer = document.getElementById("forgot-container") as HTMLDivElement;
+  const forgotStep1Form = document.getElementById("forgot-step1-form") as HTMLFormElement;
+  const forgotStep2Form = document.getElementById("forgot-step2-form") as HTMLFormElement;
+
+  // Botones y estados de login
   const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
-  const googleBtn = document.getElementById("google-btn") as HTMLButtonElement;
   const btnText = document.getElementById("btn-text")!;
   const btnSpinner = document.getElementById("btn-spinner")!;
   const errorMsg = document.getElementById("error-message") as HTMLElement;
-  const welcomeVideo = document.getElementById(
-    "welcome-video",
-  ) as HTMLVideoElement;
+
+  // Botones y estados de registro
+  const registerBtn = document.getElementById("register-btn") as HTMLButtonElement;
+  const regBtnText = document.getElementById("reg-btn-text")!;
+  const regBtnSpinner = document.getElementById("reg-btn-spinner")!;
+  const regFeedbackMsg = document.getElementById("reg-feedback-message") as HTMLElement;
+
+  // Botones y estados de recuperación
+  const btnForgotSend = document.getElementById("btn-forgot-send") as HTMLButtonElement;
+  const btnForgotSendText = document.getElementById("btn-forgot-send-text")!;
+  const btnForgotSendSpinner = document.getElementById("btn-forgot-send-spinner")!;
+  const btnForgotReset = document.getElementById("btn-forgot-reset") as HTMLButtonElement;
+  const btnForgotResetText = document.getElementById("btn-forgot-reset-text")!;
+  const btnForgotResetSpinner = document.getElementById("btn-forgot-reset-spinner")!;
+  const forgotFeedbackMsg = document.getElementById("forgot-feedback-message") as HTMLElement;
+  const forgotStep2Desc = document.getElementById("forgot-step2-desc")!;
+
+  let activeForgotIdentifier = "";
+
+  // Botón Google
+  const googleBtn = document.getElementById("google-btn") as HTMLButtonElement;
+
+  // Video y controles
+  const welcomeVideo = document.getElementById("welcome-video") as HTMLVideoElement;
   const audioToggleBtn = document.getElementById("audio-toggle-btn");
   const iconMuted = document.getElementById("icon-muted");
   const iconUnmuted = document.getElementById("icon-unmuted");
 
+  // Mostrar / ocultar contraseña en Login
+  const togglePasswordBtn = document.getElementById("toggle-password-btn");
+  const passwordInput = document.getElementById("password") as HTMLInputElement;
+  const eyeShow = document.getElementById("eye-show");
+  const eyeHide = document.getElementById("eye-hide");
+
+  if (togglePasswordBtn && passwordInput && eyeShow && eyeHide) {
+    togglePasswordBtn.addEventListener("click", () => {
+      const isPassword = passwordInput.type === "password";
+      passwordInput.type = isPassword ? "text" : "password";
+      eyeShow.classList.toggle("hidden", isPassword);
+      eyeHide.classList.toggle("hidden", !isPassword);
+    });
+  }
+
+  // Mostrar / ocultar contraseña en Registro
+  const toggleRegPasswordBtn = document.getElementById("toggle-reg-password-btn");
+  const regPasswordInput = document.getElementById("reg-password") as HTMLInputElement;
+  const eyeRegShow = document.getElementById("eye-reg-show");
+  const eyeRegHide = document.getElementById("eye-reg-hide");
+
+  if (toggleRegPasswordBtn && regPasswordInput && eyeRegShow && eyeRegHide) {
+    toggleRegPasswordBtn.addEventListener("click", () => {
+      const isPassword = regPasswordInput.type === "password";
+      regPasswordInput.type = isPassword ? "text" : "password";
+      eyeRegShow.classList.toggle("hidden", isPassword);
+      eyeRegHide.classList.toggle("hidden", !isPassword);
+    });
+  }
+
+  // Mostrar / ocultar contraseña en Recuperación
+  const toggleForgotPasswordBtn = document.getElementById("toggle-forgot-password-btn");
+  const forgotNewPasswordInput = document.getElementById("forgot-new-password") as HTMLInputElement;
+  const eyeForgotShow = document.getElementById("eye-forgot-show");
+  const eyeForgotHide = document.getElementById("eye-forgot-hide");
+
+  if (toggleForgotPasswordBtn && forgotNewPasswordInput && eyeForgotShow && eyeForgotHide) {
+    toggleForgotPasswordBtn.addEventListener("click", () => {
+      const isPassword = forgotNewPasswordInput.type === "password";
+      forgotNewPasswordInput.type = isPassword ? "text" : "password";
+      eyeForgotShow.classList.toggle("hidden", isPassword);
+      eyeForgotHide.classList.toggle("hidden", !isPassword);
+    });
+  }
+
+  // Audio video toggle
   if (audioToggleBtn && welcomeVideo && iconMuted && iconUnmuted) {
     audioToggleBtn.addEventListener("click", () => {
       welcomeVideo.muted = !welcomeVideo.muted;
@@ -237,49 +663,101 @@
     });
   }
 
-  function setLoading(on: boolean) {
+  // Función para cambiar de vista (Login / Registro / Recuperar Contraseña)
+  function setAuthMode(mode: 'login' | 'register' | 'forgot') {
+    // Ocultar todos los formularios
+    loginForm.classList.add("hidden");
+    registerForm.classList.add("hidden");
+    forgotContainer.classList.add("hidden");
+
+    // Limpiar alertas
+    errorMsg.classList.add("hidden");
+    regFeedbackMsg.classList.add("hidden");
+    forgotFeedbackMsg.classList.add("hidden");
+
+    if (mode === 'login') {
+      authTabsContainer.classList.remove("hidden");
+      googleAuthContainer.classList.remove("hidden");
+      loginForm.classList.remove("hidden");
+
+      tabLoginBtn.className = "flex-1 py-2.5 px-4 text-sm font-bold rounded-xl transition-all shadow-sm bg-white dark:bg-stone-700 text-stone-900 dark:text-white";
+      tabRegisterBtn.className = "flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200";
+      authTitle.textContent = "Acceder al Sistema";
+      authSubtitle.textContent = "Ingresa tus credenciales para continuar";
+
+    } else if (mode === 'register') {
+      authTabsContainer.classList.remove("hidden");
+      googleAuthContainer.classList.remove("hidden");
+      registerForm.classList.remove("hidden");
+
+      tabRegisterBtn.className = "flex-1 py-2.5 px-4 text-sm font-bold rounded-xl transition-all shadow-sm bg-white dark:bg-stone-700 text-stone-900 dark:text-white";
+      tabLoginBtn.className = "flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200";
+      authTitle.textContent = "Crear Cuenta Nueva";
+      authSubtitle.textContent = "Regístrate para monitorear tu invernadero inteligente";
+
+    } else if (mode === 'forgot') {
+      authTabsContainer.classList.add("hidden");
+      googleAuthContainer.classList.add("hidden");
+      forgotContainer.classList.remove("hidden");
+      forgotStep1Form.classList.remove("hidden");
+      forgotStep2Form.classList.add("hidden");
+
+      authTitle.textContent = "Recuperar Contraseña";
+      authSubtitle.textContent = "Te enviaremos un código temporal para restablecer tu clave";
+    }
+  }
+
+  tabLoginBtn?.addEventListener("click", () => setAuthMode('login'));
+  tabRegisterBtn?.addEventListener("click", () => setAuthMode('register'));
+  linkToRegister?.addEventListener("click", () => setAuthMode('register'));
+  linkToLogin?.addEventListener("click", () => setAuthMode('login'));
+  forgotPasswordLink?.addEventListener("click", () => setAuthMode('forgot'));
+  linkForgotBackToLogin?.addEventListener("click", () => setAuthMode('login'));
+
+  // Mostrar error si viene en los parámetros de la URL (?error=...)
+  const urlParams = new URLSearchParams(window.location.search);
+  const authError = urlParams.get('error');
+  if (authError && errorMsg) {
+    if (authError === 'OAuthAccountNotLinked') {
+      errorMsg.textContent = 'El correo ya está registrado con otro método de autenticación.';
+    } else if (authError === 'OAuthCallbackError' || authError === 'OAuthSignin' || authError === 'Callback') {
+      errorMsg.textContent = 'Hubo un problema al autenticar con Google. Intenta nuevamente.';
+    } else if (authError === 'AccessDenied') {
+      errorMsg.textContent = 'Acceso denegado con la cuenta de Google.';
+    } else {
+      errorMsg.textContent = `Error de autenticación (${authError}). Intenta nuevamente.`;
+    }
+    errorMsg.classList.remove('hidden');
+  }
+
+  function setLoginLoading(on: boolean) {
     if (loginBtn) loginBtn.disabled = on;
     if (googleBtn) googleBtn.disabled = on;
     if (btnText) btnText.textContent = on ? "Cargando…" : "Iniciar Sesión";
     if (btnSpinner) btnSpinner.classList.toggle("hidden", !on);
   }
 
-  // Login con Google
-  if (googleBtn) {
-    googleBtn.addEventListener("click", async () => {
-      try {
-        setLoading(true);
-        await signIn("google", { callbackUrl: "/" } as any);
-      } catch (err) {
-        console.error(err);
-        setLoading(false);
-        errorMsg.textContent =
-          "Error al conectar con Google. Intenta nuevamente.";
-        errorMsg.classList.remove("hidden");
-      }
-    });
+  function setRegisterLoading(on: boolean) {
+    if (registerBtn) registerBtn.disabled = on;
+    if (googleBtn) googleBtn.disabled = on;
+    if (regBtnText) regBtnText.textContent = on ? "Creando cuenta…" : "Crear Cuenta";
+    if (regBtnSpinner) regBtnSpinner.classList.toggle("hidden", !on);
   }
 
-  // Login con credenciales de la Base de Datos PostgreSQL
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    errorMsg.classList.add("hidden");
+  function setForgotSendLoading(on: boolean) {
+    if (btnForgotSend) btnForgotSend.disabled = on;
+    if (btnForgotSendText) btnForgotSendText.textContent = on ? "Enviando código…" : "Enviar Código de Seguridad";
+    if (btnForgotSendSpinner) btnForgotSendSpinner.classList.toggle("hidden", !on);
+  }
 
-    const username = (
-      document.getElementById("username") as HTMLInputElement
-    ).value.trim();
-    const password = (document.getElementById("password") as HTMLInputElement)
-      .value;
+  function setForgotResetLoading(on: boolean) {
+    if (btnForgotReset) btnForgotReset.disabled = on;
+    if (btnForgotResetText) btnForgotResetText.textContent = on ? "Guardando…" : "Restablecer Contraseña";
+    if (btnForgotResetSpinner) btnForgotResetSpinner.classList.toggle("hidden", !on);
+  }
 
-    if (!username || !password) {
-      errorMsg.textContent = "Por favor ingresa usuario/correo y contraseña.";
-      errorMsg.classList.remove("hidden");
-      return;
-    }
-
-    setLoading(true);
-
-    // 1. Reproducir el video INMEDIATAMENTE
+  // Reproducir el video de bienvenida y esperar antes de redirigir
+  async function playWelcomeVideo() {
     if (welcomeVideo) {
       welcomeVideo.currentTime = 0;
       const playPromise = welcomeVideo.play();
@@ -290,7 +768,6 @@
       }
     }
 
-    // 2. Esperar brevemente al video
     await new Promise<void>((resolve) => {
       if (!welcomeVideo) return resolve();
       const timeout = setTimeout(() => {
@@ -305,8 +782,50 @@
 
       welcomeVideo.addEventListener("ended", onEnded, { once: true });
     });
+  }
 
-    // 3. Autenticación con Auth.js contra PostgreSQL
+  // Login con Google
+  if (googleBtn) {
+    googleBtn.addEventListener("click", async () => {
+      try {
+        setLoginLoading(true);
+        errorMsg.classList.add("hidden");
+        regFeedbackMsg.classList.add("hidden");
+
+        // Reproducir video antes de redirigir a Google
+        await playWelcomeVideo();
+
+        await signIn("google", { callbackUrl: "/" } as any);
+      } catch (err) {
+        console.error(err);
+        setLoginLoading(false);
+        errorMsg.textContent = "Error al conectar con Google. Intenta nuevamente.";
+        errorMsg.classList.remove("hidden");
+        if (welcomeVideo) welcomeVideo.pause();
+      }
+    });
+  }
+
+  // Login con credenciales de la Base de Datos PostgreSQL
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorMsg.classList.add("hidden");
+
+    const username = (document.getElementById("username") as HTMLInputElement).value.trim();
+    const password = (document.getElementById("password") as HTMLInputElement).value;
+
+    if (!username || !password) {
+      errorMsg.textContent = "Por favor ingresa usuario/correo/celular y contraseña.";
+      errorMsg.classList.remove("hidden");
+      return;
+    }
+
+    setLoginLoading(true);
+
+    // Reproducir video de bienvenida
+    await playWelcomeVideo();
+
+    // Autenticación con Auth.js contra PostgreSQL
     try {
       const result = await signIn("credentials", {
         email: username,
@@ -316,22 +835,221 @@
       } as any);
 
       if ((result as any)?.error) {
-        setLoading(false);
-        errorMsg.textContent =
-          "Credenciales incorrectas. Verifica tu usuario/correo y contraseña.";
+        setLoginLoading(false);
+        errorMsg.textContent = "Credenciales incorrectas. Verifica tus datos y contraseña.";
         errorMsg.classList.remove("hidden");
         if (welcomeVideo) welcomeVideo.pause();
       } else {
-        // Redirigir al dashboard
         window.location.href = "/";
       }
     } catch (err) {
       console.error(err);
-      setLoading(false);
-      errorMsg.textContent =
-        "Error inesperado al iniciar sesión. Intenta nuevamente.";
+      setLoginLoading(false);
+      errorMsg.textContent = "Error inesperado al iniciar sesión. Intenta nuevamente.";
       errorMsg.classList.remove("hidden");
       if (welcomeVideo) welcomeVideo.pause();
+    }
+  });
+
+  // Registro de nuevo usuario (Rol Campesino)
+  registerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    regFeedbackMsg.classList.add("hidden");
+
+    const name = (document.getElementById("reg-name") as HTMLInputElement).value.trim();
+    const email = (document.getElementById("reg-email") as HTMLInputElement).value.trim();
+    const phone = (document.getElementById("reg-phone") as HTMLInputElement).value.trim();
+    const birthDate = (document.getElementById("reg-birthdate") as HTMLInputElement).value;
+    const password = (document.getElementById("reg-password") as HTMLInputElement).value;
+
+    if (!name) {
+      regFeedbackMsg.textContent = "Por favor ingresa tu nombre completo.";
+      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      regFeedbackMsg.classList.remove("hidden");
+      return;
+    }
+
+    if (!email && !phone) {
+      regFeedbackMsg.textContent = "Debes ingresar al menos tu correo electrónico o tu número celular.";
+      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      regFeedbackMsg.classList.remove("hidden");
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      regFeedbackMsg.textContent = "La contraseña debe tener al menos 6 caracteres.";
+      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      regFeedbackMsg.classList.remove("hidden");
+      return;
+    }
+
+    setRegisterLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email: email || undefined,
+          phone: phone || undefined,
+          birthDate: birthDate || undefined,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setRegisterLoading(false);
+        regFeedbackMsg.textContent = data.message || "Error al crear la cuenta.";
+        regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+        regFeedbackMsg.classList.remove("hidden");
+        return;
+      }
+
+      // Registro exitoso: Mostrar mensaje y auto-login
+      regFeedbackMsg.textContent = "¡Cuenta creada exitosamente! Iniciando sesión...";
+      regFeedbackMsg.className = "p-3 rounded-lg bg-emerald-50 text-sm text-emerald-700 text-center border border-emerald-200 font-medium dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400";
+      regFeedbackMsg.classList.remove("hidden");
+
+      // Reproducir video de bienvenida
+      await playWelcomeVideo();
+
+      // Iniciar sesión automáticamente
+      const loginIdentifier = email || phone || name;
+      await signIn("credentials", {
+        email: loginIdentifier,
+        password: password,
+        redirect: false,
+        callbackUrl: "/",
+      } as any);
+
+      window.location.href = "/";
+
+    } catch (err) {
+      console.error(err);
+      setRegisterLoading(false);
+      regFeedbackMsg.textContent = "Error inesperado al crear la cuenta. Intenta nuevamente.";
+      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      regFeedbackMsg.classList.remove("hidden");
+      if (welcomeVideo) welcomeVideo.pause();
+    }
+  });
+
+  // Recuperación de Contraseña - Paso 1: Solicitar Código
+  forgotStep1Form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    forgotFeedbackMsg.classList.add("hidden");
+
+    const identifier = (document.getElementById("forgot-identifier") as HTMLInputElement).value.trim();
+
+    if (!identifier) {
+      forgotFeedbackMsg.textContent = "Por favor ingresa tu correo electrónico o tu número celular.";
+      forgotFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      forgotFeedbackMsg.classList.remove("hidden");
+      return;
+    }
+
+    setForgotSendLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setForgotSendLoading(false);
+        forgotFeedbackMsg.textContent = data.message || "No se pudo procesar la solicitud.";
+        forgotFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+        forgotFeedbackMsg.classList.remove("hidden");
+        return;
+      }
+
+      activeForgotIdentifier = data.identifier || identifier;
+      setForgotSendLoading(false);
+
+      // Pasar al Paso 2
+      forgotStep1Form.classList.add("hidden");
+      forgotStep2Form.classList.remove("hidden");
+      forgotStep2Desc.textContent = data.message || "Hemos enviado un código de 6 dígitos. Ingrésalo a continuación para crear tu nueva clave.";
+      
+      forgotFeedbackMsg.textContent = data.message || "Código enviado.";
+      forgotFeedbackMsg.className = "p-3 rounded-lg bg-emerald-50 text-sm text-emerald-700 text-center border border-emerald-200 font-medium dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400";
+      forgotFeedbackMsg.classList.remove("hidden");
+
+    } catch (err) {
+      console.error(err);
+      setForgotSendLoading(false);
+      forgotFeedbackMsg.textContent = "Error al solicitar el código. Intenta nuevamente.";
+      forgotFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      forgotFeedbackMsg.classList.remove("hidden");
+    }
+  });
+
+  // Recuperación de Contraseña - Paso 2: Verificar Código y Restablecer
+  forgotStep2Form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    forgotFeedbackMsg.classList.add("hidden");
+
+    const code = (document.getElementById("forgot-code") as HTMLInputElement).value.trim();
+    const newPassword = (document.getElementById("forgot-new-password") as HTMLInputElement).value;
+
+    if (!code || code.length !== 6) {
+      forgotFeedbackMsg.textContent = "Por favor ingresa el código numérico de 6 dígitos.";
+      forgotFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      forgotFeedbackMsg.classList.remove("hidden");
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      forgotFeedbackMsg.textContent = "La nueva contraseña debe tener al menos 6 caracteres.";
+      forgotFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      forgotFeedbackMsg.classList.remove("hidden");
+      return;
+    }
+
+    setForgotResetLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: activeForgotIdentifier,
+          code,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setForgotResetLoading(false);
+        forgotFeedbackMsg.textContent = data.message || "Error al restablecer la contraseña.";
+        forgotFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+        forgotFeedbackMsg.classList.remove("hidden");
+        return;
+      }
+
+      // Restablecimiento exitoso: Regresar a Login y mostrar confirmación
+      setForgotResetLoading(false);
+      setAuthMode('login');
+
+      errorMsg.textContent = "¡Contraseña actualizada con éxito! Ya puedes iniciar sesión con tu nueva clave.";
+      errorMsg.className = "p-3 rounded-lg bg-emerald-50 text-sm text-emerald-700 text-center border border-emerald-200 font-medium dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400";
+      errorMsg.classList.remove("hidden");
+
+    } catch (err) {
+      console.error(err);
+      setForgotResetLoading(false);
+      forgotFeedbackMsg.textContent = "Error al restablecer la contraseña. Intenta nuevamente.";
+      forgotFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      forgotFeedbackMsg.classList.remove("hidden");
     }
   });
 </script>
