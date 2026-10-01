@@ -758,30 +758,38 @@
 
   // Reproducir el video de bienvenida y esperar antes de redirigir
   async function playWelcomeVideo() {
-    if (welcomeVideo) {
-      welcomeVideo.currentTime = 0;
-      const playPromise = welcomeVideo.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn("El navegador bloqueó el video:", err);
-        });
+    try {
+      if (welcomeVideo) {
+        welcomeVideo.currentTime = 0;
+        const playPromise = welcomeVideo.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn("El navegador bloqueó el video:", err);
+          });
+        }
       }
+    } catch (vidErr) {
+      console.warn("No se pudo reiniciar el video:", vidErr);
     }
 
-    await new Promise<void>((resolve) => {
-      if (!welcomeVideo) return resolve();
-      const timeout = setTimeout(() => {
-        welcomeVideo.removeEventListener("ended", onEnded);
-        resolve();
-      }, 3500);
+    try {
+      await new Promise<void>((resolve) => {
+        if (!welcomeVideo) return resolve();
+        const timeout = setTimeout(() => {
+          welcomeVideo.removeEventListener("ended", onEnded);
+          resolve();
+        }, 3500);
 
-      const onEnded = () => {
-        clearTimeout(timeout);
-        resolve();
-      };
+        const onEnded = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
 
-      welcomeVideo.addEventListener("ended", onEnded, { once: true });
-    });
+        welcomeVideo.addEventListener("ended", onEnded, { once: true });
+      });
+    } catch (waitErr) {
+      console.warn("Error esperando al video:", waitErr);
+    }
   }
 
   // Login con Google
@@ -842,11 +850,12 @@
       } else {
         window.location.href = "/";
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setLoginLoading(false);
-      errorMsg.textContent = "Error inesperado al iniciar sesión. Intenta nuevamente.";
+      errorMsg.textContent = "Error inesperado al iniciar sesión. Intenta nuevamente. " + (err?.message || "");
       errorMsg.classList.remove("hidden");
+      alert("Error detallado (envíame esto): " + (err?.message || String(err)));
       if (welcomeVideo) welcomeVideo.pause();
     }
   });
