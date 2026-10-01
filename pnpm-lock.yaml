@@ -16,10 +16,10 @@ importers:
         version: 11.0.10(astro@7.2.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@vercel/functions@3.9.8)(jiti@2.7.0)(yaml@2.9.0))
       '@auth/core':
         specifier: ^0.41.3
-        version: 0.41.3
+        version: 0.41.3(nodemailer@10.0.13)
       '@auth/pg-adapter':
         specifier: ^1.11.3
-        version: 1.11.3(pg@8.23.0)
+        version: 1.11.3(nodemailer@10.0.13)(pg@8.23.0)
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.2.2(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
@@ -31,7 +31,7 @@ importers:
         version: 7.2.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@vercel/functions@3.9.8)(jiti@2.7.0)(yaml@2.9.0)
       auth-astro:
         specifier: ^4.2.0
-        version: 4.2.0(@auth/core@0.41.3)(astro@7.2.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@vercel/functions@3.9.8)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.2.0(@auth/core@0.41.3(nodemailer@10.0.13))(astro@7.2.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@vercel/functions@3.9.8)(jiti@2.7.0)(yaml@2.9.0))
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -41,6 +41,9 @@ importers:
       exceljs:
         specifier: ^4.4.0
         version: 4.4.0
+      nodemailer:
+        specifier: ^10.0.13
+        version: 10.0.13
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -54,6 +57,9 @@ importers:
       '@astrojs/check':
         specifier: ^0.9.10
         version: 0.9.10(prettier@3.9.6)(typescript@5.9.3)
+      '@types/nodemailer':
+        specifier: ^8.0.2
+        version: 8.0.2
       '@types/pg':
         specifier: ^8.23.1
         version: 8.23.1
@@ -939,6 +945,9 @@ packages:
 
   '@types/node@14.18.63':
     resolution: {integrity: sha512-fAtCfv4jJg+ExtXhvCkCqUKZ+4ok/JQk01qDKhL5BDDoS3AxKXhV5/MAVUZyQnSEd2GT92fkgZl0pz0Q0AzcIQ==}
+
+  '@types/nodemailer@8.0.2':
+    resolution: {integrity: sha512-c7M5ox8p0nEOfbJ2E9Qcmt8/QCu/VzsiAhzBiZbvky2PhKZDHpKB3sQHBM5MEZNkCfBOaS6S9//AGPRTNB7IaA==}
 
   '@types/pg@8.23.1':
     resolution: {integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==}
@@ -1951,6 +1960,10 @@ packages:
   node-mock-http@1.0.5:
     resolution: {integrity: sha512-KQyt/wLjG3TAc7DOUhpqWzgd4ERxR80JOlTK5VE5R1S12IaPVN5qkj4klBce9HPG1Njuup4Sb5bljaT34lIyjw==}
 
+  nodemailer@10.0.13:
+    resolution: {integrity: sha512-SzG86OlvcW/NNhUFC6uROMwRTL4n7MswfQqC/T8mhkmnY1YVa23zUEMYi4ijSeXSl9GLz9ZeTJDUatEDuY5FeQ==}
+    engines: {node: '>=20.0.0'}
+
   nopt@8.1.0:
     resolution: {integrity: sha512-ieGu42u/Qsa4TFktmaKEwM6MQH0pOWnaB3htzh0JRtx84+Mebc0cbZYN5bC+6WTZ4+77xrL9Pn5m7CV6VIkV7A==}
     engines: {node: ^18.17.0 || >=20.5.0}
@@ -2908,17 +2921,19 @@ snapshots:
     dependencies:
       yaml: 2.9.0
 
-  '@auth/core@0.41.3':
+  '@auth/core@0.41.3(nodemailer@10.0.13)':
     dependencies:
       '@panva/hkdf': 1.2.1
       jose: 6.2.10
       oauth4webapi: 3.8.7
       preact: 10.24.3
       preact-render-to-string: 6.5.11(preact@10.24.3)
+    optionalDependencies:
+      nodemailer: 10.0.13
 
-  '@auth/pg-adapter@1.11.3(pg@8.23.0)':
+  '@auth/pg-adapter@1.11.3(nodemailer@10.0.13)(pg@8.23.0)':
     dependencies:
-      '@auth/core': 0.41.3
+      '@auth/core': 0.41.3(nodemailer@10.0.13)
       pg: 8.23.0
     transitivePeerDependencies:
       - '@simplewebauthn/browser'
@@ -3481,6 +3496,10 @@ snapshots:
 
   '@types/node@14.18.63': {}
 
+  '@types/nodemailer@8.0.2':
+    dependencies:
+      '@types/node': 14.18.63
+
   '@types/pg@8.23.1':
     dependencies:
       '@types/node': 14.18.63
@@ -3782,9 +3801,9 @@ snapshots:
 
   async@3.2.6: {}
 
-  auth-astro@4.2.0(@auth/core@0.41.3)(astro@7.2.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@vercel/functions@3.9.8)(jiti@2.7.0)(yaml@2.9.0)):
+  auth-astro@4.2.0(@auth/core@0.41.3(nodemailer@10.0.13))(astro@7.2.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@vercel/functions@3.9.8)(jiti@2.7.0)(yaml@2.9.0)):
     dependencies:
-      '@auth/core': 0.41.3
+      '@auth/core': 0.41.3(nodemailer@10.0.13)
       astro: 7.2.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@vercel/functions@3.9.8)(jiti@2.7.0)(yaml@2.9.0)
       set-cookie-parser: 2.7.2
 
@@ -4511,6 +4530,8 @@ snapshots:
   node-gyp-build@4.8.4: {}
 
   node-mock-http@1.0.5: {}
+
+  nodemailer@10.0.13: {}
 
   nopt@8.1.0:
     dependencies:

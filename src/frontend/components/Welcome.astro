@@ -817,24 +817,28 @@
   // Login con credenciales de la Base de Datos PostgreSQL
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    errorMsg.classList.add("hidden");
-
-    const username = (document.getElementById("username") as HTMLInputElement).value.trim();
-    const password = (document.getElementById("password") as HTMLInputElement).value;
-
-    if (!username || !password) {
-      errorMsg.textContent = "Por favor ingresa usuario/correo/celular y contraseña.";
-      errorMsg.classList.remove("hidden");
-      return;
-    }
-
-    setLoginLoading(true);
-
-    // Reproducir video de bienvenida
-    await playWelcomeVideo();
-
-    // Autenticación con Auth.js contra PostgreSQL
     try {
+      errorMsg.classList.add("hidden");
+
+      const username = (document.getElementById("username") as HTMLInputElement).value.trim();
+      const password = (document.getElementById("password") as HTMLInputElement).value;
+
+      if (!username || !password) {
+        errorMsg.textContent = "Por favor ingresa usuario/correo/celular y contraseña.";
+        errorMsg.classList.remove("hidden");
+        return;
+      }
+
+      setLoginLoading(true);
+
+      // Reproducir video de bienvenida
+      try {
+        await playWelcomeVideo();
+      } catch (vidErr: any) {
+        alert("Error de video: " + (vidErr?.message || String(vidErr)));
+      }
+      
+      // Autenticación con Auth.js contra PostgreSQL
       const result = await signIn("credentials", {
         email: username,
         password: password,
@@ -855,7 +859,7 @@
       setLoginLoading(false);
       errorMsg.textContent = "Error inesperado al iniciar sesión. Intenta nuevamente. " + (err?.message || "");
       errorMsg.classList.remove("hidden");
-      alert("Error detallado (envíame esto): " + (err?.message || String(err)));
+      alert("Error DETALLADO (Envíame esto por favor):\n" + (err?.message || String(err)) + "\n\n" + (err?.stack || ""));
       if (welcomeVideo) welcomeVideo.pause();
     }
   });

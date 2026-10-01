@@ -31,3 +31,4 @@ minimumReleaseAgeExclude:
   - astro@7.2.8
   - sharp@0.35.4
   - dotenv@18.0.3
+  - nodemailer@10.0.13
