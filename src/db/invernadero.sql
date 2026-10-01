@@ -2,10 +2,12 @@
 -- PostgreSQL database dump
 --
 
-\restrict hd8jDgiYeGRyQtbauGjQkDN638KSMIfPQiK4bbXpEL2oWVrKGaRB4gV958iSpJP
+\restrict 5fbWhzFjA05zVFExqpwLyLka7r16kJchDx40MmJzp4GGcIEP0zCpq1Sfb6LIr7l
 
 -- Dumped from database version 17.7
--- Dumped by pg_dump version 18.6
+-- Dumped by pg_dump version 17.7
+
+-- Started on 2026-10-01 13:04:36
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -19,31 +21,71 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- TOC entry 4 (class 2615 OID 2200)
+-- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
+--
+
+CREATE SCHEMA public;
+
+
+ALTER SCHEMA public OWNER TO pg_database_owner;
+
+--
+-- TOC entry 4943 (class 0 OID 0)
+-- Dependencies: 4
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: pg_database_owner
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- TOC entry 862 (class 1247 OID 25187)
+-- Name: tipo_medicion_enum; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.tipo_medicion_enum AS ENUM (
+    'crecimiento',
+    'ph',
+    'productividad',
+    'temperatura_atmosferica',
+    'temperatura_suelo',
+    'humedad'
+);
+
+
+ALTER TYPE public.tipo_medicion_enum OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: crecimiento; Type: TABLE; Schema: public; Owner: postgres
+-- TOC entry 224 (class 1259 OID 25200)
+-- Name: mediciones; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.crecimiento (
-    id integer NOT NULL,
-    planta_id integer,
-    valor numeric(5,2),
-    fecha_medida timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    usuario_id integer
+CREATE TABLE public.mediciones (
+    id bigint NOT NULL,
+    planta_id integer NOT NULL,
+    tipo public.tipo_medicion_enum NOT NULL,
+    valor numeric(10,2) NOT NULL,
+    subtipo character varying(50),
+    fecha_medida timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    usuario_id integer,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
-ALTER TABLE public.crecimiento OWNER TO postgres;
+ALTER TABLE public.mediciones OWNER TO postgres;
 
 --
--- Name: crecimiento_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- TOC entry 223 (class 1259 OID 25199)
+-- Name: mediciones_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public.crecimiento_id_seq
-    AS integer
+CREATE SEQUENCE public.mediciones_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -51,53 +93,19 @@ CREATE SEQUENCE public.crecimiento_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.crecimiento_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.mediciones_id_seq OWNER TO postgres;
 
 --
--- Name: crecimiento_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- TOC entry 4944 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: mediciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public.crecimiento_id_seq OWNED BY public.crecimiento.id;
-
-
---
--- Name: ph; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.ph (
-    id integer NOT NULL,
-    planta_id integer,
-    valor numeric(5,2),
-    fecha_medida timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    usuario_id integer
-);
-
-
-ALTER TABLE public.ph OWNER TO postgres;
-
---
--- Name: ph_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.ph_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.ph_id_seq OWNER TO postgres;
-
---
--- Name: ph_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.ph_id_seq OWNED BY public.ph.id;
+ALTER SEQUENCE public.mediciones_id_seq OWNED BY public.mediciones.id;
 
 
 --
+-- TOC entry 218 (class 1259 OID 24995)
 -- Name: plantas; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -113,6 +121,7 @@ CREATE TABLE public.plantas (
 ALTER TABLE public.plantas OWNER TO postgres;
 
 --
+-- TOC entry 217 (class 1259 OID 24994)
 -- Name: plantas_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -128,6 +137,8 @@ CREATE SEQUENCE public.plantas_id_seq
 ALTER SEQUENCE public.plantas_id_seq OWNER TO postgres;
 
 --
+-- TOC entry 4945 (class 0 OID 0)
+-- Dependencies: 217
 -- Name: plantas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
@@ -135,43 +146,7 @@ ALTER SEQUENCE public.plantas_id_seq OWNED BY public.plantas.id;
 
 
 --
--- Name: productividad; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.productividad (
-    id integer NOT NULL,
-    planta_id integer,
-    valor numeric(5,2),
-    fecha_medida timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    usuario_id integer
-);
-
-
-ALTER TABLE public.productividad OWNER TO postgres;
-
---
--- Name: productividad_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.productividad_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.productividad_id_seq OWNER TO postgres;
-
---
--- Name: productividad_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.productividad_id_seq OWNED BY public.productividad.id;
-
-
---
+-- TOC entry 220 (class 1259 OID 25021)
 -- Name: relaciones; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -190,6 +165,7 @@ CREATE TABLE public.relaciones (
 ALTER TABLE public.relaciones OWNER TO postgres;
 
 --
+-- TOC entry 219 (class 1259 OID 25020)
 -- Name: relaciones_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -205,6 +181,8 @@ CREATE SEQUENCE public.relaciones_id_seq
 ALTER SEQUENCE public.relaciones_id_seq OWNER TO postgres;
 
 --
+-- TOC entry 4946 (class 0 OID 0)
+-- Dependencies: 219
 -- Name: relaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
@@ -212,138 +190,7 @@ ALTER SEQUENCE public.relaciones_id_seq OWNED BY public.relaciones.id;
 
 
 --
--- Name: temperatura_atmosferica; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.temperatura_atmosferica (
-    id integer NOT NULL,
-    planta_id integer,
-    tipo character varying(20),
-    valor numeric(5,2),
-    fecha_medida timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    usuario_id integer
-);
-
-
-ALTER TABLE public.temperatura_atmosferica OWNER TO postgres;
-
---
--- Name: temperatura_atmosferica_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.temperatura_atmosferica_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.temperatura_atmosferica_id_seq OWNER TO postgres;
-
---
--- Name: temperatura_atmosferica_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.temperatura_atmosferica_id_seq OWNED BY public.temperatura_atmosferica.id;
-
-
---
--- Name: temperatura_suelo; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.temperatura_suelo (
-    id integer NOT NULL,
-    planta_id integer,
-    valor numeric(5,2),
-    fecha_medida timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    usuario_id integer
-);
-
-
-ALTER TABLE public.temperatura_suelo OWNER TO postgres;
-
---
--- Name: temperatura_suelo_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.temperatura_suelo_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.temperatura_suelo_id_seq OWNER TO postgres;
-
---
--- Name: temperatura_suelo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.temperatura_suelo_id_seq OWNED BY public.temperatura_suelo.id;
-
-
---
--- Name: humedad; Type: TABLE; Schema: public; Owner: postgres
--- Humedad relativa / de suelo por planta (%). Sigue el mismo patrón
--- que ph, crecimiento y temperaturas: valor + fecha_medida + usuario_id.
--- La fecha de la toma la da fecha_medida (cuando el responsable midió).
---
-
-CREATE TABLE public.humedad (
-    id integer NOT NULL,
-    planta_id integer,
-    valor numeric(5,2),
-    fecha_medida timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    usuario_id integer
-);
-
-
-ALTER TABLE public.humedad OWNER TO postgres;
-
---
--- Name: humedad_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.humedad_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.humedad_id_seq OWNER TO postgres;
-
---
--- Name: humedad_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.humedad_id_seq OWNED BY public.humedad.id;
-
-
---
--- Name: responsable; Type: TABLE; Schema: public; Owner: postgres
--- Persona que fue a tomar las medidas. usuario_id en las tablas de
--- medición referencia a responsable(id).
---
-
-CREATE TABLE public.responsable (
-    id integer NOT NULL,
-    nombre character varying(100) NOT NULL,
-    cargo character varying(50),
-    activo boolean DEFAULT true,
-    fecha_registro timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.responsable OWNER TO postgres;
-
---
+-- TOC entry 222 (class 1259 OID 25166)
 -- Name: responsable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -359,27 +206,31 @@ CREATE SEQUENCE public.responsable_id_seq
 ALTER SEQUENCE public.responsable_id_seq OWNER TO postgres;
 
 --
--- Name: responsable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- TOC entry 221 (class 1259 OID 25159)
+-- Name: responsable; Type: TABLE; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public.responsable_id_seq OWNED BY public.responsable.id;
+CREATE TABLE public.responsable (
+    id integer DEFAULT nextval('public.responsable_id_seq'::regclass) NOT NULL,
+    nombre character varying(100) NOT NULL,
+    cargo character varying(50),
+    activo boolean DEFAULT true,
+    fecha_registro timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.responsable OWNER TO postgres;
+
+--
+-- TOC entry 4767 (class 2604 OID 25203)
+-- Name: mediciones id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.mediciones ALTER COLUMN id SET DEFAULT nextval('public.mediciones_id_seq'::regclass);
 
 
 --
--- Name: crecimiento id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.crecimiento ALTER COLUMN id SET DEFAULT nextval('public.crecimiento_id_seq'::regclass);
-
-
---
--- Name: ph id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ph ALTER COLUMN id SET DEFAULT nextval('public.ph_id_seq'::regclass);
-
-
---
+-- TOC entry 4760 (class 2604 OID 24998)
 -- Name: plantas id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -387,13 +238,7 @@ ALTER TABLE ONLY public.plantas ALTER COLUMN id SET DEFAULT nextval('public.plan
 
 
 --
--- Name: productividad id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.productividad ALTER COLUMN id SET DEFAULT nextval('public.productividad_id_seq'::regclass);
-
-
---
+-- TOC entry 4762 (class 2604 OID 25024)
 -- Name: relaciones id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -401,58 +246,42 @@ ALTER TABLE ONLY public.relaciones ALTER COLUMN id SET DEFAULT nextval('public.r
 
 
 --
--- Name: temperatura_atmosferica id; Type: DEFAULT; Schema: public; Owner: postgres
+-- TOC entry 4937 (class 0 OID 25200)
+-- Dependencies: 224
+-- Data for Name: mediciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.temperatura_atmosferica ALTER COLUMN id SET DEFAULT nextval('public.temperatura_atmosferica_id_seq'::regclass);
-
-
---
--- Name: temperatura_suelo id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.temperatura_suelo ALTER COLUMN id SET DEFAULT nextval('public.temperatura_suelo_id_seq'::regclass);
-
-
---
--- Name: humedad id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.humedad ALTER COLUMN id SET DEFAULT nextval('public.humedad_id_seq'::regclass);
-
-
---
--- Name: responsable id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.responsable ALTER COLUMN id SET DEFAULT nextval('public.responsable_id_seq'::regclass);
-
-
---
--- Data for Name: crecimiento; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.crecimiento (id, planta_id, valor, fecha_medida, usuario_id) FROM stdin;
-1	1	15.20	2026-09-04 17:43:14.557869	1
-2	2	18.70	2026-09-03 17:43:14.557869	1
-3	3	14.90	2026-09-02 17:43:14.557869	1
-4	4	16.50	2026-09-04 17:43:14.557869	1
+COPY public.mediciones (id, planta_id, tipo, valor, subtipo, fecha_medida, usuario_id, created_at) FROM stdin;
+1	1	crecimiento	15.20	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+2	2	crecimiento	18.70	\N	2026-09-03 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+3	3	crecimiento	14.90	\N	2026-09-02 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+4	4	crecimiento	16.50	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+5	1	ph	6.45	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+6	2	ph	6.52	\N	2026-09-03 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+7	3	ph	6.38	\N	2026-09-02 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+8	4	ph	6.55	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+9	1	productividad	2.40	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+10	2	productividad	2.80	\N	2026-09-03 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+11	3	productividad	2.10	\N	2026-09-02 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+12	4	productividad	3.00	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+13	1	temperatura_atmosferica	28.50	entrada	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+14	1	temperatura_atmosferica	25.20	salida	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+15	2	temperatura_atmosferica	29.20	entrada	2026-09-03 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+16	2	temperatura_atmosferica	26.10	salida	2026-09-03 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+17	1	temperatura_suelo	22.50	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+18	2	temperatura_suelo	23.10	\N	2026-09-03 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+19	3	temperatura_suelo	21.80	\N	2026-09-02 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+20	4	temperatura_suelo	24.00	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:32:50.801617-05
+21	1	humedad	68.50	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:58:22.406336-05
+22	2	humedad	72.30	\N	2026-09-03 17:43:14.557869-05	1	2026-10-01 12:58:22.406336-05
+23	3	humedad	65.80	\N	2026-09-02 17:43:14.557869-05	1	2026-10-01 12:58:22.406336-05
+24	4	humedad	70.10	\N	2026-09-04 17:43:14.557869-05	1	2026-10-01 12:58:22.406336-05
 \.
 
 
 --
--- Data for Name: ph; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.ph (id, planta_id, valor, fecha_medida, usuario_id) FROM stdin;
-1	1	6.45	2026-09-04 17:43:14.557869	1
-2	2	6.52	2026-09-03 17:43:14.557869	1
-3	3	6.38	2026-09-02 17:43:14.557869	1
-4	4	6.55	2026-09-04 17:43:14.557869	1
-\.
-
-
---
+-- TOC entry 4931 (class 0 OID 24995)
+-- Dependencies: 218
 -- Data for Name: plantas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -465,18 +294,8 @@ COPY public.plantas (id, nombre, especie, ubicacion, estado) FROM stdin;
 
 
 --
--- Data for Name: productividad; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.productividad (id, planta_id, valor, fecha_medida, usuario_id) FROM stdin;
-1	1	2.40	2026-09-04 17:43:14.557869	1
-2	2	2.80	2026-09-03 17:43:14.557869	1
-3	3	2.10	2026-09-02 17:43:14.557869	1
-4	4	3.00	2026-09-04 17:43:14.557869	1
-\.
-
-
---
+-- TOC entry 4933 (class 0 OID 25021)
+-- Dependencies: 220
 -- Data for Name: relaciones; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -489,68 +308,31 @@ COPY public.relaciones (id, tipo_relacion, plantida_id, tipo_medida1, valor1, ti
 
 
 --
--- Data for Name: temperatura_atmosferica; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.temperatura_atmosferica (id, planta_id, tipo, valor, fecha_medida, usuario_id) FROM stdin;
-1	1	entrada	28.50	2026-09-04 17:43:14.557869	1
-2	1	salida	25.20	2026-09-04 17:43:14.557869	1
-3	2	entrada	29.20	2026-09-03 17:43:14.557869	1
-4	2	salida	26.10	2026-09-03 17:43:14.557869	1
-\.
-
-
---
--- Data for Name: temperatura_suelo; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.temperatura_suelo (id, planta_id, valor, fecha_medida, usuario_id) FROM stdin;
-1	1	22.50	2026-09-04 17:43:14.557869	1
-2	2	23.10	2026-09-03 17:43:14.557869	1
-3	3	21.80	2026-09-02 17:43:14.557869	1
-4	4	24.00	2026-09-04 17:43:14.557869	1
-\.
-
-
---
--- Data for Name: humedad; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.humedad (id, planta_id, valor, fecha_medida, usuario_id) FROM stdin;
-1	1	68.50	2026-09-04 17:43:14.557869	1
-2	2	72.30	2026-09-03 17:43:14.557869	1
-3	3	65.80	2026-09-02 17:43:14.557869	1
-4	4	70.10	2026-09-04 17:43:14.557869	1
-\.
-
-
---
+-- TOC entry 4934 (class 0 OID 25159)
+-- Dependencies: 221
 -- Data for Name: responsable; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.responsable (id, nombre, cargo, activo, fecha_registro) FROM stdin;
-1	Administrador	Supervisor Técnico	t	2026-09-04 17:43:14.557869
-2	Juan Perez	Técnico Agrónomo	t	2026-09-04 17:43:14.557869
-3	Maria Gomez	Supervisora de Riego	t	2026-09-04 17:43:14.557869
-4	Luis Torres	Auxiliar de Campo	t	2026-09-04 17:43:14.557869
+1	Administrador	Supervisor Técnico	t	2026-09-17 09:58:11.767383
+2	Juan Perez	Técnico Agrónomo	t	2026-09-17 09:58:11.767383
+3	Maria Gomez	Supervisora de Riego	t	2026-09-17 09:58:11.767383
+4	Luis Torres	Auxiliar de Campo	t	2026-09-17 09:58:11.767383
 \.
 
 
 --
--- Name: crecimiento_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- TOC entry 4947 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: mediciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.crecimiento_id_seq', 4, true);
-
-
---
--- Name: ph_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ph_id_seq', 4, true);
+SELECT pg_catalog.setval('public.mediciones_id_seq', 24, true);
 
 
 --
+-- TOC entry 4948 (class 0 OID 0)
+-- Dependencies: 217
 -- Name: plantas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -558,13 +340,8 @@ SELECT pg_catalog.setval('public.plantas_id_seq', 4, true);
 
 
 --
--- Name: productividad_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.productividad_id_seq', 4, true);
-
-
---
+-- TOC entry 4949 (class 0 OID 0)
+-- Dependencies: 219
 -- Name: relaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -572,27 +349,8 @@ SELECT pg_catalog.setval('public.relaciones_id_seq', 4, true);
 
 
 --
--- Name: temperatura_atmosferica_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.temperatura_atmosferica_id_seq', 4, true);
-
-
---
--- Name: temperatura_suelo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.temperatura_suelo_id_seq', 4, true);
-
-
---
--- Name: humedad_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.humedad_id_seq', 4, true);
-
-
---
+-- TOC entry 4950 (class 0 OID 0)
+-- Dependencies: 222
 -- Name: responsable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -600,22 +358,16 @@ SELECT pg_catalog.setval('public.responsable_id_seq', 4, true);
 
 
 --
--- Name: crecimiento crecimiento_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 4781 (class 2606 OID 25207)
+-- Name: mediciones mediciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.crecimiento
-    ADD CONSTRAINT crecimiento_pkey PRIMARY KEY (id);
-
-
---
--- Name: ph ph_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ph
-    ADD CONSTRAINT ph_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.mediciones
+    ADD CONSTRAINT mediciones_pkey PRIMARY KEY (id);
 
 
 --
+-- TOC entry 4771 (class 2606 OID 25001)
 -- Name: plantas plantas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -624,14 +376,7 @@ ALTER TABLE ONLY public.plantas
 
 
 --
--- Name: productividad productividad_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.productividad
-    ADD CONSTRAINT productividad_pkey PRIMARY KEY (id);
-
-
---
+-- TOC entry 4773 (class 2606 OID 25027)
 -- Name: relaciones relaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -640,30 +385,7 @@ ALTER TABLE ONLY public.relaciones
 
 
 --
--- Name: temperatura_atmosferica temperatura_atmosferica_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.temperatura_atmosferica
-    ADD CONSTRAINT temperatura_atmosferica_pkey PRIMARY KEY (id);
-
-
---
--- Name: temperatura_suelo temperatura_suelo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.temperatura_suelo
-    ADD CONSTRAINT temperatura_suelo_pkey PRIMARY KEY (id);
-
-
---
--- Name: humedad humedad_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.humedad
-    ADD CONSTRAINT humedad_pkey PRIMARY KEY (id);
-
-
---
+-- TOC entry 4775 (class 2606 OID 25165)
 -- Name: responsable responsable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -672,54 +394,57 @@ ALTER TABLE ONLY public.responsable
 
 
 --
--- Name: crecimiento crecimiento_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 4776 (class 1259 OID 25218)
+-- Name: idx_mediciones_planta_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.crecimiento
-    ADD CONSTRAINT crecimiento_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id);
-
-
---
--- Name: crecimiento crecimiento_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.crecimiento
-    ADD CONSTRAINT crecimiento_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
+CREATE INDEX idx_mediciones_planta_fecha ON public.mediciones USING btree (planta_id, fecha_medida DESC);
 
 
 --
--- Name: ph ph_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 4777 (class 1259 OID 25220)
+-- Name: idx_mediciones_planta_tipo_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.ph
-    ADD CONSTRAINT ph_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id);
-
-
---
--- Name: ph ph_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ph
-    ADD CONSTRAINT ph_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
+CREATE INDEX idx_mediciones_planta_tipo_fecha ON public.mediciones USING btree (planta_id, tipo, fecha_medida DESC);
 
 
 --
--- Name: productividad productividad_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- TOC entry 4778 (class 1259 OID 25219)
+-- Name: idx_mediciones_tipo_fecha; Type: INDEX; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.productividad
-    ADD CONSTRAINT productividad_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id);
-
-
---
--- Name: productividad productividad_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.productividad
-    ADD CONSTRAINT productividad_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
+CREATE INDEX idx_mediciones_tipo_fecha ON public.mediciones USING btree (tipo, fecha_medida DESC);
 
 
 --
+-- TOC entry 4779 (class 1259 OID 25221)
+-- Name: idx_mediciones_usuario_fecha; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_mediciones_usuario_fecha ON public.mediciones USING btree (usuario_id, fecha_medida DESC);
+
+
+--
+-- TOC entry 4783 (class 2606 OID 25208)
+-- Name: mediciones mediciones_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.mediciones
+    ADD CONSTRAINT mediciones_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4784 (class 2606 OID 25213)
+-- Name: mediciones mediciones_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.mediciones
+    ADD CONSTRAINT mediciones_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 4782 (class 2606 OID 25028)
 -- Name: relaciones relaciones_plantida_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -727,57 +452,11 @@ ALTER TABLE ONLY public.relaciones
     ADD CONSTRAINT relaciones_plantida_id_fkey FOREIGN KEY (plantida_id) REFERENCES public.plantas(id) ON DELETE CASCADE;
 
 
---
--- Name: temperatura_atmosferica temperatura_atmosferica_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.temperatura_atmosferica
-    ADD CONSTRAINT temperatura_atmosferica_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id);
-
-
---
--- Name: temperatura_atmosferica temperatura_atmosferica_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.temperatura_atmosferica
-    ADD CONSTRAINT temperatura_atmosferica_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
-
-
---
--- Name: temperatura_suelo temperatura_suelo_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.temperatura_suelo
-    ADD CONSTRAINT temperatura_suelo_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id);
-
-
---
--- Name: temperatura_suelo temperatura_suelo_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.temperatura_suelo
-    ADD CONSTRAINT temperatura_suelo_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
-
-
---
--- Name: humedad humedad_planta_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.humedad
-    ADD CONSTRAINT humedad_planta_id_fkey FOREIGN KEY (planta_id) REFERENCES public.plantas(id);
-
-
---
--- Name: humedad humedad_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.humedad
-    ADD CONSTRAINT humedad_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.responsable(id) ON DELETE SET NULL;
-
+-- Completed on 2026-10-01 13:04:36
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict hd8jDgiYeGRyQtbauGjQkDN638KSMIfPQiK4bbXpEL2oWVrKGaRB4gV958iSpJP
+\unrestrict 5fbWhzFjA05zVFExqpwLyLka7r16kJchDx40MmJzp4GGcIEP0zCpq1Sfb6LIr7l
 
