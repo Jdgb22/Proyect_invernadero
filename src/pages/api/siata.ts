@@ -10,7 +10,12 @@ export const GET: APIRoute = async ({ request }) => {
     
     const siataEndpoint = 'http://siata.gov.co:8089/estacionesTemperatura/20';
     
-    const response = await fetch(siataEndpoint);
+    // Configurar un timeout corto (3s) para evitar que Vercel cancele la función (timeout de 10s)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch(siataEndpoint, { signal: controller.signal });
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       throw new Error(`Error al conectar con SIATA. Estado: ${response.status}`);
