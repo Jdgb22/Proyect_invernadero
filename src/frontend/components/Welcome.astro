@@ -417,8 +417,8 @@
 
         <!-- Paso 2: Verificar Código y Crear Nueva Contraseña -->
         <form id="forgot-step2-form" class="space-y-4 hidden" novalidate>
-          <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl text-xs text-amber-800 dark:text-amber-300">
-            <span id="forgot-step2-desc">Hemos enviado un código de 6 dígitos. Ingrésalo a continuación para crear tu nueva clave.</span>
+          <div id="forgot-step2-desc" class="p-3 rounded-lg bg-emerald-50 text-sm text-emerald-700 text-center border border-emerald-200 font-medium dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400">
+            Hemos enviado un código de 6 dígitos. Ingrésalo a continuación para crear tu nueva clave.
           </div>
 
           <div>
@@ -986,14 +986,10 @@
       activeForgotIdentifier = data.identifier || identifier;
       setForgotSendLoading(false);
 
-      // Pasar al Paso 2
       forgotStep1Form.classList.add("hidden");
       forgotStep2Form.classList.remove("hidden");
       forgotStep2Desc.textContent = data.message || "Hemos enviado un código de 6 dígitos. Ingrésalo a continuación para crear tu nueva clave.";
-      
-      forgotFeedbackMsg.textContent = data.message || "Código enviado.";
-      forgotFeedbackMsg.className = "p-3 rounded-lg bg-emerald-50 text-sm text-emerald-700 text-center border border-emerald-200 font-medium dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400";
-      forgotFeedbackMsg.classList.remove("hidden");
+      forgotFeedbackMsg.classList.add("hidden");
 
     } catch (err) {
       console.error(err);

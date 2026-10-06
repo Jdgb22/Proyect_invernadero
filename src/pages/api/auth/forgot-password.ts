@@ -100,16 +100,15 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const isDev = Boolean((import.meta as any).env?.DEV || process.env.NODE_ENV !== 'production');
-
     return new Response(
       JSON.stringify({
-        message: `Se ha enviado un código de 6 dígitos a tu ${destinationType} (${maskedTarget}). Válido por 15 minutos.`,
+        message: sendResult.sent
+          ? `Se ha enviado un código de 6 dígitos a tu ${destinationType} (${maskedTarget}). Válido por 15 minutos.`
+          : `No se pudo enviar el código a tu ${destinationType} (${maskedTarget}). Intenta nuevamente.`,
         destinationType,
         maskedTarget,
         identifier: canonicalId,
         sent: sendResult.sent,
-        devCode: isDev ? code : undefined,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
