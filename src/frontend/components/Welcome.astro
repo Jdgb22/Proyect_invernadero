@@ -291,7 +291,7 @@ const today = new Date().toISOString().slice(0, 10);
             id="reg-birthdate"
             name="birthDate"
             type="date"
-            max={today}
+            max={today} <!-- max = hoy -->
             class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
           />
         </div>
@@ -311,7 +311,7 @@ const today = new Date().toISOString().slice(0, 10);
               type="password"
               autocomplete="new-password"
               class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
             />
             <button
               id="toggle-reg-password-btn"

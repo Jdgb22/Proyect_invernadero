@@ -2,25 +2,6 @@ import type { APIRoute } from 'astro';
 import bcrypt from 'bcryptjs';
 import { pool } from '../../../db/client';
 
-/**
- * POST /api/auth/register
- *
- * Registra un nuevo usuario en PostgreSQL con contraseña hasheada (bcrypt).
- * Rol asignado por defecto: 'Campesino'.
- *
- * Body esperado (JSON):
- *  - name:       string (requerido)
- *  - email:      string (opcional si se proporciona phone)
- *  - phone:      string (opcional si se proporciona email)
- *  - birthDate:  string (opcional, YYYY-MM-DD)
- *  - password:   string (requerido)
- *
- * Respuestas:
- *  - 201: Usuario registrado exitosamente
- *  - 400: Datos obligatorios faltantes o ya registrados
- *  - 500: Error interno de base de datos
- */
-
 export const POST: APIRoute = async ({ request }) => {
   try {
     const data = await request.json();
@@ -48,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!password || (password as string).length < 6) {
       return new Response(
-        JSON.stringify({ message: 'La contraseña debe tener al menos 6 caracteres.' }),
+        JSON.stringify({ message: 'La contraseña debe tener al menos 8 caracteres.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
