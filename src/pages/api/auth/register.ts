@@ -16,7 +16,7 @@ const RegisterSchema = z
     birthDate: z.string().optional().or(z.literal("")),
     password: z
       .string()
-      .min(6, "La contraseña debe tener al menos 8 caracteres."),
+      .min(8, "La contraseña debe tener al menos 8 caracteres."),
   })
   .refine((data) => data.email || data.phone, {
     message:
@@ -42,7 +42,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const cleanName = name.trim();
     const cleanEmail = email ? email.trim().toLowerCase() : null;
-    const cleanPhone = phone ? phone.trim() : null;
+    let cleanPhone = phone ? phone.trim() : null;
     const cleanBirthDate = birthDate ? birthDate.trim() : null;
 
     if (cleanPhone) {

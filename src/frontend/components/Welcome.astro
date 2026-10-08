@@ -32,7 +32,7 @@ const today = new Date().toISOString().slice(0, 10);
     <button
       id="audio-toggle-btn"
       type="button"
-      class="absolute top-4 right-4 lg:top-8 lg:right-8 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500"
+      class="absolute top-4 right-4 lg:top-8 lg:right-8 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-all focus:outline-none focus:ring-2 focus:ring-green-500"
       style="z-index:10;"
       aria-label="Alternar audio"
     >
@@ -111,7 +111,7 @@ const today = new Date().toISOString().slice(0, 10);
             name="username"
             type="text"
             autocomplete="username"
-            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
             placeholder="admin@ejemplo.com, 3001234567 o usuario"
           />
         </div>
@@ -128,7 +128,7 @@ const today = new Date().toISOString().slice(0, 10);
               name="password"
               type="password"
               autocomplete="current-password"
-              class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
               placeholder="••••••••"
             />
             <button
@@ -158,14 +158,14 @@ const today = new Date().toISOString().slice(0, 10);
               id="remember-me"
               name="remember-me"
               type="checkbox"
-              class="h-4 w-4 text-amber-600 focus:ring-amber-500 border-stone-300 rounded dark:border-stone-600 dark:bg-stone-700"
+              class="h-4 w-4 text-green-600 focus:ring-green-500 border-stone-300 rounded dark:border-stone-600 dark:bg-stone-700"
             />
             Recordarme
           </label>
           <button
             id="forgot-password-link"
             type="button"
-            class="text-sm font-medium text-amber-600 hover:text-amber-500 dark:text-amber-500 focus:outline-none hover:underline underline-offset-2"
+            class="text-sm font-medium text-green-600 hover:text-green-500 dark:text-green-500 focus:outline-none hover:underline underline-offset-2"
           >
             ¿Olvidaste tu contraseña?
           </button>
@@ -175,7 +175,7 @@ const today = new Date().toISOString().slice(0, 10);
           <button
             id="login-btn"
             type="submit"
-            class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+            class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-500 hover:to-lime-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
           >
             <span id="btn-text">Iniciar Sesión</span>
             <svg
@@ -212,7 +212,7 @@ const today = new Date().toISOString().slice(0, 10);
           <button
             id="link-to-register"
             type="button"
-            class="font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-500 underline underline-offset-2"
+            class="font-semibold text-green-600 hover:text-green-700 dark:text-green-500 underline underline-offset-2"
           >
             Regístrate aquí
           </button>
@@ -227,14 +227,14 @@ const today = new Date().toISOString().slice(0, 10);
             for="reg-name"
             class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
           >
-            Nombre Completo <span class="text-amber-600">*</span>
+            Nombre Completo <span class="text-green-800 dark:text-green-400">*</span>
           </label>
           <input
             id="reg-name"
             name="name"
             type="text"
             autocomplete="name"
-            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
             placeholder="Ej: Juan Pérez"
           />
         </div>
@@ -253,7 +253,7 @@ const today = new Date().toISOString().slice(0, 10);
               name="email"
               type="email"
               autocomplete="email"
-              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
               placeholder="juan@ejemplo.com"
             />
           </div>
@@ -270,7 +270,7 @@ const today = new Date().toISOString().slice(0, 10);
               name="phone"
               type="tel"
               autocomplete="tel"
-              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
               placeholder="300 123 4567"
             />
           </div>
@@ -292,7 +292,7 @@ const today = new Date().toISOString().slice(0, 10);
             name="birthDate"
             type="date"
             max={today}
-            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
           />
         </div>
 
@@ -302,7 +302,7 @@ const today = new Date().toISOString().slice(0, 10);
             for="reg-password"
             class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
           >
-            Contraseña <span class="text-amber-600">*</span>
+            Contraseña <span class="text-green-800 dark:text-green-400">*</span>
           </label>
           <div class="relative">
             <input
@@ -310,7 +310,7 @@ const today = new Date().toISOString().slice(0, 10);
               name="password"
               type="password"
               autocomplete="new-password"
-              class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
               placeholder="Mínimo 8 caracteres"
             />
             <button
@@ -334,7 +334,7 @@ const today = new Date().toISOString().slice(0, 10);
           <button
             id="register-btn"
             type="submit"
-            class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+            class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-500 hover:to-lime-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
           >
             <span id="reg-btn-text">Crear Cuenta</span>
             <svg
@@ -369,7 +369,7 @@ const today = new Date().toISOString().slice(0, 10);
           <button
             id="link-to-login"
             type="button"
-            class="font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-500 underline underline-offset-2"
+            class="font-semibold text-green-600 hover:text-green-700 dark:text-green-500 underline underline-offset-2"
           >
             Inicia sesión aquí
           </button>
@@ -392,7 +392,7 @@ const today = new Date().toISOString().slice(0, 10);
               id="forgot-identifier"
               name="identifier"
               type="text"
-              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
               placeholder="tu@correo.com o 3001234567"
             />
           </div>
@@ -401,7 +401,7 @@ const today = new Date().toISOString().slice(0, 10);
             <button
               id="btn-forgot-send"
               type="submit"
-              class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+              class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-500 hover:to-lime-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
             >
               <span id="btn-forgot-send-text">Enviar Código de Seguridad</span>
               <svg
@@ -436,7 +436,7 @@ const today = new Date().toISOString().slice(0, 10);
               type="text"
               inputmode="numeric"
               maxlength="6"
-              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-lg tracking-widest text-center font-mono font-bold transition-all shadow-sm"
+              class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-lg tracking-widest text-center font-mono font-bold transition-all shadow-sm"
               placeholder="123456"
             />
           </div>
@@ -454,7 +454,7 @@ const today = new Date().toISOString().slice(0, 10);
                 name="newPassword"
                 type="password"
                 autocomplete="new-password"
-                class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+                class="block w-full px-4 py-3 pr-12 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
                 placeholder="Mínimo 6 caracteres"
               />
               <button
@@ -478,7 +478,7 @@ const today = new Date().toISOString().slice(0, 10);
             <button
               id="btn-forgot-reset"
               type="submit"
-              class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+              class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-500 hover:to-lime-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
             >
               <span id="btn-forgot-reset-text">Restablecer Contraseña</span>
               <svg
@@ -504,7 +504,7 @@ const today = new Date().toISOString().slice(0, 10);
           <button
             id="link-forgot-back-to-login"
             type="button"
-            class="font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-500 inline-flex items-center gap-1.5 hover:underline underline-offset-2"
+            class="font-semibold text-green-600 hover:text-green-700 dark:text-green-500 inline-flex items-center gap-1.5 hover:underline underline-offset-2"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -522,7 +522,7 @@ const today = new Date().toISOString().slice(0, 10);
           <button
             id="google-btn"
             type="button"
-            class="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700/80 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-200 font-semibold text-sm rounded-xl transition-all shadow-sm hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-amber-500"
+            class="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700/80 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-200 font-semibold text-sm rounded-xl transition-all shadow-sm hover:shadow active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
               <path
@@ -891,8 +891,29 @@ const today = new Date().toISOString().slice(0, 10);
       return;
     }
 
-    if (!password || password.length < 6) {
-      regFeedbackMsg.textContent = "La contraseña debe tener al menos 6 caracteres.";
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      regFeedbackMsg.textContent = "El correo electrónico no es válido. Ejemplo: nombre@correo.com";
+      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      regFeedbackMsg.classList.remove("hidden");
+      return;
+    }
+
+    if (phone && !/^\+?\d{7,15}$/.test(phone.replace(/[\s\-().]/g, ""))) {
+      regFeedbackMsg.textContent = "El número de celular no es válido. Ejemplo: 3001234567";
+      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      regFeedbackMsg.classList.remove("hidden");
+      return;
+    }
+
+    if (birthDate && (birthDate > new Date().toISOString().slice(0, 10) || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate))) {
+      regFeedbackMsg.textContent = "La fecha de nacimiento no es válida.";
+      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+      regFeedbackMsg.classList.remove("hidden");
+      return;
+    }
+
+    if (!password || password.length < 8) {
+      regFeedbackMsg.textContent = "La contraseña debe tener al menos 8 caracteres.";
       regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
       regFeedbackMsg.classList.remove("hidden");
       return;
