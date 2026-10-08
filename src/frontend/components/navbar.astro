@@ -1,8 +1,11 @@
 ---
 import { getSession } from "auth-astro/server";
+import { Blobatar } from "@blobatar/react";
+import "blobatar/motion.css";
 
 const session = await getSession(Astro.request);
 const currentPath = Astro.url.pathname;
+const userEmail = session?.user?.email || "usuario@ejemplo.com";
 
 const navLinks = [
   { name: "Inicio", path: "/" },
@@ -55,10 +58,19 @@ const navLinks = [
       </div>
 
       <!-- Botón Logout Desktop -->
-      <div class="hidden md:flex items-center">
+      <div class="hidden md:flex items-center gap-4 ml-4">
+        {session && (
+          <div class="w-10 h-10 rounded-full border-2 border-green-200 dark:border-[#104d28] shadow-sm bg-white dark:bg-stone-800 overflow-hidden flex items-center justify-center cursor-pointer" title={session.user?.name || userEmail}>
+            {session.user?.image ? (
+              <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
+            ) : (
+              <Blobatar client:load name={userEmail} animate="hover" size={40} />
+            )}
+          </div>
+        )}
         <button
           id="nav-logout-btn"
-          class="ml-4 px-5 py-2 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 shadow-md shadow-red-500/20 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transform hover:-translate-y-0.5"
+          class="px-5 py-2 text-sm font-bold rounded-xl text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 shadow-md shadow-red-500/20 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transform hover:-translate-y-0.5"
         >
           Cerrar Sesión
         </button>
@@ -124,6 +136,20 @@ const navLinks = [
       }
 
       <div class="pt-4 mt-4 border-t border-green-100 dark:border-[#104d28]">
+        {session && (
+          <div class="flex items-center gap-3 px-4 mb-4">
+            <div class="w-10 h-10 rounded-full border-2 border-green-200 dark:border-[#104d28] shadow-sm bg-white dark:bg-stone-800 overflow-hidden flex items-center justify-center">
+              {session.user?.image ? (
+                <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
+              ) : (
+                <Blobatar client:load name={userEmail} animate="hover" size={40} />
+              )}
+            </div>
+            <div class="text-sm font-semibold text-green-900 dark:text-stone-200 truncate">
+              {session.user?.name || userEmail}
+            </div>
+          </div>
+        )}
         <button
           id="nav-logout-btn-mobile"
           class="w-full flex justify-center px-4 py-3 text-base font-bold rounded-xl text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"

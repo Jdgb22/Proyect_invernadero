@@ -1,7 +1,6 @@
 ---
 import "../styles/global.css";
-import "sileo/styles.css";
-import { Toaster } from "sileo";
+import SileoProvider from "../components/SileoProvider.tsx";
 ---
 
 <!doctype html>
@@ -16,7 +15,7 @@ import { Toaster } from "sileo";
   </head>
   <body>
     <slot />
-    <Toaster client:load />
+    <SileoProvider client:load />
   </body>
 </html>
 

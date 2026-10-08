@@ -12,6 +12,13 @@ Documentación técnica y de usuario. La marca del producto es **Macollo** (logo
 | [AUTH](./AUTH.md) | Devs / seguridad | Credentials + Google, JWT con rol, recuperación 6 dígitos/15 min, brechas y endurecimiento. |
 | [DATABASE](./DATABASE.md) | Devs / DBA | Esquemas auth + agronómico, ER Mermaid, instalación, brecha dataset-en-memoria, mantenimiento. |
 | [DEPLOYMENT](./DEPLOYMENT.md) | DevOps | Vercel SSR, env vars, DB nube, checklist, límites y rollback. |
+| [decisions/](./decisions/) (ADR-001…006) | Devs / evaluadores | Porqués: Astro SSR, PG nube, Auth.js JWT, proxy SIATA dual, Sheets CSV, bcrypt+recuperación. |
+| [REQUIREMENTS](./REQUIREMENTS.md) | Académico / PO | SRS v1.0: RF-01…22 y RNF-01…10 con traza CU/US y criterios de aceptación. |
+| [UML](./UML.md) | Académico / devs | Clases, componentes, despliegue y estados en Mermaid. |
+| [TESTING](./TESTING.md) | QA / devs | Plan, 14 casos E2E, `curl` de API, setup Vitest propuesto, checklist release. |
+| [CONTRIBUTING](./CONTRIBUTING.md) | Equipo | Ramas, commits, DoD, cómo agregar docs/ADRs, revisión de PR. |
+| [GLOSSARY](./GLOSSARY.md) | Todos | Términos agronómicos + técnicos (incluye Macollo vs Proyecto). |
+| [TROUBLESHOOTING](./TROUBLESHOOTING.md) | Soporte / devs | Runbook por síntoma (auth, datos, DB, build) con queries y comandos. |
 | [USE_CASES](./USE_CASES.md) | Académico / analista | CU-001…CU-007 con flujos y postcondiciones. |
 | [USER_STORIES](./USER_STORIES.md) | Académico / PO | US-001…US-011 por rol. |
 | [SEQUENCE_DIAGRAMS](./SEQUENCE_DIAGRAMS.md) | Académico / devs | SD-001…SD-004 en Mermaid. |

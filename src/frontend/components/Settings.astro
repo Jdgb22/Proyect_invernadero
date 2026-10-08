@@ -1,11 +1,12 @@
 ---
 // Settings.astro
 import { getSession } from "auth-astro/server";
+import { Blobatar } from "@blobatar/react";
+import "blobatar/motion.css";
 
 const session = await getSession(Astro.request);
 const userEmail = session?.user?.email || "usuario@ejemplo.com";
 const userName = session?.user?.name || "Usuario del Sistema";
-const userImage = session?.user?.image || "https://ui-avatars.com/api/?name=" + userName + "&background=166534&color=fff";
 ---
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -46,7 +47,13 @@ const userImage = session?.user?.image || "https://ui-avatars.com/api/?name=" + 
         <div class="p-6 space-y-6">
           <div class="flex items-center gap-6">
             <div class="relative">
-              <img src={userImage} alt="Avatar" class="w-20 h-20 rounded-full border-4 border-[#f4fce3] dark:border-stone-700 object-cover shadow-sm" />
+              <div class="w-20 h-20 rounded-full border-4 border-[#f4fce3] dark:border-stone-700 shadow-sm overflow-hidden bg-white dark:bg-stone-800 flex items-center justify-center">
+                {session?.user?.image ? (
+                  <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
+                ) : (
+                  <Blobatar client:load name={userEmail} animate="hover" size={80} />
+                )}
+              </div>
               <button class="absolute bottom-0 right-0 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-full p-1.5 shadow-sm text-sm hover:bg-stone-50 dark:hover:bg-stone-600 transition-colors">
                 ✏️
               </button>
@@ -233,7 +240,6 @@ const userImage = session?.user?.image || "https://ui-avatars.com/api/?name=" + 
 
 <script>
   import { signOut } from "auth-astro/client";
-  import { sileo } from "sileo";
   
   // Script para manejar las pestañas
   const tabs = document.querySelectorAll('.settings-tab');
@@ -241,14 +247,11 @@ const userImage = session?.user?.image || "https://ui-avatars.com/api/?name=" + 
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      // Remover clases activas de todos los tabs
       tabs.forEach(t => {
         t.classList.remove('bg-[#f4fce3]', 'text-green-900', 'border-green-200', 'dark:bg-stone-800', 'dark:text-white', 'dark:border-[#166534]', 'shadow-sm');
         t.classList.add('text-stone-600', 'border-transparent', 'dark:text-stone-400');
       });
 
-      // Añadir clases activas al tab seleccionado
-      // Si es el tab de "danger", le damos estilos diferentes
       if (tab.getAttribute('data-target') === 'danger') {
         tab.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200', 'dark:bg-rose-900/20', 'dark:text-rose-400', 'dark:border-rose-800/50', 'shadow-sm');
         tab.classList.remove('text-stone-600', 'border-transparent', 'dark:text-stone-400');
@@ -257,11 +260,9 @@ const userImage = session?.user?.image || "https://ui-avatars.com/api/?name=" + 
         tab.classList.remove('text-stone-600', 'border-transparent', 'dark:text-stone-400');
       }
 
-      // Ocultar todos los paneles
       panels.forEach(p => p.classList.add('hidden'));
       panels.forEach(p => p.classList.remove('block'));
 
-      // Mostrar el panel seleccionado
       const targetId = tab.getAttribute('data-target');
       const targetPanel = document.getElementById(`${targetId}-panel`);
       if (targetPanel) {
@@ -271,20 +272,21 @@ const userImage = session?.user?.image || "https://ui-avatars.com/api/?name=" + 
     });
   });
 
-  // Eventos de botones
+  const getSileo = () => (window as any).sileo;
+
   const btnGuardar = document.querySelector('.bg-green-600.hover\\:bg-green-700');
   if (btnGuardar) {
     btnGuardar.addEventListener('click', () => {
-      sileo.success({ title: "¡Cambios guardados correctamente!" });
+      getSileo()?.success({ title: "¡Cambios guardados correctamente!" });
     });
   }
 
   const btnDescargar = document.querySelector('.bg-stone-100.hover\\:bg-stone-200');
   if (btnDescargar) {
     btnDescargar.addEventListener('click', () => {
-      sileo.info({ title: "Generando archivo CSV..." });
+      getSileo()?.info({ title: "Generando archivo CSV..." });
       setTimeout(() => {
-        sileo.success({ title: "Descarga completada." });
+        getSileo()?.success({ title: "Descarga completada." });
       }, 1500);
     });
   }
@@ -292,15 +294,14 @@ const userImage = session?.user?.image || "https://ui-avatars.com/api/?name=" + 
   const btnRestablecer = document.querySelector('.bg-rose-100.hover\\:bg-rose-200');
   if (btnRestablecer) {
     btnRestablecer.addEventListener('click', () => {
-      sileo.error({ title: "Esta acción eliminará todos los datos. Confirma de nuevo." });
+      getSileo()?.error({ title: "Esta acción eliminará todos los datos. Confirma de nuevo." });
     });
   }
 
-  // Manejar el logout
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-      sileo.info({ title: "Cerrando sesión..." });
+      getSileo()?.info({ title: "Cerrando sesión..." });
       setTimeout(() => {
         signOut();
       }, 800);

@@ -163,6 +163,12 @@ Roles: `Campesino` (defecto) · `Agrónomo` · `Admin` · `Super admin`. El rol 
 - [Auth](./docs/AUTH.md) - Credentials + Google, JWT con rol, recuperación 6 dígitos/15 min, brechas.
 - [Base de Datos](./docs/DATABASE.md) - Esquemas auth + agronómico, ER, brecha dataset-en-memoria.
 - [Despliegue](./docs/DEPLOYMENT.md) - Vercel SSR, env vars, checklist y rollback.
+- [Decisiones (ADRs)](./docs/decisions/) - Los 6 porqués arquitectónicos (SSR, PG, Auth.js, SIATA, Sheets, bcrypt).
+- [Requisitos](./docs/REQUIREMENTS.md) - SRS v1.0 con trazabilidad RF→CU/US.
+- [UML](./docs/UML.md) - Clases, componentes, despliegue y estados.
+- [Testing](./docs/TESTING.md) - Plan, casos E2E/API y checklist release.
+- [Contribuir](./docs/CONTRIBUTING.md) - Flujo, commits, DoD y revisión de PR.
+- [Glosario](./docs/GLOSSARY.md) + [Troubleshooting](./docs/TROUBLESHOOTING.md) - Términos y runbook por síntoma.
 - [Casos de uso](./docs/USE_CASES.md) + [Historias](./docs/USER_STORIES.md) - Requisitos (lo no implementado va marcado ⚠️).
 - [Secuencia](./docs/SEQUENCE_DIAGRAMS.md) + [Actividades](./docs/ACTIVITIES.md) - Diagramas Mermaid verificados.
 - **JSDoc en código:** `src/backend/services/`, `src/middleware.ts`, `auth.config.ts` y `src/services/notifications.ts` están documentados para autocompletado del editor.
