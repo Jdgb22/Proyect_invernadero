@@ -3,7 +3,7 @@ export interface WeatherData {
   humidity: number;
   rainProbability: number;
   weatherCode: number;
-  irradiation: number;
+  windSpeed: number;
   isFallback: boolean;
   source?: string;
 }
@@ -36,53 +36,34 @@ export function isValleDeAburra(lat: number, lon: number): boolean {
  * @returns {Promise<WeatherData>} Objeto consolidado con todas las métricas climáticas.
  */
 export async function fetchWeatherData(lat: number, lon: number, isFallback = false): Promise<WeatherData> {
-  const inMedellin = isValleDeAburra(lat, lon);
-  
-  if (inMedellin) {
-    // Estamos dentro del Área Metropolitana de Medellín.
-    // Intentamos usar la API local de SIATA a través de nuestro proxy.
-    try {
-      const siataRes = await fetch('/api/siata');
-      if (siataRes.ok) {
-        const siataData = await siataRes.json();
-        
-        // Obtenemos el resto de datos de Open-Meteo ya que SIATA /estacionesTemperatura 
-        // solo devuelve temperatura
-        const openMeteo = await fetchOpenMeteo(lat, lon);
-        
-        // Asumiendo que siataData tiene datos. Intentamos parsear la temperatura
-        // (La estructura real depende de SIATA, pero si existe, la priorizamos)
-        let tempSiata = openMeteo.temperature;
-        if (Array.isArray(siataData) && siataData.length > 0 && siataData[0].temperatura) {
-          tempSiata = siataData[0].temperatura;
-        } else if (siataData.datos && siataData.datos.length > 0 && siataData.datos[0].temperatura) {
-          tempSiata = siataData.datos[0].temperatura;
-        }
-
-        return {
-          ...openMeteo,
-          temperature: tempSiata, 
-          source: 'SIATA (Valle de Aburrá)',
-          isFallback
-        };
-      }
-    } catch (error) {
-      console.warn("Fallo al consultar SIATA, cayendo a Open-Meteo", error);
-    }
+  // El servicio de SIATA está temporalmente fuera de línea o con timeout.
+  // Usamos Open-Meteo directamente para evitar el retraso de 3 segundos
+  // y asegurar que la interfaz responda instantáneamente.
+  try {
+    const openMeteoData = await fetchOpenMeteo(lat, lon);
+    return {
+      ...openMeteoData,
+      source: 'Open-Meteo (Global)',
+      isFallback
+    };
+  } catch (error) {
+    console.error("Error al obtener Open-Meteo:", error);
+    // Datos de emergencia si falla la red
+    return {
+      temperature: 22,
+      humidity: 60,
+      rainProbability: 0,
+      weatherCode: 0,
+      windSpeed: 5,
+      source: 'Offline Fallback',
+      isFallback: true
+    };
   }
-
-  // Si estamos fuera del Área Metropolitana, o SIATA falló, usamos directamente Open-Meteo
-  const openMeteoData = await fetchOpenMeteo(lat, lon);
-  return {
-    ...openMeteoData,
-    source: 'Open-Meteo (Global)',
-    isFallback
-  };
 }
 
 async function fetchOpenMeteo(lat: number, lon: number) {
   const res = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,shortwave_radiation&hourly=precipitation_probability&timezone=America%2FBogota`
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=precipitation_probability&timezone=auto`
   );
   
   if (!res.ok) throw new Error('Error de red al obtener el clima desde Open-Meteo');
@@ -91,6 +72,7 @@ async function fetchOpenMeteo(lat: number, lon: number) {
   const current = data.current;
   
   const currentHour = new Date().getHours();
+  // Al usar timezone=auto, la hora local del usuario coincidirá muy de cerca con el índice
   const rainProb = data.hourly.precipitation_probability[currentHour] || 0;
   
   return {
@@ -98,7 +80,7 @@ async function fetchOpenMeteo(lat: number, lon: number) {
     humidity: current.relative_humidity_2m,
     rainProbability: rainProb,
     weatherCode: current.weather_code,
-    irradiation: current.shortwave_radiation
+    windSpeed: current.wind_speed_10m
   };
 }
 
