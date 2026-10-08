@@ -2,26 +2,32 @@
 
 Documentación técnica y de usuario. La marca del producto es **Macollo** (logo `gulupa.svg` en navbar) dentro del **Proyecto Invernadero**.
 
-| Documento | Para quién | Qué contiene |
-| :--- | :--- | :--- |
-| [👤 Manual de Usuario](../MANUAL_USUARIO.md) | Usuarios finales, campo | Registro/login, matriz 4×5, métricas, historial, settings, FAQ, glosario. |
-| [README](../README.md) | Todos (puerta de entrada) | Qué es, features, stack, instalación, comandos, troubleshooting. |
-| [ARCHITECTURE](./ARCHITECTURE.md) | Devs / evaluadores | Visión, estructura `src/`, flujos auth/datos, decisiones (SSR, JWT, proxy SIATA, DB). |
-| [ROUTES](./ROUTES.md) | Devs | Rutas reales (`/`, `/signin`, `/metrics`, `/historial`, `/settings` + API) y mapa de navegación. |
-| [ENDPOINTS](./ENDPOINTS.md) | Devs / integraciones | Referencia exacta de los 7 endpoints con bodies, códigos y `curl`. |
-| [AUTH](./AUTH.md) | Devs / seguridad | Credentials + Google, JWT con rol, recuperación 6 dígitos/15 min, brechas y endurecimiento. |
-| [DATABASE](./DATABASE.md) | Devs / DBA | Esquemas auth + agronómico, ER Mermaid, instalación, brecha dataset-en-memoria, mantenimiento. |
-| [DEPLOYMENT](./DEPLOYMENT.md) | DevOps | Vercel SSR, env vars, DB nube, checklist, límites y rollback. |
-| [decisions/](./decisions/) (ADR-001…006) | Devs / evaluadores | Porqués: Astro SSR, PG nube, Auth.js JWT, proxy SIATA dual, Sheets CSV, bcrypt+recuperación. |
-| [REQUIREMENTS](./REQUIREMENTS.md) | Académico / PO | SRS v1.0: RF-01…22 y RNF-01…10 con traza CU/US y criterios de aceptación. |
-| [UML](./UML.md) | Académico / devs | Clases, componentes, despliegue y estados en Mermaid. |
-| [TESTING](./TESTING.md) | QA / devs | Plan, 14 casos E2E, `curl` de API, setup Vitest propuesto, checklist release. |
-| [CONTRIBUTING](./CONTRIBUTING.md) | Equipo | Ramas, commits, DoD, cómo agregar docs/ADRs, revisión de PR. |
-| [GLOSSARY](./GLOSSARY.md) | Todos | Términos agronómicos + técnicos (incluye Macollo vs Proyecto). |
-| [TROUBLESHOOTING](./TROUBLESHOOTING.md) | Soporte / devs | Runbook por síntoma (auth, datos, DB, build) con queries y comandos. |
-| [USE_CASES](./USE_CASES.md) | Académico / analista | CU-001…CU-007 con flujos y postcondiciones. |
-| [USER_STORIES](./USER_STORIES.md) | Académico / PO | US-001…US-011 por rol. |
-| [SEQUENCE_DIAGRAMS](./SEQUENCE_DIAGRAMS.md) | Académico / devs | SD-001…SD-004 en Mermaid. |
-| [ACTIVITIES](./ACTIVITIES.md) | Académico / devs | AD-001…AD-004 en Mermaid. |
+| Documento                                                                                    | Para quién                | Qué contiene                                                                                               |
+| :------------------------------------------------------------------------------------------- | :------------------------ | :--------------------------------------------------------------------------------------------------------- |
+| [👤 Manual de Usuario](../MANUAL_USUARIO.md)                                                 | Usuarios finales, campo   | Registro/login, matriz 4×5, métricas, historial, settings, FAQ, glosario.                                  |
+| [README](../README.md)                                                                       | Todos (puerta de entrada) | Qué es, features, stack, instalación, comandos, troubleshooting.                                           |
+| [ARCHITECTURE](./ARCHITECTURE.md)                                                            | Devs / evaluadores        | Visión, estructura `src/`, flujos auth/datos, decisiones (SSR, JWT, proxy SIATA, DB).                      |
+| [ROUTES](./ROUTES.md)                                                                        | Devs                      | Rutas reales (`/`, `/signin`, `/metrics`, `/historial`, `/settings` + API) y mapa de navegación.           |
+| [ENDPOINTS](./ENDPOINTS.md)                                                                  | Devs / integraciones      | Referencia exacta de los 7 endpoints con bodies, códigos y `curl`.                                         |
+| [AUTH](./AUTH.md)                                                                            | Devs / seguridad          | Credentials + Google, JWT con rol, recuperación 6 dígitos/15 min, brechas y endurecimiento.                |
+| [DATABASE](./DATABASE.md)                                                                    | Devs / DBA                | Esquemas auth + agronómico, ER Mermaid, instalación, brecha dataset-en-memoria, mantenimiento.             |
+| [DEPLOYMENT](./DEPLOYMENT.md)                                                                | DevOps                    | Vercel SSR, env vars, DB nube, checklist, límites y rollback.                                              |
+| [decisions/](./decisions/) (ADR-001…007)                                                     | Devs / evaluadores        | Porqués: Astro SSR, PG nube, Auth.js JWT, proxy SIATA dual, Sheets CSV, bcrypt+recuperación, bypass SIATA. |
+| [REQUIREMENTS](./REQUIREMENTS.md)                                                            | Académico / PO            | SRS v1.0: RF-01…22 y RNF-01…10 con traza CU/US y criterios de aceptación.                                  |
+| [UML](./UML.md)                                                                              | Académico / devs          | Clases, componentes, despliegue y estados en Mermaid.                                                      |
+| [TESTING](./TESTING.md)                                                                      | QA / devs                 | Plan, 14 casos E2E, `curl` de API, setup Vitest propuesto, checklist release.                              |
+| [CONTRIBUTING](./CONTRIBUTING.md)                                                            | Equipo                    | Ramas, commits, DoD, cómo agregar docs/ADRs, revisión de PR.                                               |
+| [GLOSSARY](./GLOSSARY.md)                                                                    | Todos                     | Términos agronómicos + técnicos (incluye Macollo vs Proyecto).                                             |
+| [TROUBLESHOOTING](./TROUBLESHOOTING.md)                                                      | Soporte / devs            | Runbook por síntoma (auth, datos, DB, build) con queries y comandos.                                       |
+| [DATA-DICTIONARY](./DATA-DICTIONARY.md)                                                      | Devs / campo              | `MetricRecord`, columnas CSV aceptadas, spec del Excel, mapeo a PG.                                        |
+| [FIELD-PROTOCOL](./FIELD-PROTOCOL.md)                                                        | Operarios                 | Cómo llenar la hoja (IDs, columnas, N/D) y publicar para importar.                                         |
+| [DEMO-DATA](./DEMO-DATA.md) (+ [`sample-mediciones-demo.csv`](./sample-mediciones-demo.csv)) | Todos                     | Fixture 20 plantas validado (16🟢/2🟡/2🔴) para demos y TEST-07.                                           |
+| [SECURITY](./SECURITY.md)                                                                    | Devs                      | Política de secretos, controles, riesgos SEC-01…06 y reporte.                                              |
+| [ROADMAP](./ROADMAP.md)                                                                      | Equipo / PO               | v1.1 endurecimiento+PG, v1.2 agronomía, v2.0 IoT.                                                          |
+| [CHANGELOG](./CHANGELOG.md)                                                                  | Todos                     | Historial desde `git log` + Unreleased.                                                                    |
+| [USE_CASES](./USE_CASES.md)                                                                  | Académico / analista      | CU-001…CU-007 con flujos y postcondiciones.                                                                |
+| [USER_STORIES](./USER_STORIES.md)                                                            | Académico / PO            | US-001…US-011 por rol.                                                                                     |
+| [SEQUENCE_DIAGRAMS](./SEQUENCE_DIAGRAMS.md)                                                  | Académico / devs          | SD-001…SD-004 en Mermaid.                                                                                  |
+| [ACTIVITIES](./ACTIVITIES.md)                                                                | Académico / devs          | AD-001…AD-004 en Mermaid.                                                                                  |
 
 **Convenciones:** rutas y endpoints documentados aquí son los implementados (verificados contra `src/` en oct-2026). Lo no implementado se marca explícitamente (ej. `/dashboard`, `GET /api/metrics`, persistencia de Sheets en PG). JSDoc en `src/backend/services/`, `src/middleware.ts`, `auth.config.ts` y `src/services/notifications.ts` complementa como ayuda de editor.

@@ -47,26 +47,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  // Continuar con la petición normal y capturar la respuesta
-  const response = await next();
-
-  // --- DEFENSA EN PROFUNDIDAD: SECURITY HEADERS ---
-  // Evitar Clickjacking
-  response.headers.set("X-Frame-Options", "DENY");
-  // Evitar MIME-Sniffing
-  response.headers.set("X-Content-Type-Options", "nosniff");
-  // Política estricta de Referrer
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  // Forzar HTTPS (HSTS)
-  response.headers.set(
-    "Strict-Transport-Security",
-    "max-age=31536000; includeSubDomains; preload",
-  );
-  // Política base de CSP (Permite WebSockets para el dev server de Astro)
-  response.headers.set(
-    "Content-Security-Policy",
-    "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: wss:; img-src 'self' data: https: blob:;",
-  );
-
-  return response;
+  // Continuar con la petición normal
+  return next();
 });

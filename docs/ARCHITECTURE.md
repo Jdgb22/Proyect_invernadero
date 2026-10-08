@@ -38,7 +38,7 @@ astro.config.mjs      # output server + @astrojs/vercel + auth() + react()
 
 ## 3. Flujos principales
 
-**Portada dual (`/`):** request → `getSession` → sin sesión `Welcome`, con sesión `Navbar + Dashboard`. El `middleware.ts` solo intercepta `/dashboard` (inexistente) → la protección real de `/metrics`, `/historial`, `/settings` es el `getSession` de cada página (renderiza `Welcome` si no hay sesión) — brecha documentada en [AUTH](./AUTH.md) §7.
+**Portada dual (`/`):** request → `getSession` → sin sesión `Welcome`, con sesión `Navbar + Dashboard`. El `middleware.ts` solo intercepta `/dashboard` (inexistente) → la protección real de `/metrics`, `/historial`, `/settings` es el `getSession` de cada página (renderiza `Welcome` si no hay sesión) — brecha documentada en [AUTH](./AUTH.md) §7. El middleware además aplica **security headers** a toda respuesta (defensa en profundidad): `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `HSTS` y `CSP` base.
 
 **Login/registro:** `/signin` (tabs) → `signIn('credentials')` o Google, o `POST /api/auth/register` (bcrypt, rol fijo `Campesino`) → JWT con `role` → `/`.
 
@@ -46,20 +46,24 @@ astro.config.mjs      # output server + @astrojs/vercel + auth() + react()
 
 **Datos agronómicos (estado actual):** Historial → importar Excel/CSV o `POST /api/sync-sheets` (normaliza URL → CSV → `resolvePlantCoordinates` + defaults + regla 29/30-sep sin temp suelo → `records`) → cliente en memoria → Dashboard/Métricas renderizan + `export-excel` genera `.xlsx`. **PG agronómico aún no interviene** (migración propuesta en [DATABASE](./DATABASE.md) §5).
 
-**Clima externo:** el Dashboard pide **geolocalización** (`navigator.geolocation`, timeout 10 s; fallback Medellín 6.2442, -75.5812) y llama `fetchWeatherData(lat, lon)` → si `isValleDeAburra` (6.00–6.50, -75.75–-75.40) intenta `/api/siata` (temp local) + Open-Meteo (resto: `temperature_2m, relative_humidity_2m, weather_code, shortwave_radiation` + `precipitation_probability` hora actual, `America/Bogota`); si falla o fuera del Valle, solo Open-Meteo. `getWeatherEmoji` mapea WMO → icono. Refresco cada **10 min** (`setInterval 600000`). Además consulta **AQI** a `api.waqi.info` (token demo en cliente). La escena 3D anima el **ciclo sol (6:00–18:00) / luna** con sombras `PCFSoftShadowMap` según la hora real.
+**Clima externo (desde `efed143`):** el Dashboard pide **geolocalización** (`navigator.geolocation`, timeout 10 s; fallback Medellín 6.2442, -75.5812) y llama `fetchWeatherData(lat, lon)` → **Open-Meteo directo** (`temperature_2m, relative_humidity_2m, weather_code, wind_speed_10m` + `precipitation_probability` hora actual, `timezone=auto`). Sin red responde **fallback offline** (22 °C, 60 %, lluvia 0, viento 5 km/h, `source: 'Offline Fallback'`). El widget muestra **viento (km/h)**, no irradiación. `getWeatherEmoji` mapea WMO → icono. Refresco cada **10 min** (`setInterval 600000`). Además consulta **AQI** a `api.waqi.info` (token demo en cliente). La escena 3D anima el **ciclo sol (6:00–18:00) / luna** con sombras `PCFSoftShadowMap` según la hora real.
+
+> ⚠️ SIATA está **temporalmente bypasseado** (fuera de línea; evitaba 3 s de espera): `/api/siata` sigue vivo pero sin consumidores internos. `isValleDeAburra` y `fetchSiataPredictions()` quedan como código latente. Ver ADR-007.
 
 ## 4. Decisiones clave
 
-| Decisión | Por qué |
-| :--- | :--- |
-| Astro SSR + Vercel (`output: server`) | Sesión y API en el mismo despliegue; páginas deciden por sesión en servidor. |
-| JWT (no sessions DB) | Sin estado en serverless; el rol viaja en el token (re-login tras cambio de rol). |
-| Proxy `/api/siata` | Evita CORS del navegador; timeout 3 s ante el límite serverless. |
-| Dual SIATA/Open-Meteo | Precisión local en Medellín, respaldo global fuera/fallo. |
-| CSV-first para Sheets | Sin credenciales Google: basta enlace público/export. Parser tolerante (delimitador, comillas, coma decimal, serial Excel, IDs `T0-P1/TO-P2`). |
-| ExcelJS 3 hojas | Reporte auditoría (hoy + historial + rangos) con promedios vía fórmulas. |
-| bcrypt salt 10 | Costo razonable login/registro en serverless. |
-| PG nube, no SQLite | Serverless sin disco persistente; pool con SSL en prod. |
+| Decisión                              | Por qué                                                                                                                                        |
+| :------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| Astro SSR + Vercel (`output: server`) | Sesión y API en el mismo despliegue; páginas deciden por sesión en servidor.                                                                   |
+| JWT (no sessions DB)                  | Sin estado en serverless; el rol viaja en el token (re-login tras cambio de rol).                                                              |
+| Proxy `/api/siata`                    | Evita CORS del navegador; timeout 3 s ante el límite serverless.                                                                               |
+| Dual SIATA/Open-Meteo                 | Precisión local en Medellín, respaldo global fuera/fallo.                                                                                      |
+| CSV-first para Sheets                 | Sin credenciales Google: basta enlace público/export. Parser tolerante (delimitador, comillas, coma decimal, serial Excel, IDs `T0-P1/TO-P2`). |
+| ExcelJS 3 hojas                       | Reporte auditoría (hoy + historial + rangos) con promedios vía fórmulas.                                                                       |
+| bcrypt salt 10                        | Costo razonable login/registro en serverless.                                                                                                  |
+| PG nube, no SQLite                    | Serverless sin disco persistente; pool con SSL en prod.                                                                                        |
+| Zod Zero Trust                        | `register`, `sync-sheets` y `export-excel` validan input con schemas (`safeParse`); el servidor no confía en el cliente.                       |
+| Husky pre-commit                      | `lint-staged` (prettier) + bloqueo de secretos (`.env`, `credentials`, `secret`) antes de cada commit.                                         |
 
 ## 5. Modelo de datos (resumen)
 

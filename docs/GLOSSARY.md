@@ -18,8 +18,8 @@
 
 - **SSR:** render en servidor por request (Astro `output: server`).
 - **JWT:** token de sesión con `sub` + `role`; exige re-login tras cambio de rol.
-- **Proxy SIATA:** `/api/siata` (evita CORS, timeout 3 s).
-- **Dual climático:** SIATA local en Valle de Aburrá, Open-Meteo resto/fallback.
+- **Proxy SIATA:** `/api/siata` (evitaba CORS, timeout 3 s). **Pausado**: sin consumidores internos desde `efed143` (ver ADR-007).
+- **Fuente climática actual:** Open-Meteo directo + fallback offline (22 °C/60 %/viento 5 km/h). Widget con **viento (km/h)**, no irradiación.
 - **CSV-first:** ingesta Sheets sin credenciales vía `export?format=csv`.
 - **EAV:** `mediciones` guarda una fila por `(planta, tipo, fecha)` con `tipo_medicion_enum`.
 - **AQI:** índice de calidad del aire (waqi.info) mostrado en el Dashboard.

@@ -54,33 +54,34 @@ Sin SMTP configurado (`SMTP_USER/SMTP_PASS`), el endpoint responde `sent: false`
 Callbacks JWT:
 
 ```ts
-jwt({ token, user })     // login: token.sub = user.id, token.role = user.role ?? 'Campesino'
-session({ session, token }) // cada request: session.user.id = token.sub, session.user.role = token.role
+jwt({ token, user }); // login: token.sub = user.id, token.role = user.role ?? 'Campesino'
+session({ session, token }); // cada request: session.user.id = token.sub, session.user.role = token.role
 ```
 
 Roles (`user_role_enum`): `Campesino` (defecto) · `Agronomo` · `Admin` · `Super admin`.
 El JWT **no se refresca solo** ante un cambio de rol en BD: el usuario debe **cerrar y volver a iniciar sesión**. Cambio de rol: `UPDATE users SET role='Admin' WHERE email='…'`.
 
-Las páginas muestran el rol (`/metrics`, `/historial`: `Administrador de Cultivo` si `role==='admin'`, si no `Operario de Campo` — ojo: compara minúscula `'admin'`, nunca coincide con el enum `'Admin'`; las páginas siempre muestran *Operario de Campo*. Bug cosmético conocido).
+Las páginas muestran el rol (`/metrics`, `/historial`: `Administrador de Cultivo` si `role==='admin'`, si no `Operario de Campo` — ojo: compara minúscula `'admin'`, nunca coincide con el enum `'Admin'`; las páginas siempre muestran _Operario de Campo_. Bug cosmético conocido).
 
 ## 7. Protección de rutas ⚠️ (leer antes de tocar)
 
-| Capa | Qué protege | Estado |
-| :--- | :--- | :--- |
-| `middleware.ts` | Solo `pathname.startsWith('/dashboard')` → redirect `/` | **Muerta**: no existe `/dashboard`. No protege nada real. |
-| Páginas (`index/metrics/historial/settings`) | `getSession` → sin sesión renderizan `Welcome` | **Activa**, pero es render-condicional, no redirect 302. |
-| Handlers API (`export-excel`, `sync-sheets`, `siata`, `register/forgot/reset`) | Nada interno | Dependen de llamarse desde páginas con sesión. |
+| Capa                                                                           | Qué protege                                                                                   | Estado                                                    |
+| :----------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------- | :-------------------------------------------------------- |
+| `middleware.ts` (rutas)                                                        | Solo `pathname.startsWith('/dashboard')` → redirect `/`                                       | **Muerta**: no existe `/dashboard`. No protege nada real. |
+| `middleware.ts` (headers)                                                      | **Toda respuesta**: `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `HSTS`, `CSP` base | **Activa** (defensa en profundidad, `1ccbf24`).           |
+| Páginas (`index/metrics/historial/settings`)                                   | `getSession` → sin sesión renderizan `Welcome`                                                | **Activa**, pero es render-condicional, no redirect 302.  |
+| Handlers API (`export-excel`, `sync-sheets`, `siata`, `register/forgot/reset`) | Nada interno (sí validación **Zod**)                                                          | Dependen de llamarse desde páginas con sesión.            |
 
 **Endurecimiento recomendado** (pendiente): en `middleware.ts` proteger `/metrics`, `/historial`, `/settings` (+ `/api/export-excel`, `/api/sync-sheets` salvo auth públicos) con `getSession` + `redirect('/signin')`, o verificar sesión dentro de cada handler sensible.
 
 ## 8. Variables y archivos
 
-| Var | Uso | Obligatoria |
-| :--- | :--- | :--- |
-| `AUTH_SECRET` | Firma JWT/cookies Auth.js | Sí en prod (error si falta) |
-| `AUTH_TRUST_HOST` / `trustHost` | Confiar en host tras proxy | Sí tras proxy |
-| `GOOGLE_CLIENT_ID/SECRET` | OAuth Google | Solo si se usa Google |
-| `SMTP_USER/SMTP_PASS` (+`SMTP_HOST/PORT/FROM`) | Correos de recuperación | Solo recuperación por email |
-| `DATABASE_URL` / `POSTGRES_*` | Pool `pg` + adaptador | Sí |
+| Var                                            | Uso                        | Obligatoria                 |
+| :--------------------------------------------- | :------------------------- | :-------------------------- |
+| `AUTH_SECRET`                                  | Firma JWT/cookies Auth.js  | Sí en prod (error si falta) |
+| `AUTH_TRUST_HOST` / `trustHost`                | Confiar en host tras proxy | Sí tras proxy               |
+| `GOOGLE_CLIENT_ID/SECRET`                      | OAuth Google               | Solo si se usa Google       |
+| `SMTP_USER/SMTP_PASS` (+`SMTP_HOST/PORT/FROM`) | Correos de recuperación    | Solo recuperación por email |
+| `DATABASE_URL` / `POSTGRES_*`                  | Pool `pg` + adaptador      | Sí                          |
 
 Archivos: `auth.config.ts` · `src/db/client.ts` · `src/db/auth-schema.sql` · `src/services/notifications.ts` · `src/pages/api/auth/*.ts` · `src/middleware.ts`.

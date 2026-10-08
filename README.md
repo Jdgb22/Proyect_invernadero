@@ -3,6 +3,7 @@
 Plataforma web para el **monitoreo agronómico de un invernadero real**: matriz de **20 plantas (4 filas × 5 columnas)**, métricas de suelo y ambiente (pH, temperaturas, humedad, crecimiento, sanidad, productividad), **historial por fecha** con importación/exportación Excel y sincronización con **Google Sheets**, más clima externo (**SIATA** local + **Open-Meteo** global).
 
 **Autores:**
+
 - Nixon Ramirez
 - Luis Manuel Florez
 - Mateo Herrera
@@ -16,14 +17,14 @@ Plataforma web para el **monitoreo agronómico de un invernadero real**: matriz 
 
 ## ✨ Funcionalidades por módulo
 
-| Módulo (ruta) | Qué hace |
-| :--- | :--- |
-| **Inicio** (`/`) | Dashboard con matriz 4×5 de plantas, semáforo 🟢 Óptimo / 🟡 Atención / 🔴 Crítico / ⚪ Sin datos, cards de humedad y temp. aire, modal de detalle por planta (pH, temp suelo/aire, crecimiento, productividad, sanidad). |
-| **Métricas** (`/metrics`) | Promedios globales y por fila, badges de pH (Óptimo 6.0–6.8 / Atención / Crítico), sanidad y productividad, tabla estilo Excel con modal y gráficos por planta. |
-| **Historial** (`/historial`) | Consulta cronológica por fecha, **importación Excel/CSV**, **conexión Google Sheets** (URL pública → CSV), **exportación `.xlsx`** con ExcelJS. |
-| **Configuración** (`/settings`) | Perfil (nombre editable, correo solo lectura), tema Claro/Oscuro/Auto, frecuencia de sincronización IoT, notificaciones y zona de peligro. |
-| **Auth** (`/signin`, `/api/auth/*`) | Login email+contraseña (bcrypt + PostgreSQL), registro con rol (`Campesino/Agrónomo/Admin/Super admin`), OAuth Google, recuperación por código (email/SMS, ~15 min). Sesión JWT con rol. |
-| **Clima externo** | Proxy `/api/siata` (evita CORS) para SIATA Medellín + `fetchWeatherData()` a Open-Meteo como respaldo global. |
+| Módulo (ruta)                       | Qué hace                                                                                                                                                                                                                  |
+| :---------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Inicio** (`/`)                    | Dashboard con matriz 4×5 de plantas, semáforo 🟢 Óptimo / 🟡 Atención / 🔴 Crítico / ⚪ Sin datos, cards de humedad y temp. aire, modal de detalle por planta (pH, temp suelo/aire, crecimiento, productividad, sanidad). |
+| **Métricas** (`/metrics`)           | Promedios globales y por fila, badges de pH (Óptimo 6.0–6.8 / Atención / Crítico), sanidad y productividad, tabla estilo Excel con modal y gráficos por planta.                                                           |
+| **Historial** (`/historial`)        | Consulta cronológica por fecha, **importación Excel/CSV**, **conexión Google Sheets** (URL pública → CSV), **exportación `.xlsx`** con ExcelJS.                                                                           |
+| **Configuración** (`/settings`)     | Perfil (nombre editable, correo solo lectura), tema Claro/Oscuro/Auto, frecuencia de sincronización IoT, notificaciones y zona de peligro.                                                                                |
+| **Auth** (`/signin`, `/api/auth/*`) | Login email+contraseña (bcrypt + PostgreSQL), registro con rol (`Campesino/Agrónomo/Admin/Super admin`), OAuth Google, recuperación por código (email/SMS, ~15 min). Sesión JWT con rol.                                  |
+| **Clima externo**                   | Proxy `/api/siata` (evita CORS) para SIATA Medellín + `fetchWeatherData()` a Open-Meteo como respaldo global.                                                                                                             |
 
 ---
 
@@ -31,18 +32,20 @@ Plataforma web para el **monitoreo agronómico de un invernadero real**: matriz 
 
 Construido con SSR moderno. Detalle en [ARCHITECTURE.md](./ARCHITECTURE.md) y [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
-| Capa | Tecnología (versión en `package.json`) |
-| :--- | :--- |
-| **Framework** | [Astro](https://astro.build) 7.2.8 (SSR, adaptador Node/Vercel) |
-| **UI** | Astro Components + React 19 (islas) + `sileo` toasts |
-| **Estilos** | Tailwind CSS 4.3.3 |
-| **3D** | Three.js 0.185.1 (iluminación dinámica según hora) |
-| **Auth** | Auth.js (`auth-astro` 4.2.0, `@auth/core` 0.41.3, `@auth/pg-adapter` 1.11.3, `bcryptjs`) |
-| **DB** | PostgreSQL (`pg` 8.23.0). Esquemas en `src/db/` |
-| **Datos** | Open-Meteo (global) + SIATA (Medellín, vía proxy) |
-| **Archivos** | ExcelJS 4.4.0 (import/export `.xlsx`), Google Sheets sync |
-| **Email/SMS** | Nodemailer 10 (recuperación de contraseña) |
-| **Deploy** | Vercel |
+| Capa           | Tecnología (versión en `package.json`)                                                   |
+| :------------- | :--------------------------------------------------------------------------------------- |
+| **Framework**  | [Astro](https://astro.build) 7.2.8 (SSR, adaptador Node/Vercel)                          |
+| **UI**         | Astro Components + React 19 (islas) + `sileo` toasts                                     |
+| **Estilos**    | Tailwind CSS 4.3.3                                                                       |
+| **3D**         | Three.js 0.185.1 (iluminación dinámica según hora)                                       |
+| **Auth**       | Auth.js (`auth-astro` 4.2.0, `@auth/core` 0.41.3, `@auth/pg-adapter` 1.11.3, `bcryptjs`) |
+| **DB**         | PostgreSQL (`pg` 8.23.0). Esquemas en `src/db/`                                          |
+| **Datos**      | Open-Meteo directo + fallback offline (SIATA pausado, ver ADR-007)                       |
+| **Validación** | Zod 4 (Zero Trust en `register`, `sync-sheets`, `export-excel`)                          |
+| **Calidad**    | Husky pre-commit (lint-staged prettier + bloqueo de secretos)                            |
+| **Archivos**   | ExcelJS 4.4.0 (import/export `.xlsx`), Google Sheets sync                                |
+| **Email/SMS**  | Nodemailer 10 (recuperación de contraseña)                                               |
+| **Deploy**     | Vercel                                                                                   |
 
 ### Estructura real del código
 
@@ -143,13 +146,13 @@ Roles: `Campesino` (defecto) · `Agrónomo` · `Admin` · `Super admin`. El rol 
 
 ### Solución rápida de problemas dev
 
-| Síntoma | Causa probable / fix |
-| :--- | :--- |
-| `[Auth] Falta AUTH_SECRET` en producción | Define `AUTH_SECRET` en `.env` / Vercel. |
+| Síntoma                                  | Causa probable / fix                                                                                             |
+| :--------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
+| `[Auth] Falta AUTH_SECRET` en producción | Define `AUTH_SECRET` en `.env` / Vercel.                                                                         |
 | Login siempre "Credenciales incorrectas" | Usuario no existe o hash bcrypt inválido; verifica `users` en pgAdmin. El login acepta email, nombre o teléfono. |
-| Tarjetas `--` / `N/D` | No hay mediciones; importa desde `/historial`. |
-| Google OAuth no aparece / falla | Faltan `GOOGLE_CLIENT_ID/SECRET` o URL de retorno no autorizada. |
-| Sheets: "Error de autenticación" | La hoja no es pública/legible o el rol no es Admin. |
+| Tarjetas `--` / `N/D`                    | No hay mediciones; importa desde `/historial`.                                                                   |
+| Google OAuth no aparece / falla          | Faltan `GOOGLE_CLIENT_ID/SECRET` o URL de retorno no autorizada.                                                 |
+| Sheets: "Error de autenticación"         | La hoja no es pública/legible o el rol no es Admin.                                                              |
 
 ---
 
@@ -163,7 +166,9 @@ Roles: `Campesino` (defecto) · `Agrónomo` · `Admin` · `Super admin`. El rol 
 - [Auth](./docs/AUTH.md) - Credentials + Google, JWT con rol, recuperación 6 dígitos/15 min, brechas.
 - [Base de Datos](./docs/DATABASE.md) - Esquemas auth + agronómico, ER, brecha dataset-en-memoria.
 - [Despliegue](./docs/DEPLOYMENT.md) - Vercel SSR, env vars, checklist y rollback.
-- [Decisiones (ADRs)](./docs/decisions/) - Los 6 porqués arquitectónicos (SSR, PG, Auth.js, SIATA, Sheets, bcrypt).
+- [Decisiones (ADRs)](./docs/decisions/) - Los 7 porqués (SSR, PG, Auth.js, SIATA, Sheets, bcrypt, bypass SIATA).
+- [Datos](./docs/DATA-DICTIONARY.md) + [Protocolo de campo](./docs/FIELD-PROTOCOL.md) + [Demo](./docs/DEMO-DATA.md) - Campos, cómo llenar la hoja y fixture CSV.
+- [Seguridad](./docs/SECURITY.md) + [Roadmap](./docs/ROADMAP.md) + [Changelog](./docs/CHANGELOG.md) - Política, plan y historial.
 - [Requisitos](./docs/REQUIREMENTS.md) - SRS v1.0 con trazabilidad RF→CU/US.
 - [UML](./docs/UML.md) - Clases, componentes, despliegue y estados.
 - [Testing](./docs/TESTING.md) - Plan, casos E2E/API y checklist release.

@@ -25,12 +25,12 @@
 
 Al registrarte eliges un rol (se guarda en la tabla `users` de PostgreSQL y viaja en la sesión JWT):
 
-| Rol | Qué puede hacer |
-| :--- | :--- |
-| **Campesino** (por defecto) | Consultar dashboard, métricas e historial. Uso operativo de campo. **Toda cuenta nueva recibe este rol.** |
-| **Agrónomo** | Todo lo anterior + análisis de pH, sanidad y productividad por fila/planta. Se asigna por un administrador directo en la base de datos. |
-| **Admin** | Todo lo anterior + sincronización con Google Sheets y gestión de integraciones. |
-| **Super admin** | Acceso total, incluyendo gestión de usuarios y parámetros críticos. |
+| Rol                         | Qué puede hacer                                                                                                                         |
+| :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| **Campesino** (por defecto) | Consultar dashboard, métricas e historial. Uso operativo de campo. **Toda cuenta nueva recibe este rol.**                               |
+| **Agrónomo**                | Todo lo anterior + análisis de pH, sanidad y productividad por fila/planta. Se asigna por un administrador directo en la base de datos. |
+| **Admin**                   | Todo lo anterior + sincronización con Google Sheets y gestión de integraciones.                                                         |
+| **Super admin**             | Acceso total, incluyendo gestión de usuarios y parámetros críticos.                                                                     |
 
 > ⚠️ **Nota importante:** aunque el formulario de registro muestra un selector de rol, el servidor actualmente asigna siempre `Campesino` por seguridad (`POST /api/auth/register`). Si necesitas otro rol, un administrador debe cambiarlo en la tabla `users` (`UPDATE users SET role='Agronomo' WHERE email='...'`).
 
@@ -106,12 +106,12 @@ Cada tarjeta representa una planta con código como `T0-C1` (fila `t0..t3`, colu
 
 Semáforo de estado (leyenda superior):
 
-| Color | Estado | Significado |
-| :--- | :--- | :--- |
-| 🟢 Lima | **Óptimo** | Sanidad `Excelente` / `Saludable`. |
-| 🟡 Amarillo | **Atención** | Sanidad `Vulnerable`. Requiere revisión. |
-| 🔴 Rojo | **Crítico** | Sanidad `Crítica`. Acción inmediata (riego, pH, plaga). |
-| ⚪ Gris | **Esperando datos** | Aún no hay medición cargada para esa planta (`--` / `N/D`). |
+| Color       | Estado              | Significado                                                 |
+| :---------- | :------------------ | :---------------------------------------------------------- |
+| 🟢 Lima     | **Óptimo**          | Sanidad `Excelente` / `Saludable`.                          |
+| 🟡 Amarillo | **Atención**        | Sanidad `Vulnerable`. Requiere revisión.                    |
+| 🔴 Rojo     | **Crítico**         | Sanidad `Crítica`. Acción inmediata (riego, pH, plaga).     |
+| ⚪ Gris     | **Esperando datos** | Aún no hay medición cargada para esa planta (`--` / `N/D`). |
 
 Cada tarjeta muestra de un vistazo:
 
@@ -141,11 +141,11 @@ Debajo de la matriz verás el **modelo 3D** (Three.js): nave del invernadero sob
 
 ### 4.4. Widget de clima y calidad del aire
 
-Junto al 3D verás el widget ambiental: **temperatura, humedad, probabilidad de lluvia, irradiación (W/m²)** e icono de condición, más el **índice AQI de calidad del aire** (ÓPTIMO / ACEPTABLE / RIESGO LEVE / DAÑINO…).
+Junto al 3D verás el widget ambiental: **temperatura, humedad, probabilidad de lluvia, viento (km/h)** e icono de condición, más el **índice AQI de calidad del aire** (ÓPTIMO / ACEPTABLE / RIESGO LEVE / DAÑINO…).
 
 - La primera vez, el navegador te pedirá **permiso de ubicación**: acéptalo para clima de tu zona (se actualiza cada 10 min).
 - Si lo deniegas, se usa **Medellín por defecto** (verás `Clima (Medellín)` en el título).
-- La temperatura prioriza **SIATA** si estás en el Valle de Aburrá, si no **Open-Meteo** (ver [cap. 8](#8-datos-climáticos-externos)).
+- Los datos vienen de **Open-Meteo**; sin internet verás valores de respaldo (`22 °C / 60 %`).
 
 ### 4.5. Indicador de sincronización
 
@@ -278,10 +278,10 @@ Acciones irreversibles (requieren confirmación):
 
 El sistema combina tus sensores con clima externo:
 
-- **SIATA (Valle de Aburrá / Medellín):** si el invernadero está en la zona, los datos vienen de la red local SIATA vía proxy interno `/api/siata` (evita bloqueos CORS del navegador). Máxima precisión local.
-- **Open-Meteo (global):** si estás fuera del Valle o SIATA no responde, el sistema cambia automáticamente a Open-Meteo por coordenadas (lat/lon). Verás temperatura, humedad y probabilidad de lluvia con icono (☀️ 🌧️ ☁️).
+- **Open-Meteo (fuente actual):** temperatura, humedad, probabilidad de lluvia y viento por coordenadas, con refresco cada 10 min.
+- **SIATA (pausado):** la red local de Medellín está temporalmente fuera de línea; el proxy interno se mantiene para reactivarlo sin cambios en el panel.
 
-No debes hacer nada: la conmutación es automática. Si ves un icono de lluvia, es la predicción de la hora actual.
+No debes hacer nada: si hay internet verás el clima en vivo; si no, valores de respaldo. Si ves un icono de lluvia, es la predicción de la hora actual.
 
 ---
 
@@ -300,7 +300,7 @@ No hay mediciones cargadas. Ve a **Historial → Importar Excel/CSV** o **Conect
 La iluminación sigue el reloj real. De noche el sol de la simulación se oculta. Vuelve de día o ajusta el tema a modo claro.
 
 **¿De dónde vienen los datos?**
-Sensores propios (PostgreSQL) + SIATA si estás en Medellín + Open-Meteo como respaldo global.
+Mediciones propias (importadas a memoria desde Excel/Sheets) + clima Open-Meteo en vivo (+ AQI). SIATA está pausado temporalmente.
 
 **Exportar Excel falla o descarga vacía.**
 Revisa que haya datos en el rango/fecha elegido y que tu sesión siga activa (si expiró, inicia sesión de nuevo).
@@ -327,4 +327,4 @@ Tu sesión expiró o no tienes rol suficiente. Inicia sesión de nuevo.
 
 ---
 
-*Proyecto Invernadero © 2026 — Sistema de Monitoreo Ambiental. Para soporte técnico contacta al administrador del cultivo o al equipo de desarrollo (ver README).*
+_Proyecto Invernadero © 2026 — Sistema de Monitoreo Ambiental. Para soporte técnico contacta al administrador del cultivo o al equipo de desarrollo (ver README)._

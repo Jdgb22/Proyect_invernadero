@@ -17,7 +17,7 @@ sequenceDiagram
     DB-->>Auth: Usuario encontrado/contraseña válida
     Auth-->>Front: Token de sesión válido
     Front->>User: Redirige al dashboard
-    
+
     %% Failed login
     alt Credenciales inválidas
         Auth-->>Front: Error de autenticación
@@ -46,7 +46,7 @@ sequenceDiagram
     end
     User->>Proxy: GET /api/siata (si Valle de Aburrá)
     Proxy-->>User: Temperatura local (o 500 → fallback)
-    User->>OM: Clima global (temp, humedad, lluvia, irradiación)
+    User->>OM: Clima Open-Meteo (temp, humedad, lluvia, viento)
     OM-->>User: Datos America/Bogota
     User->>AQI: Índice calidad del aire
     AQI-->>User: AQI (ÓPTIMO…PELIGROSO)

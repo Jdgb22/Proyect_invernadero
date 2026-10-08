@@ -1,0 +1,21 @@
+ID_planta,fecha,responsable,T_Ext_C,T_Int_C,humedad_Pct,T_Planta_C,Ph,ALtura_cm,fase,productividad,sanidad,observacion
+T0-P1,2026-10-09,Equipo Demo,20.2,24.5,65,20.1,6.4,42,Floración,Alta,Excelente,Demo: planta de referencia
+T0-P2,2026-10-09,Equipo Demo,20.2,24.6,66,20.0,6.5,44,Floración,Alta,Saludable,Demo
+T0-P3,2026-10-09,Equipo Demo,20.4,25.1,63,20.3,5.7,38,Floración,Media,Vulnerable,pH bajo: programar enmienda
+T0-P4,2026-10-09,Equipo Demo,20.1,24.4,65,19.9,6.3,41,Floración,Alta,Saludable,Demo
+T0-P5,2026-10-09,Equipo Demo,20.3,24.7,64,20.2,6.6,45,Llenado de Fruto,Alta,Excelente,Demo
+T1-P1,2026-10-09,Equipo Demo,20.0,23.9,67,19.8,6.2,39,Floración,Media,Saludable,Demo
+T1-P2,2026-10-09,Equipo Demo,20.5,25.4,62,20.5,7.9,36,Floración,Baja,Crítica,pH alcalino crítico: intervenir hoy
+T1-P3,2026-10-09,Equipo Demo,20.2,24.5,65,20.1,6.4,43,Floración,Alta,Saludable,Demo
+T1-P4,2026-10-09,Equipo Demo,20.1,24.3,66,20.0,6.1,40,Floración,Media,Saludable,Demo
+T1-P5,2026-10-09,Equipo Demo,20.3,24.8,63,20.4,6.7,46,Llenado de Fruto,Alta,Excelente,Demo
+T2-P1,2026-10-09,Equipo Demo,19.9,23.7,68,19.7,6.0,37,Desarrollo Vegetativo,Media,Saludable,Demo
+T2-P2,2026-10-09,Equipo Demo,20.2,24.5,65,20.2,6.4,42,Floración,Alta,Saludable,Demo
+T2-P3,2026-10-09,Equipo Demo,20.2,24.6,64,N/D,6.5,44,Floración,Alta,Saludable,Demo: sensor de suelo falló (N/D)
+T2-P4,2026-10-09,Equipo Demo,20.4,25.0,62,20.6,5.4,35,Floración,Baja,Vulnerable,pH ácido: vigilar
+T2-P5,2026-10-09,Equipo Demo,20.1,24.4,66,20.0,6.3,41,Floración,Alta,Saludable,Demo
+T3-P1,2026-10-09,Equipo Demo,20.0,24.0,67,19.9,6.2,40,Floración,Media,Saludable,Demo
+T3-P2,2026-10-09,Equipo Demo,20.3,24.7,64,20.3,6.6,45,Llenado de Fruto,Alta,Excelente,Demo
+T3-P3,2026-10-09,Equipo Demo,20.5,25.5,61,20.8,8.1,33,Floración,Baja,Crítica,pH crítico + calor: riego y sombra
+T3-P4,2026-10-09,Equipo Demo,20.2,24.5,65,20.1,6.4,42,Floración,Alta,Saludable,Demo
+T3-P5,2026-10-09,Equipo Demo,20.1,24.3,66,19.8,6.0,38,Desarrollo Vegetativo,Media,Saludable,Demo
