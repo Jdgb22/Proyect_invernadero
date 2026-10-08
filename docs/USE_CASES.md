@@ -6,12 +6,11 @@
 **Actor(es):** Usuario final, Sistema de autenticación
 **Descripción:** El usuario se autentica en el sistema para obtener acceso a las funcionalidades protegidas.
 
-**Flujo básico:**
-1. Usuario navega a la página de login
-2. Usuario ingresa credenciales (email/contraseña)
-3. Sistema valida credenciales contra la base de datos
-4. Si son válidas, se crea una sesión y se redirige al usuario al dashboard
-5. Si son inválidas, se muestra mensaje de error
+**Flujo básico (registro + login):**
+1. Usuario navega a `/signin`, pestaña Registrarse
+2. Usuario ingresa nombre, email/teléfono y contraseña (cliente exige ≥ 8; servidor ≥ 6)
+3. `POST /api/auth/register` valida unicidad y guarda hash bcrypt; **toda cuenta nace con rol `Campesino`** (el selector de rol del formulario es informativo)
+4. Usuario inicia sesión en la pestaña Iniciar Sesión (o con Google OAuth) y es redirigido a `/` (Dashboard)
 
 **Flujo alternativo (OAuth):**
 - Usuario usa proveedor Google/GitHub para iniciar sesión
@@ -25,15 +24,18 @@
 ---
 
 ### Caso de Uso: CU-002 - Monitoreo de Datos en Tiempo Real
-**Actor(es):** Usuario autenticado, Sistema de sensores
-**Descripción:** El usuario visualiza los datos actuales del greenhouse provenientes de sensores IoT.
+**Actor(es):** Usuario autenticado, Sistema de sensores, APIs de clima
+**Descripción:** El usuario visualiza el estado del invernadero: matriz de 20 plantas con su última medición + clima externo en vivo.
 
-**Flujo básico:**
-1. Usuario accede al dashboard
-2. Sistema inicia conexión con backend para obtener datos en tiempo real
-3. Backend consulta PostgreSQL por lecturas recientes
-4. Datos se envían al frontend y se visualizan en tarjetas métricas
-5. Cada 30 segundos, el sistema actualiza automáticamente los datos
+**Flujo básico (real):**
+1. Usuario accede a `/` (Dashboard)
+2. La matriz se renderiza en servidor desde el dataset (`metricsData.ts`, hoy vacío hasta importar/sincronizar Sheets)
+3. El navegador pide geolocalización y consulta clima (SIATA vía proxy + Open-Meteo) y AQI, con **refresco cada 10 minutos**
+4. El usuario importa datos desde `/historial` cuando hay nuevas tomas de campo
+
+**Flujo de error:**
+- Sin geolocalización → clima de Medellín por defecto (`Clima (Medellín)`)
+- Sin mediciones → tarjetas en gris `Esperando datos` (`--`/`N/D`)
 
 **Flujo de error:**
 - Si la conexión falla, se muestra estado "Última actualización: HH:MM"
@@ -67,11 +69,11 @@
 
 ---
 
-### Caso de Uso: CU-004 - Configuración de Umbrales de Alerta
+### Caso de Uso: CU-004 - Configuración de Umbrales de Alerta ⚠️ PROPUESTO (no implementado)
 **Actor(es):** Usuario autenticado, Sistema de notificaciones
-**Descripción:** El usuario establece los límites mínimos y máximos para las variables ambientales.
+**Descripción:** El usuario establecerá los límites mínimos y máximos para las variables ambientales. **Estado real (oct-2026): Settings solo ofrece perfil, tema, frecuencia de sincronización y notificaciones; no hay UI ni persistencia de umbrales.** Se conserva como requisito futuro.
 
-**Flujo básico:**
+**Flujo básico (futuro):**
 1. Usuario accede a la sección de configuración
 2. Usuario ingresa valores mínimos y máximos para:
    - Temperatura (°C)
@@ -95,13 +97,12 @@
 
 ### Caso de Uso: CU-005 - Exportación de Datos
 **Actor(es):** Usuario autenticado, Motor de exportación (ExcelJS)
-**Descripción:** El usuario exporta los datos históricos a un formato de archivo compatible.
+**Descripción:** El usuario exporta las mediciones a Excel. **Implementado solo `.xlsx`** (`GET/POST /api/export-excel`, 3 hojas: Mediciones de Hoy, Historial Completo, Rangos Agronómicos, archivo `Macollo_Mediciones_Invernadero_YYYY-MM-DD.xlsx`). CSV no implementado.
 
 **Flujo básico:**
-1. Usuario selecciona el rango de fechas y tipo de dato
-2. Usuario hace clic en "Exportar"
-3. Sistema genera archivo según formato seleccionado (Excel/CSV)
-4. Archivo se descarga automáticamente al dispositivo del usuario
+1. Usuario selecciona fecha en `/historial` (POST puede enviar `{ plants }` filtrado)
+2. Usuario hace clic en "Exportar a Excel"
+3. Sistema genera el `.xlsx` y lo descarga automáticamente
 
 **Formatos compatibles:**
 - Excel (.xlsx): Con encabezados, múltiples hojas por tipo de métrica
@@ -113,18 +114,15 @@
 
 ---
 
-### Caso de Uso: CU-006 - Sincronización con Google Sheets
+### Caso de Uso: CU-006 - Importación desde Google Sheets
 **Actor(es):** Administrador, Sistema de integración
-**Descripción:** El usuario sincroniza los datos del greenhouse con una hoja de cálculo de Google Sheets.
+**Descripción:** El usuario **importa** mediciones **desde** una hoja pública de Google Sheets (dirección Sheets → app; no se escribe en Sheets). **Implementado:** `POST /api/sync-sheets { url }` normaliza a `export?format=csv`, parsea columnas (`ID_planta`, `fecha`, `T_Ext_C`, `T_Int_C`, `humedad_Pct`, `T_Planta_C`, `Ph`, `ALtura_cm`…), resuelve la matriz 4×5 y devuelve `records` al cliente **sin persistir en PG** (viven en memoria del navegador). Sin programación por intervalo.
 
 **Flujo básico:**
-1. Usuario accede a la página de sincronización
-2. Usuario ingresa el ID de la hoja de Google Sheets y credenciales de servicio
-3. Usuario configura el intervalo de sincronización ( cada 5min, 15min, 1h, manual)
-4. Usuario inicia la sincronización
-5. Sistema lee los datos actuales de PostgreSQL
-6. Sistema escribe los datos en la hoja de Google Sheets especificada
-7. Confirmación de éxito o fallo
+1. Usuario accede a `/historial` → "Conectar Google Sheets"
+2. Usuario pega la URL pública (documento con lectura *"Cualquier persona con el enlace"* o *"Publicado en la web como CSV"*)
+3. Sistema descarga el CSV, valida fechas/IDs (incluye regla 29/30-sep sin temp. de suelo) y muestra conteo importado
+4. Dashboard/Métricas se actualizan en memoria; opcionalmente se exporta a Excel
 
 **Post-conditions:**
 - Datos transferidos a Google Sheets
@@ -134,18 +132,14 @@
 ---
 
 ### Caso de Uso: CU-007 - Recuperación de Contraseña
-**Actor(es):** Usuario registrado, Sistema de email
-**Descripción:** El usuario solicita el restablecimiento de su contraseña cuando la ha olvidado.
+**Actor(es):** Usuario registrado, Sistema de email/SMS
+**Descripción:** El usuario restablece su contraseña con un **código de 6 dígitos válido 15 minutos** (email vía SMTP o SMS). Implementado en `POST /api/auth/forgot-password` + `POST /api/auth/reset-password` con tabla `verification_token`.
 
 **Flujo básico:**
-1. Usuario hace clic en "¿Olvidaste tu contraseña?" en la página de login
-2. Usuario ingresa su dirección de email registrada
-3. Sistema verifica que el email existe en la base de datos
-4. Sistema genera un token de recuperación único (válido 24h)
-5. Sistema envía email con enlace de restablecimiento
-6. Usuario hace clic en el enlace y es redirigido a página de nueva contraseña
-7. Usuario ingresa y confirma la nueva contraseña
-8. Sistema actualiza la contraseña y cierra sesión activa
+1. Usuario indica su email o celular registrado
+2. Sistema genera el código, invalida anteriores y lo envía (respuesta con destino enmascarado, ej. `ju***@correo.com`)
+3. Usuario ingresa código + nueva contraseña (mín. 6 en servidor)
+4. Sistema verifica `token + expires > NOW()`, actualiza hash bcrypt e invalida el token
 
 **Post-conditions:**
 - Contraseña actualizada

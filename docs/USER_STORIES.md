@@ -64,15 +64,25 @@
 
 ### US-007: Exportar datos a Excel
 - **Usuario:** Usuario autenticado
-- **Descripción:** El usuario puede exportar los datos históricos a un archivo Excel.
-- **Formato:** Archivo .xlsx con hojas por tipo de métrica.
-- **Resultado esperado:** Archivo descargable con todos los datos seleccionados.
+- **Descripción:** El usuario puede exportar las mediciones a un archivo Excel.
+- **Formato:** Archivo `Macollo_Mediciones_Invernadero_YYYY-MM-DD.xlsx` con 3 hojas (Mediciones de Hoy, Historial Completo, Rangos Agronómicos). Solo `.xlsx` (CSV no implementado).
+- **Resultado esperado:** Archivo descargable vía `GET/POST /api/export-excel` (POST acepta `{ plants }` para filtrar).
 
 ### US-008: Ver historial de datos
 - **Usuario:** Usuario autenticado
 - **Descripción:** El usuario consulta el historial de lecturas pasadas.
-- **Filtros:** Rango de fechas, tipo de sensor.
+- **Filtros:** Fecha específica (rango 2026-09-14 a 2026-09-30 según datos cargados).
 - **Resultado esperado:** Lista de lecturas con marca de tiempo y valores.
+
+### US-009: Recuperar contraseña
+- **Usuario:** Cualquier usuario registrado (con email o celular)
+- **Descripción:** El usuario restablece su contraseña con un código de 6 dígitos válido 15 minutos, enviado por email (SMTP) o SMS.
+- **Flujo principal:**
+  1. El usuario indica su email o celular (`POST /api/auth/forgot-password`).
+  2. El sistema guarda el código en `verification_token` y lo envía (destino enmascarado en la respuesta).
+  3. El usuario ingresa código + nueva contraseña (`POST /api/auth/reset-password`).
+  4. El sistema actualiza el hash bcrypt e invalida el código.
+- **Resultado esperado:** Contraseña actualizada y lista para login.
 
 ## Integration Users
 
@@ -82,8 +92,8 @@
 - **Datos obtenidos:** Pronósticos climáticos, datos específicos de Medellín.
 - **Resultado esperado:** Datos SIATA integrados en el dashboard junto con datos propios.
 
-### US-011: Sincronización con Google Sheets
+### US-011: Importación desde Google Sheets
 - **Usuario:** Usuario con permisos de administrador
-- **Descripción:** El usuario puede sincronizar los datos del greenhouse con una hoja de Google Sheets.
-- **Frecuencia:** Configurable (manual o automática cada X minutos).
-- **Resultado esperado:** Datos transferidos correctamente a la hoja designada.
+- **Descripción:** El usuario importa mediciones **desde** una hoja pública de Google Sheets (dirección Sheets → app; no se escribe en Sheets).
+- **Mecanismo:** `POST /api/sync-sheets { url }` (convierte a CSV, parsea columnas y devuelve `records`; viven en memoria del navegador, no persisten en PG).
+- **Resultado esperado:** Mediciones visibles en Dashboard/Métricas tras la importación.

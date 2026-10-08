@@ -5,12 +5,14 @@ import tailwindcss from '@tailwindcss/vite';
 import vercel from '@astrojs/vercel';
 import auth from 'auth-astro';
 
+import react from '@astrojs/react';
+
 // https://astro.build/config
 export default defineConfig({
   security: { checkOrigin: false },
   output: 'server',
   adapter: vercel(),
-  integrations: [auth()],
+  integrations: [auth(), react()],
   vite: {
     plugins: [tailwindcss()],
     server: {

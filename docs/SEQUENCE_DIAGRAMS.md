@@ -25,24 +25,33 @@ sequenceDiagram
     end
 ```
 
-## SD-002: Flujo de Obtención de Datos en Tiempo Real
+## SD-002: Flujo de Monitoreo (Dashboard + Clima)
 
 ```mermaid
 sequenceDiagram
     participant User as Usuario/Dashboard
-    participant Front as Componente Frontend
-    participant Service as Servicios Backend (metricsData.ts, weather.ts)
-    participant DB as PostgreSQL
-    participant API as Endpoints API
+    participant Page as Página / (SSR, metricsData.ts)
+    participant Geo as Geolocalización navegador
+    participant Proxy as GET /api/siata (proxy)
+    participant OM as Open-Meteo API
+    participant AQI as waqi.info (AQI)
 
-    User->>Front: Accede al dashboard
-    Front->>API: GET /api/metrics (ultimas lecturas)
-    API->>DB: Consultar lecturas recientes
-    DB-->>API: Datos de sensores (temp, humedad, luz)
-    API-->>Front: JSON con datos de métricas
-    Front->>Front: Actualizar UI (cards, gráficos)
-    Note over Front: Actualización cada 30s
-    Front-->>User: Dashboard actualizado
+    User->>Page: Accede a / (con sesión)
+    Page-->>User: Matriz 4×5 + escena 3D (dataset en memoria)
+    User->>Geo: Solicitar ubicación
+    alt Ubicación concedida
+        Geo-->>User: lat/lon del dispositivo
+    else Denegada o sin soporte
+        User->>User: Fallback Medellín (6.2442, -75.5812)
+    end
+    User->>Proxy: GET /api/siata (si Valle de Aburrá)
+    Proxy-->>User: Temperatura local (o 500 → fallback)
+    User->>OM: Clima global (temp, humedad, lluvia, irradiación)
+    OM-->>User: Datos America/Bogota
+    User->>AQI: Índice calidad del aire
+    AQI-->>User: AQI (ÓPTIMO…PELIGROSO)
+    Note over User: Refresco de clima cada 10 min (setInterval)
+    User-->>User: Widgets + ciclo sol/luna actualizados
 ```
 
 ## SD-003: Flujo de Exportación a Excel
@@ -50,35 +59,36 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User as Usuario
-    participant Front as Página Historial
-    participant Service as Servicio Exportación
-    participant DB as PostgreSQL
+    participant Page as Métricas / Historial
+    participant API as /api/export-excel (ExcelJS)
 
-    User->>Front: Selecciona rango fechas + tipo dato
-    Front->>Service: Solicitar exportación datos
-    Service->>DB: Consultar datos por rango y tipo
-    DB-->>Service: Datos históricos estructurados
-    Service->>Front: Recibir datos formateados
-    Front->>User: Descargar archivo .xlsx
-    Note over Front: ExcelJS genera hoja por métrica
+    User->>Page: Selecciona fecha / plantas
+    alt Desde Métricas
+        Page->>API: POST /api/export-excel { plants }
+    else Desde Historial
+        Page->>API: GET /api/export-excel (redirect)
+    end
+    API->>API: generateExcelBuffer (3 hojas + promedios AVERAGE)
+    API-->>Page: .xlsx (Macollo_Mediciones_Invernadero_FECHA.xlsx)
+    Page-->>User: Descarga automática del archivo
 ```
 
-## SD-004: Flujo de Sincronización Google Sheets
+## SD-004: Flujo de Importación desde Google Sheets
 
 ```mermaid
 sequenceDiagram
     participant User as Usuario (Admin)
-    participant Front as Página Sync Sheets
-    participant Service as Servicio Sync Sheets (sync-sheets.ts)
-    participant Google as Google Sheets API
-    participant DB as PostgreSQL
+    participant Page as Página Historial
+    participant API as POST /api/sync-sheets
+    participant Google as Google Sheets (CSV público)
 
-    User->>Front: Ingresa ID hoja + credenciales
-    Front->>Service: Solicitar sincronización
-    Service->>DB: Obtener datos actuales
-    DB-->>Service: Datos estructurados
-    Service->>Google: Escribir datos en hoja
-    Google-->>Service: Confirmación éxito
-    Service-->>Front: Confirmación al usuario
-    Front-->>User: Mostrar estado sincronización
+    User->>Page: Pega URL pública del Sheet
+    Page->>API: POST /api/sync-sheets { url }
+    API->>API: normalizeGoogleSheetUrl (export?format=csv)
+    API->>Google: Descarga CSV (sin credenciales)
+    Google-->>API: Texto CSV
+    API->>API: parseCSV + resolvePlantCoordinates + defaults
+    API-->>Page: { success, count, records }
+    Page-->>User: Dataset en memoria (Dashboard/Métricas)
+    Note over Page,API: No persiste en PostgreSQL (brecha, ver DATABASE §5)
 ```

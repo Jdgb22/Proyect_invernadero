@@ -14,7 +14,9 @@ flowchart TD
     G --> H[Mostrar bienvenida usuario]
 ```
 
-## AD-002: Flujo de Configuración de Umbrales de Alerta
+## AD-002: Flujo de Configuración de Umbrales de Alerta ⚠️ PROPUESTO (no implementado)
+
+> Estado real (oct-2026): Settings no tiene UI de umbrales. Diagrama objetivo futuro.
 
 ```mermaid
 flowchart TD
@@ -35,31 +37,31 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Usuario selecciona rango de fechas] --> B[Seleccionar tipo de dato (temp/humedad/luz)]
-    B --> C{Hacer clic en Exportar}
-    C -- No --> [Continuar usando aplicación]
-    C -- Sí --> D[Solicitar formato de archivo]
-    D -- Excel --> E[Generar archivo .xlsx con ExcelJS]
-    D -- CSV --> F[Generar archivo .csv]
+    A[Usuario en Métricas o Historial] --> B{Origen}
+    B -- Métricas --> C[POST /api/export-excel con plants filtrado]
+    B -- Historial --> D[GET /api/export-excel redirect]
+    C --> E[Generar .xlsx 3 hojas con ExcelJS]
+    D --> E
     E --> G[Descargar archivo automáticamente]
-    F --> G
-    G --> H[Mostrar notificación "Descarga completada"]
+    G --> H[Mostrar notificación Descarga completada]
 ```
 
-## AD-004: Flujo de Sincronización con Google Sheets
+> Solo `.xlsx` (CSV no implementado). Hojas: Mediciones de Hoy, Historial Completo, Rangos Agronómicos.
+
+## AD-004: Flujo de Importación desde Google Sheets
 
 ```mermaid
 flowchart TD
-    A[Usuario accede a página sincronización] --> B[Ingresar ID hoja Google Sheets]
-    B --> C[Ingresar credenciales de servicio]
-    C --> D[Seleccionar intervalo de sincronización]
-    D --> E[Hacer clic en "Iniciar sincronización"]
-    E --> F[Validar credenciales y conexión]
-    F -- Fallo --> G[Mostrar error "Error de autenticación"]
-    G --> A
-    F -- Éxito --> H[Obtener datos actuales de PostgreSQL]
-    H --> I[Formatear datos según esquema Sheets]
-    I --> J[Escribir datos en hoja Google Sheets]
-    J --> K[Mostrar confirmación "Sincronización completada"]
-    K --> L[Programar próxima sincronización según intervalo]
+    A[Usuario accede a Historial] --> B[Pegar URL pública del Sheet]
+    B --> C[POST /api/sync-sheets: normalizar a export CSV]
+    C --> D[Descargar y parsear CSV sin credenciales]
+    D --> E{Registros válidos?}
+    E -- No --> F[Mostrar error 422: revisar permisos del documento]
+    F --> A
+    E -- Sí --> H[Resolver matriz 4x5 + defaults + regla 29/30-sep]
+    H --> I[Devolver records al cliente en memoria]
+    I --> K[Mostrar confirmación N mediciones importadas]
+    K --> L[Dashboard y Métricas se actualizan]
 ```
+
+> Dirección Sheets → app (no se escribe en Sheets) y sin persistencia en PG (ver DATABASE §5).

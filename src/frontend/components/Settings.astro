@@ -1,1 +1,309 @@
-<div>Configuración en construcción</div>
+---
+// Settings.astro
+import { getSession } from "auth-astro/server";
+
+const session = await getSession(Astro.request);
+const userEmail = session?.user?.email || "usuario@ejemplo.com";
+const userName = session?.user?.name || "Usuario del Sistema";
+const userImage = session?.user?.image || "https://ui-avatars.com/api/?name=" + userName + "&background=166534&color=fff";
+---
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-green-950 dark:text-white mb-2">Configuración</h1>
+    <p class="text-green-700 dark:text-stone-300">Administra tus preferencias del sistema y perfil de usuario.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <!-- Sidebar de Navegación -->
+    <div class="md:col-span-1">
+      <nav class="flex flex-col gap-2 sticky top-8">
+        <button class="settings-tab active flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium bg-[#f4fce3] text-green-900 border border-green-200 dark:bg-stone-800 dark:text-white dark:border-[#166534] shadow-sm" data-target="profile">
+          <span class="text-xl">👤</span> Perfil de Usuario
+        </button>
+        <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="system">
+          <span class="text-xl">⚙️</span> Preferencias del Sistema
+        </button>
+        <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="notifications">
+          <span class="text-xl">🔔</span> Notificaciones
+        </button>
+        <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 border border-transparent" data-target="danger">
+          <span class="text-xl">⚠️</span> Zona de Peligro
+        </button>
+      </nav>
+    </div>
+
+    <!-- Contenido de Configuración -->
+    <div class="md:col-span-2 space-y-6">
+      
+      <!-- Panel de Perfil -->
+      <div id="profile-panel" class="settings-panel block bg-white dark:bg-stone-800 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden">
+        <div class="p-6 border-b border-stone-100 dark:border-stone-700">
+          <h2 class="text-xl font-bold text-green-950 dark:text-white">Perfil de Usuario</h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Información personal y de contacto.</p>
+        </div>
+        <div class="p-6 space-y-6">
+          <div class="flex items-center gap-6">
+            <div class="relative">
+              <img src={userImage} alt="Avatar" class="w-20 h-20 rounded-full border-4 border-[#f4fce3] dark:border-stone-700 object-cover shadow-sm" />
+              <button class="absolute bottom-0 right-0 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-full p-1.5 shadow-sm text-sm hover:bg-stone-50 dark:hover:bg-stone-600 transition-colors">
+                ✏️
+              </button>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-stone-900 dark:text-white">{userName}</h3>
+              <p class="text-stone-500 dark:text-stone-400 text-sm">{userEmail}</p>
+              <span class="inline-flex mt-2 items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-300">
+                <span class="w-1.5 h-1.5 rounded-full bg-lime-500"></span> Administrador
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 pt-4 border-t border-stone-100 dark:border-stone-700">
+            <div>
+              <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Nombre Completo</label>
+              <input type="text" value={userName} class="w-full px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Correo Electrónico</label>
+              <input type="email" value={userEmail} disabled class="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 text-stone-500 dark:text-stone-400 outline-none cursor-not-allowed" />
+            </div>
+          </div>
+        </div>
+        <div class="px-6 py-4 bg-stone-50 dark:bg-stone-900/50 border-t border-stone-100 dark:border-stone-700 flex justify-end">
+          <button class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+            Guardar Cambios
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel de Sistema -->
+      <div id="system-panel" class="settings-panel hidden bg-white dark:bg-stone-800 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden">
+        <div class="p-6 border-b border-stone-100 dark:border-stone-700">
+          <h2 class="text-xl font-bold text-green-950 dark:text-white">Preferencias del Sistema</h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Configura cómo se comporta el invernadero y la interfaz.</p>
+        </div>
+        <div class="p-6 space-y-6">
+          <!-- Apariencia -->
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-3">Apariencia</h3>
+            <div class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/30">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">🌗</span>
+                <div>
+                  <p class="font-medium text-stone-900 dark:text-white">Tema Visual</p>
+                  <p class="text-xs text-stone-500 dark:text-stone-400">Selecciona el modo claro, oscuro o del sistema.</p>
+                </div>
+              </div>
+              <select class="px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-green-500 cursor-pointer shadow-sm">
+                <option value="system">Automático (Sistema)</option>
+                <option value="light">Modo Claro</option>
+                <option value="dark">Modo Oscuro</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Sensores -->
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-3">Sensores IoT</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/30">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">📡</span>
+                  <div>
+                    <p class="font-medium text-stone-900 dark:text-white">Frecuencia de Sincronización</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400">Cada cuánto se actualizan los datos en tiempo real.</p>
+                  </div>
+                </div>
+                <select class="px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-green-500 cursor-pointer shadow-sm">
+                  <option value="1">1 Minuto</option>
+                  <option value="5" selected>5 Minutos</option>
+                  <option value="15">15 Minutos</option>
+                  <option value="60">1 Hora</option>
+                </select>
+              </div>
+
+              <div class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/30">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">🌡️</span>
+                  <div>
+                    <p class="font-medium text-stone-900 dark:text-white">Unidades de Temperatura</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400">Formato para mostrar la temperatura del invernadero.</p>
+                  </div>
+                </div>
+                <div class="flex bg-stone-200 dark:bg-stone-700 rounded-lg p-1 shadow-inner">
+                  <button class="px-3 py-1 rounded-md bg-white dark:bg-stone-600 text-stone-900 dark:text-white text-sm font-semibold shadow-sm">°C</button>
+                  <button class="px-3 py-1 rounded-md text-stone-500 dark:text-stone-400 text-sm font-medium hover:text-stone-900 dark:hover:text-white">°F</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de Notificaciones -->
+      <div id="notifications-panel" class="settings-panel hidden bg-white dark:bg-stone-800 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden">
+        <div class="p-6 border-b border-stone-100 dark:border-stone-700">
+          <h2 class="text-xl font-bold text-green-950 dark:text-white">Notificaciones</h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Controla las alertas del estado del cultivo.</p>
+        </div>
+        <div class="p-6 space-y-4">
+          <label class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900/30 transition-colors cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="text-xl">📱</span>
+              <div>
+                <p class="font-medium text-stone-900 dark:text-white">Alertas Críticas</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400">Recibe avisos cuando una planta esté en estado crítico (Ej: Falta de agua).</p>
+              </div>
+            </div>
+            <input type="checkbox" checked class="w-5 h-5 text-green-600 bg-stone-100 border-stone-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-stone-800 focus:ring-2 dark:bg-stone-700 dark:border-stone-600 cursor-pointer">
+          </label>
+
+          <label class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900/30 transition-colors cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="text-xl">📧</span>
+              <div>
+                <p class="font-medium text-stone-900 dark:text-white">Resumen Semanal por Email</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400">Reporte del crecimiento y salud general del invernadero.</p>
+              </div>
+            </div>
+            <input type="checkbox" checked class="w-5 h-5 text-green-600 bg-stone-100 border-stone-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-stone-800 focus:ring-2 dark:bg-stone-700 dark:border-stone-600 cursor-pointer">
+          </label>
+          
+          <label class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900/30 transition-colors cursor-pointer">
+            <div class="flex items-center gap-3">
+              <span class="text-xl">🔋</span>
+              <div>
+                <p class="font-medium text-stone-900 dark:text-white">Avisos de Mantenimiento</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400">Notificaciones sobre calibración de sensores de pH o batería.</p>
+              </div>
+            </div>
+            <input type="checkbox" class="w-5 h-5 text-green-600 bg-stone-100 border-stone-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-stone-800 focus:ring-2 dark:bg-stone-700 dark:border-stone-600 cursor-pointer">
+          </label>
+        </div>
+      </div>
+
+      <!-- Panel Zona de Peligro -->
+      <div id="danger-panel" class="settings-panel hidden bg-white dark:bg-stone-800 rounded-2xl shadow-sm border border-rose-200 dark:border-rose-900/50 overflow-hidden">
+        <div class="p-6 border-b border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-900/10">
+          <h2 class="text-xl font-bold text-rose-700 dark:text-rose-400">Zona de Peligro</h2>
+          <p class="text-sm text-rose-600/80 dark:text-rose-400/80 mt-1">Acciones destructivas e irreversibles.</p>
+        </div>
+        <div class="p-6 space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p class="font-bold text-stone-900 dark:text-white">Exportar Todos los Datos</p>
+              <p class="text-sm text-stone-500 dark:text-stone-400">Descarga un archivo CSV con todo el historial de métricas.</p>
+            </div>
+            <button class="px-4 py-2 bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-800 dark:text-stone-200 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap shadow-sm border border-stone-200 dark:border-stone-600">
+              Descargar CSV
+            </button>
+          </div>
+          
+          <hr class="border-stone-200 dark:border-stone-700">
+
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p class="font-bold text-stone-900 dark:text-white">Restablecer Invernadero</p>
+              <p class="text-sm text-stone-500 dark:text-stone-400">Elimina todas las métricas actuales e historial. Los sensores se reiniciarán.</p>
+            </div>
+            <button class="px-4 py-2 bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap border border-rose-200 dark:border-rose-800 shadow-sm">
+              Restablecer Datos
+            </button>
+          </div>
+          
+          <hr class="border-stone-200 dark:border-stone-700">
+
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p class="font-bold text-stone-900 dark:text-white">Cerrar Sesión</p>
+              <p class="text-sm text-stone-500 dark:text-stone-400">Cerrar sesión en este dispositivo.</p>
+            </div>
+            <button id="logout-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors whitespace-nowrap">
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  import { signOut } from "auth-astro/client";
+  import { sileo } from "sileo";
+  
+  // Script para manejar las pestañas
+  const tabs = document.querySelectorAll('.settings-tab');
+  const panels = document.querySelectorAll('.settings-panel');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remover clases activas de todos los tabs
+      tabs.forEach(t => {
+        t.classList.remove('bg-[#f4fce3]', 'text-green-900', 'border-green-200', 'dark:bg-stone-800', 'dark:text-white', 'dark:border-[#166534]', 'shadow-sm');
+        t.classList.add('text-stone-600', 'border-transparent', 'dark:text-stone-400');
+      });
+
+      // Añadir clases activas al tab seleccionado
+      // Si es el tab de "danger", le damos estilos diferentes
+      if (tab.getAttribute('data-target') === 'danger') {
+        tab.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200', 'dark:bg-rose-900/20', 'dark:text-rose-400', 'dark:border-rose-800/50', 'shadow-sm');
+        tab.classList.remove('text-stone-600', 'border-transparent', 'dark:text-stone-400');
+      } else {
+        tab.classList.add('bg-[#f4fce3]', 'text-green-900', 'border-green-200', 'dark:bg-stone-800', 'dark:text-white', 'dark:border-[#166534]', 'shadow-sm');
+        tab.classList.remove('text-stone-600', 'border-transparent', 'dark:text-stone-400');
+      }
+
+      // Ocultar todos los paneles
+      panels.forEach(p => p.classList.add('hidden'));
+      panels.forEach(p => p.classList.remove('block'));
+
+      // Mostrar el panel seleccionado
+      const targetId = tab.getAttribute('data-target');
+      const targetPanel = document.getElementById(`${targetId}-panel`);
+      if (targetPanel) {
+        targetPanel.classList.remove('hidden');
+        targetPanel.classList.add('block');
+      }
+    });
+  });
+
+  // Eventos de botones
+  const btnGuardar = document.querySelector('.bg-green-600.hover\\:bg-green-700');
+  if (btnGuardar) {
+    btnGuardar.addEventListener('click', () => {
+      sileo.success({ title: "¡Cambios guardados correctamente!" });
+    });
+  }
+
+  const btnDescargar = document.querySelector('.bg-stone-100.hover\\:bg-stone-200');
+  if (btnDescargar) {
+    btnDescargar.addEventListener('click', () => {
+      sileo.info({ title: "Generando archivo CSV..." });
+      setTimeout(() => {
+        sileo.success({ title: "Descarga completada." });
+      }, 1500);
+    });
+  }
+
+  const btnRestablecer = document.querySelector('.bg-rose-100.hover\\:bg-rose-200');
+  if (btnRestablecer) {
+    btnRestablecer.addEventListener('click', () => {
+      sileo.error({ title: "Esta acción eliminará todos los datos. Confirma de nuevo." });
+    });
+  }
+
+  // Manejar el logout
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      sileo.info({ title: "Cerrando sesión..." });
+      setTimeout(() => {
+        signOut();
+      }, 800);
+    });
+  }
+</script>

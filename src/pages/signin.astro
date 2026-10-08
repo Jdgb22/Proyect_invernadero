@@ -1,6 +1,8 @@
 ---
 import { getSession } from 'auth-astro/server';
 import { SignIn } from 'auth-astro/components';
+import { Toaster } from 'sileo';
+import 'sileo/dist/styles.css';
 
 /**
  * Página de inicio de sesión y registro del Proyecto Invernadero.
@@ -186,18 +188,27 @@ if (session) {
       Proyecto Invernadero &copy; {new Date().getFullYear()} — Sistema de Monitoreo Ambiental
     </p>
   </main>
-
+  <Toaster client:load />
 </body>
 </html>
 
 <script>
   import { signIn } from 'auth-astro/client';
+  import { sileo } from 'sileo';
 
   // ─── Utilidades ─────────────────────────────────────────────
   function showAlert(msg: string, type: 'info' | 'success' | 'error') {
     const box = document.getElementById('alert-box')!;
     box.textContent = msg;
     box.className   = `alert alert-${type}`;
+
+    if (type === 'success') {
+      sileo.success({ title: msg });
+    } else if (type === 'error') {
+      sileo.error({ title: msg });
+    } else {
+      sileo.info({ title: msg });
+    }
   }
 
   function setLoading(btn: HTMLButtonElement, loading: boolean) {

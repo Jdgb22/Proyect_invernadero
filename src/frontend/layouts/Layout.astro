@@ -1,5 +1,7 @@
 ---
 import "../styles/global.css";
+import "sileo/dist/styles.css";
+import { Toaster } from "sileo";
 ---
 
 <!doctype html>
@@ -14,6 +16,7 @@ import "../styles/global.css";
   </head>
   <body>
     <slot />
+    <Toaster client:load />
   </body>
 </html>
 
