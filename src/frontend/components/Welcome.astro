@@ -68,18 +68,22 @@ const today = new Date().toISOString().slice(0, 10);
     <div class="max-w-md w-full mx-auto">
       
       <!-- Selector de Modo (Tabs Login / Registro) -->
-      <div id="auth-tabs-container" class="flex p-1 mb-8 bg-stone-100 dark:bg-stone-800 rounded-2xl border border-stone-200/80 dark:border-stone-700/80">
+      <div id="auth-tabs-container" class="relative flex p-1 mb-8 bg-stone-100 dark:bg-stone-800 rounded-2xl border border-stone-200/80 dark:border-stone-700/80">
+        <span
+          id="auth-tab-indicator"
+          class="absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] rounded-xl bg-white dark:bg-stone-700 shadow-sm transition-transform duration-300 ease-out"
+        ></span>
         <button
           id="tab-login-btn"
           type="button"
-          class="flex-1 py-2.5 px-4 text-sm font-bold rounded-xl transition-all shadow-sm bg-white dark:bg-stone-700 text-stone-900 dark:text-white"
+          class="relative z-10 flex-1 py-2.5 px-4 text-sm font-bold rounded-xl transition-colors text-stone-900 dark:text-white"
         >
           Iniciar Sesión
         </button>
         <button
           id="tab-register-btn"
           type="button"
-          class="flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"
+          class="relative z-10 flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-colors text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"
         >
           Crear Cuenta
         </button>
@@ -558,6 +562,8 @@ const today = new Date().toISOString().slice(0, 10);
   const authTabsContainer = document.getElementById("auth-tabs-container")!;
   const tabLoginBtn = document.getElementById("tab-login-btn") as HTMLButtonElement;
   const tabRegisterBtn = document.getElementById("tab-register-btn") as HTMLButtonElement;
+  const authTabIndicator = document.getElementById("auth-tab-indicator")!;
+  const TAB_BASE = "relative z-10 flex-1 py-2.5 px-4 text-sm rounded-xl transition-colors";
   const linkToRegister = document.getElementById("link-to-register");
   const linkToLogin = document.getElementById("link-to-login");
   const forgotPasswordLink = document.getElementById("forgot-password-link");
@@ -665,6 +671,12 @@ const today = new Date().toISOString().slice(0, 10);
     });
   }
 
+  function animateAuthIn(el: HTMLElement) {
+    el.classList.remove("auth-anim-in");
+    void el.offsetWidth;
+    el.classList.add("auth-anim-in");
+  }
+
   // Función para cambiar de vista (Login / Registro / Recuperar Contraseña)
   function setAuthMode(mode: 'login' | 'register' | 'forgot') {
     // Ocultar todos los formularios
@@ -682,8 +694,9 @@ const today = new Date().toISOString().slice(0, 10);
       googleAuthContainer.classList.remove("hidden");
       loginForm.classList.remove("hidden");
 
-      tabLoginBtn.className = "flex-1 py-2.5 px-4 text-sm font-bold rounded-xl transition-all shadow-sm bg-white dark:bg-stone-700 text-stone-900 dark:text-white";
-      tabRegisterBtn.className = "flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200";
+      tabLoginBtn.className = `${TAB_BASE} font-bold text-stone-900 dark:text-white`;
+      tabRegisterBtn.className = `${TAB_BASE} font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200`;
+      authTabIndicator.classList.remove("translate-x-full");
       authTitle.textContent = "Acceder al Sistema";
       authSubtitle.textContent = "Ingresa tus credenciales para continuar";
 
@@ -692,8 +705,9 @@ const today = new Date().toISOString().slice(0, 10);
       googleAuthContainer.classList.remove("hidden");
       registerForm.classList.remove("hidden");
 
-      tabRegisterBtn.className = "flex-1 py-2.5 px-4 text-sm font-bold rounded-xl transition-all shadow-sm bg-white dark:bg-stone-700 text-stone-900 dark:text-white";
-      tabLoginBtn.className = "flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200";
+      tabRegisterBtn.className = `${TAB_BASE} font-bold text-stone-900 dark:text-white`;
+      tabLoginBtn.className = `${TAB_BASE} font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200`;
+      authTabIndicator.classList.add("translate-x-full");
       authTitle.textContent = "Crear Cuenta Nueva";
       authSubtitle.textContent = "Regístrate para monitorear tu invernadero inteligente";
 
@@ -707,6 +721,10 @@ const today = new Date().toISOString().slice(0, 10);
       authTitle.textContent = "Recuperar Contraseña";
       authSubtitle.textContent = "Te enviaremos un código temporal para restablecer tu clave";
     }
+
+    const activePanel = mode === 'login' ? loginForm : mode === 'register' ? registerForm : forgotContainer;
+    animateAuthIn(activePanel);
+    if (authTitle.parentElement) animateAuthIn(authTitle.parentElement);
   }
 
   tabLoginBtn?.addEventListener("click", () => setAuthMode('login'));
@@ -1085,3 +1103,20 @@ const today = new Date().toISOString().slice(0, 10);
     }
   });
 </script>
+
+<style>
+  .auth-anim-in {
+    animation: authFadeSlide 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes authFadeSlide {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
