@@ -2,7 +2,7 @@
 
 ¡Bienvenido a **Macollo / Proyecto Invernadero**! Plataforma web para el **monitoreo agronómico de un invernadero real**: 20 plantas organizadas en matriz (4 filas × 5 columnas), métricas de suelo y ambiente, historial por fecha e integración con clima externo (SIATA / Open-Meteo) y Google Sheets.
 
-> **Rutas principales:** `Inicio (/ Sein)` · `Métricas (/metrics)` · `Historial (/historial)` · `Configuración (/settings)` · Acceso en `/signin`.
+> **Rutas principales:** `Inicio (/)` · `Métricas (/metrics)` · `Historial (/historial)` · `Configuración (/settings)` · Acceso en `/signin`.
 
 ---
 

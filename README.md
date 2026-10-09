@@ -98,9 +98,12 @@ Construido con SSR moderno. Detalle en [ARCHITECTURE.md](./ARCHITECTURE.md) y [d
    AUTH_TRUST_HOST=true
    GOOGLE_CLIENT_ID=
    GOOGLE_CLIENT_SECRET=
-   # SMTP para recuperación (Gmail: myaccount.google.com/apppasswords)
-   SMTP_USER=test@test.com
-   SMTP_PASS=abcdefghijklmnop
+    # SMTP para recuperación (Gmail: myaccount.google.com/apppasswords)
+    SMTP_HOST=smtp.gmail.com
+    SMTP_PORT=465
+    SMTP_FROM="Macollo <test@test.com>"
+    SMTP_USER=test@test.com
+    SMTP_PASS=abcdefghijklmnop
    ```
 
 3. **Base de datos:** crea la BD `invernadero` y ejecuta en orden:

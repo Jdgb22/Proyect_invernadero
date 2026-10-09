@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Documentación 2026-10-09: typo `(/ Sein)` → `(/)` en MANUAL_USUARIO; OAuth corregido a solo Google en USE_CASES/USER_STORIES; `.env.example` + README completados con `AUTH_TRUST_HOST`, `SMTP_HOST/PORT/FROM` (verificados contra `notifications.ts` y `auth.config.ts`).
+
 ### Added
 
 - Documentación verificada contra `src/`: ARCHITECTURE, ROUTES, ENDPOINTS, AUTH, DATABASE, DEPLOYMENT, REQUIREMENTS (SRS), UML, TESTING, CONTRIBUTING, GLOSSARY, TROUBLESHOOTING, DATA-DICTIONARY, FIELD-PROTOCOL, DEMO-DATA (+ CSV demo), SECURITY, ROADMAP.
