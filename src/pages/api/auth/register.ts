@@ -42,7 +42,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const cleanName = name.trim();
     const cleanEmail = email ? email.trim().toLowerCase() : null;
-    const cleanPhone = phone ? phone.trim() : null;
+    let cleanPhone = phone ? phone.trim() : null;
     const cleanBirthDate = birthDate ? birthDate.trim() : null;
 
     if (cleanPhone) {

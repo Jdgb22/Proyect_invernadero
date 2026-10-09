@@ -552,53 +552,60 @@ const today = new Date().toISOString().slice(0, 10);
 </div>
 
 <script>
-  import { signIn } from "auth-astro/client";
+  document.addEventListener('DOMContentLoaded', async () => {
+    let signIn: any;
+    try {
+      const authAstro = await import("auth-astro/client");
+      signIn = authAstro.signIn;
+    } catch(err) {
+      console.error("No se pudo cargar auth-astro/client", err);
+    }
 
-  // Elementos de pestañas y contenedores
-  const authTabsContainer = document.getElementById("auth-tabs-container")!;
-  const tabLoginBtn = document.getElementById("tab-login-btn") as HTMLButtonElement;
-  const tabRegisterBtn = document.getElementById("tab-register-btn") as HTMLButtonElement;
-  const linkToRegister = document.getElementById("link-to-register");
-  const linkToLogin = document.getElementById("link-to-login");
-  const forgotPasswordLink = document.getElementById("forgot-password-link");
-  const linkForgotBackToLogin = document.getElementById("link-forgot-back-to-login");
-  const authTitle = document.getElementById("auth-title")!;
-  const authSubtitle = document.getElementById("auth-subtitle")!;
-  const googleAuthContainer = document.getElementById("google-auth-container")!;
+    // Elementos de pestañas y contenedores
+    const authTabsContainer = document.getElementById("auth-tabs-container")!;
+    const tabLoginBtn = document.getElementById("tab-login-btn") as HTMLButtonElement;
+    const tabRegisterBtn = document.getElementById("tab-register-btn") as HTMLButtonElement;
+    const linkToRegister = document.getElementById("link-to-register");
+    const linkToLogin = document.getElementById("link-to-login");
+    const forgotPasswordLink = document.getElementById("forgot-password-link");
+    const linkForgotBackToLogin = document.getElementById("link-forgot-back-to-login");
+    const authTitle = document.getElementById("auth-title")!;
+    const authSubtitle = document.getElementById("auth-subtitle")!;
+    const googleAuthContainer = document.getElementById("google-auth-container")!;
 
-  // Formularios
-  const loginForm = document.getElementById("login-form") as HTMLFormElement;
-  const registerForm = document.getElementById("register-form") as HTMLFormElement;
-  const forgotContainer = document.getElementById("forgot-container") as HTMLDivElement;
-  const forgotStep1Form = document.getElementById("forgot-step1-form") as HTMLFormElement;
-  const forgotStep2Form = document.getElementById("forgot-step2-form") as HTMLFormElement;
+    // Formularios
+    const loginForm = document.getElementById("login-form") as HTMLFormElement;
+    const registerForm = document.getElementById("register-form") as HTMLFormElement;
+    const forgotContainer = document.getElementById("forgot-container") as HTMLDivElement;
+    const forgotStep1Form = document.getElementById("forgot-step1-form") as HTMLFormElement;
+    const forgotStep2Form = document.getElementById("forgot-step2-form") as HTMLFormElement;
 
-  // Botones y estados de login
-  const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
-  const btnText = document.getElementById("btn-text")!;
-  const btnSpinner = document.getElementById("btn-spinner")!;
-  const errorMsg = document.getElementById("error-message") as HTMLElement;
+    // Botones y estados de login
+    const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
+    const btnText = document.getElementById("btn-text")!;
+    const btnSpinner = document.getElementById("btn-spinner")!;
+    const errorMsg = document.getElementById("error-message") as HTMLElement;
 
-  // Botones y estados de registro
-  const registerBtn = document.getElementById("register-btn") as HTMLButtonElement;
-  const regBtnText = document.getElementById("reg-btn-text")!;
-  const regBtnSpinner = document.getElementById("reg-btn-spinner")!;
-  const regFeedbackMsg = document.getElementById("reg-feedback-message") as HTMLElement;
+    // Botones y estados de registro
+    const registerBtn = document.getElementById("register-btn") as HTMLButtonElement;
+    const regBtnText = document.getElementById("reg-btn-text")!;
+    const regBtnSpinner = document.getElementById("reg-btn-spinner")!;
+    const regFeedbackMsg = document.getElementById("reg-feedback-message") as HTMLElement;
 
-  // Botones y estados de recuperación
-  const btnForgotSend = document.getElementById("btn-forgot-send") as HTMLButtonElement;
-  const btnForgotSendText = document.getElementById("btn-forgot-send-text")!;
-  const btnForgotSendSpinner = document.getElementById("btn-forgot-send-spinner")!;
-  const btnForgotReset = document.getElementById("btn-forgot-reset") as HTMLButtonElement;
-  const btnForgotResetText = document.getElementById("btn-forgot-reset-text")!;
-  const btnForgotResetSpinner = document.getElementById("btn-forgot-reset-spinner")!;
-  const forgotFeedbackMsg = document.getElementById("forgot-feedback-message") as HTMLElement;
-  const forgotStep2Desc = document.getElementById("forgot-step2-desc")!;
+    // Botones y estados de recuperación
+    const btnForgotSend = document.getElementById("btn-forgot-send") as HTMLButtonElement;
+    const btnForgotSendText = document.getElementById("btn-forgot-send-text")!;
+    const btnForgotSendSpinner = document.getElementById("btn-forgot-send-spinner")!;
+    const btnForgotReset = document.getElementById("btn-forgot-reset") as HTMLButtonElement;
+    const btnForgotResetText = document.getElementById("btn-forgot-reset-text")!;
+    const btnForgotResetSpinner = document.getElementById("btn-forgot-reset-spinner")!;
+    const forgotFeedbackMsg = document.getElementById("forgot-feedback-message") as HTMLElement;
+    const forgotStep2Desc = document.getElementById("forgot-step2-desc")!;
 
-  let activeForgotIdentifier = "";
+    let activeForgotIdentifier = "";
 
-  // Botón Google
-  const googleBtn = document.getElementById("google-btn") as HTMLButtonElement;
+    // Botón Google
+    const googleBtn = document.getElementById("google-btn") as HTMLButtonElement;
 
   // Video y controles
   const welcomeVideo = document.getElementById("welcome-video") as HTMLVideoElement;
@@ -803,9 +810,29 @@ const today = new Date().toISOString().slice(0, 10);
         regFeedbackMsg.classList.add("hidden");
 
         // Reproducir video antes de redirigir a Google
-        await playWelcomeVideo();
+        try { await playWelcomeVideo(); } catch(e) {}
 
-        await signIn("google", { callbackUrl: "/" } as any);
+        if (typeof signIn === 'function') {
+          await signIn("google", { callbackUrl: "/" } as any);
+        } else {
+          const csrfRes = await fetch('/api/auth/csrf');
+          const csrfData = await csrfRes.json();
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '/api/auth/signin/google';
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'csrfToken';
+          input.value = csrfData.csrfToken;
+          const inputCallback = document.createElement('input');
+          inputCallback.type = 'hidden';
+          inputCallback.name = 'callbackUrl';
+          inputCallback.value = '/';
+          form.appendChild(input);
+          form.appendChild(inputCallback);
+          document.body.appendChild(form);
+          form.submit();
+        }
       } catch (err) {
         console.error(err);
         setLoginLoading(false);
@@ -837,18 +864,45 @@ const today = new Date().toISOString().slice(0, 10);
       try {
         await playWelcomeVideo();
       } catch (vidErr: any) {
-        alert("Error de video: " + (vidErr?.message || String(vidErr)));
+        console.warn("Video no pudo reproducirse", vidErr);
       }
       
-      // Autenticación con Auth.js contra PostgreSQL
-      const result = await signIn("credentials", {
-        email: username,
-        password: password,
-        redirect: false,
-        callbackUrl: "/",
-      } as any);
+      let hasError = false;
 
-      if ((result as any)?.error) {
+      if (typeof signIn === 'function') {
+        const result = await signIn("credentials", {
+          email: username,
+          password: password,
+          redirect: false,
+          callbackUrl: "/",
+        } as any);
+        if ((result as any)?.error) hasError = true;
+      } else {
+        const csrfRes = await fetch('/api/auth/csrf');
+        const csrfData = await csrfRes.json();
+        
+        const params = new URLSearchParams();
+        params.append('csrfToken', csrfData.csrfToken);
+        params.append('email', username);
+        params.append('password', password);
+        params.append('redirect', 'false');
+        params.append('callbackUrl', '/');
+        params.append('json', 'true');
+
+        const authRes = await fetch('/api/auth/callback/credentials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+
+        // fetch sigue automáticamente las redirecciones (302).
+        // Si hay error, la URL final tendrá "?error=".
+        if (authRes.url && authRes.url.includes('error=')) {
+          hasError = true;
+        }
+      }
+
+      if (hasError) {
         setLoginLoading(false);
         errorMsg.textContent = "Credenciales incorrectas. Verifica tus datos y contraseña.";
         errorMsg.classList.remove("hidden");
@@ -1063,4 +1117,6 @@ const today = new Date().toISOString().slice(0, 10);
       forgotFeedbackMsg.classList.remove("hidden");
     }
   });
+
+  }); // fin DOMContentLoaded
 </script>

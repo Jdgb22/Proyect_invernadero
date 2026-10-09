@@ -3,7 +3,7 @@ export interface WeatherData {
   humidity: number;
   rainProbability: number;
   weatherCode: number;
-  windSpeed: number;
+  irradiance: number;
   isFallback: boolean;
   source?: string;
 }
@@ -19,12 +19,12 @@ export interface WeatherData {
  * @returns {boolean} `true` si está dentro del perímetro, `false` en caso contrario.
  */
 export function isValleDeAburra(lat: number, lon: number): boolean {
-  return lat >= 6.00 && lat <= 6.50 && lon >= -75.75 && lon <= -75.40;
+  return lat >= 6.0 && lat <= 6.5 && lon >= -75.75 && lon <= -75.4;
 }
 
 /**
  * Obtiene los datos meteorológicos actuales para unas coordenadas dadas.
- * 
+ *
  * Esta función es un agregador inteligente:
  * 1. Si las coordenadas están en Medellín, intenta usar primero el servicio local SIATA
  *    para obtener mediciones más precisas (como temperatura local).
@@ -35,7 +35,11 @@ export function isValleDeAburra(lat: number, lon: number): boolean {
  * @param {boolean} [isFallback=false] - Indica si esta petición es un reintento de respaldo.
  * @returns {Promise<WeatherData>} Objeto consolidado con todas las métricas climáticas.
  */
-export async function fetchWeatherData(lat: number, lon: number, isFallback = false): Promise<WeatherData> {
+export async function fetchWeatherData(
+  lat: number,
+  lon: number,
+  isFallback = false,
+): Promise<WeatherData> {
   // El servicio de SIATA está temporalmente fuera de línea o con timeout.
   // Usamos Open-Meteo directamente para evitar el retraso de 3 segundos
   // y asegurar que la interfaz responda instantáneamente.
@@ -43,8 +47,8 @@ export async function fetchWeatherData(lat: number, lon: number, isFallback = fa
     const openMeteoData = await fetchOpenMeteo(lat, lon);
     return {
       ...openMeteoData,
-      source: 'Open-Meteo (Global)',
-      isFallback
+      source: "Open-Meteo (Global)",
+      isFallback,
     };
   } catch (error) {
     console.error("Error al obtener Open-Meteo:", error);
@@ -54,33 +58,34 @@ export async function fetchWeatherData(lat: number, lon: number, isFallback = fa
       humidity: 60,
       rainProbability: 0,
       weatherCode: 0,
-      windSpeed: 5,
-      source: 'Offline Fallback',
-      isFallback: true
+      irradiance: 450,
+      source: "Offline Fallback",
+      isFallback: true,
     };
   }
 }
 
 async function fetchOpenMeteo(lat: number, lon: number) {
   const res = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=precipitation_probability&timezone=auto`
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,shortwave_radiation&hourly=precipitation_probability&timezone=auto`,
   );
-  
-  if (!res.ok) throw new Error('Error de red al obtener el clima desde Open-Meteo');
-  
+
+  if (!res.ok)
+    throw new Error("Error de red al obtener el clima desde Open-Meteo");
+
   const data = await res.json();
   const current = data.current;
-  
+
   const currentHour = new Date().getHours();
   // Al usar timezone=auto, la hora local del usuario coincidirá muy de cerca con el índice
   const rainProb = data.hourly.precipitation_probability[currentHour] || 0;
-  
+
   return {
     temperature: current.temperature_2m,
     humidity: current.relative_humidity_2m,
     rainProbability: rainProb,
     weatherCode: current.weather_code,
-    windSpeed: current.wind_speed_10m
+    irradiance: current.shortwave_radiation,
   };
 }
 
@@ -91,10 +96,10 @@ async function fetchOpenMeteo(lat: number, lon: number) {
  * @returns {string} Emoji representativo de la condición climática.
  */
 export function getWeatherEmoji(code: number): string {
-  if (code === 0) return '☀️';
-  if (code >= 1 && code <= 3) return '⛅';
-  if (code >= 51 && code <= 67) return '🌧️';
-  if (code >= 71 && code <= 77) return '❄️';
-  if (code >= 95) return '⛈️';
-  return '☁️';
+  if (code === 0) return "☀️";
+  if (code >= 1 && code <= 3) return "⛅";
+  if (code >= 51 && code <= 67) return "🌧️";
+  if (code >= 71 && code <= 77) return "❄️";
+  if (code >= 95) return "⛈️";
+  return "☁️";
 }

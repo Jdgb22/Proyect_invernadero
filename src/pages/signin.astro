@@ -192,11 +192,20 @@ if (session) {
 </html>
 
 <script>
-  import { signIn } from 'auth-astro/client';
+  try {
+    console.log("Iniciando script de signin...");
+  } catch(e) {}
+  
+  let signIn: any;
+  // Cargamos el módulo dinámicamente para que no bloquee el parseo inicial
+  import('auth-astro/client').then(mod => {
+    signIn = mod.signIn;
+  }).catch(e => console.error(e));
 
   // ─── Utilidades ─────────────────────────────────────────────
   function showAlert(msg: string, type: 'info' | 'success' | 'error') {
-    const box = document.getElementById('alert-box')!;
+    const box = document.getElementById('alert-box');
+    if (!box) return;
     box.textContent = msg;
     box.className   = `alert alert-${type}`;
 
@@ -212,42 +221,49 @@ if (session) {
     }
   }
 
-  function setLoading(btn: HTMLButtonElement, loading: boolean) {
-    const text    = btn.querySelector('.btn-text')!;
-    const spinner = btn.querySelector('.btn-spinner')!;
+  function setLoading(btn: HTMLButtonElement | null, loading: boolean) {
+    if (!btn) return;
+    const text    = btn.querySelector('.btn-text');
+    const spinner = btn.querySelector('.btn-spinner');
     btn.disabled  = loading;
-    text.classList.toggle('hidden', loading);
-    spinner.classList.toggle('hidden', !loading);
+    if (text) text.classList.toggle('hidden', loading);
+    if (spinner) spinner.classList.toggle('hidden', !loading);
   }
 
   // ─── Tabs ────────────────────────────────────────────────────
-  function switchTab(tab: 'login' | 'register') {
-    const isLogin = tab === 'login';
-    document.getElementById('tab-login')!.classList.toggle('active', isLogin);
-    document.getElementById('tab-register')!.classList.toggle('active', !isLogin);
-    document.getElementById('form-login')!.classList.toggle('active', isLogin);
-    document.getElementById('form-register')!.classList.toggle('active', !isLogin);
-    document.getElementById('tab-login')!.setAttribute('aria-selected', String(isLogin));
-    document.getElementById('tab-register')!.setAttribute('aria-selected', String(!isLogin));
-    // Limpiar alerta al cambiar pestaña
-    const box = document.getElementById('alert-box')!;
-    box.className = 'alert hidden';
-  }
+  window.addEventListener('DOMContentLoaded', () => {
+    function switchTab(tab: 'login' | 'register') {
+      try {
+        const isLogin = tab === 'login';
+        document.getElementById('tab-login')?.classList.toggle('active', isLogin);
+        document.getElementById('tab-register')?.classList.toggle('active', !isLogin);
+        document.getElementById('form-login')?.classList.toggle('active', isLogin);
+        document.getElementById('form-register')?.classList.toggle('active', !isLogin);
+        document.getElementById('tab-login')?.setAttribute('aria-selected', String(isLogin));
+        document.getElementById('tab-register')?.setAttribute('aria-selected', String(!isLogin));
+        const box = document.getElementById('alert-box');
+        if (box) box.className = 'alert hidden';
+      } catch(e) { console.error("Error en switchTab:", e); }
+    }
 
-  document.getElementById('tab-login')?.addEventListener('click', () => switchTab('login'));
-  document.getElementById('tab-register')?.addEventListener('click', () => switchTab('register'));
+    document.getElementById('tab-login')?.addEventListener('click', () => switchTab('login'));
+    document.getElementById('tab-register')?.addEventListener('click', () => switchTab('register'));
 
-  // ─── Login ───────────────────────────────────────────────────
-  document.getElementById('login-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn      = document.getElementById('btn-login-submit') as HTMLButtonElement;
-    const email    = (document.getElementById('login-email') as HTMLInputElement).value.trim();
-    const password = (document.getElementById('login-password') as HTMLInputElement).value;
+    // ─── Login ───────────────────────────────────────────────────
+    document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn      = document.getElementById('btn-login-submit') as HTMLButtonElement;
+      const emailEl  = document.getElementById('login-email') as HTMLInputElement;
+      const passEl   = document.getElementById('login-password') as HTMLInputElement;
+      if (!emailEl || !passEl) return;
 
-    showAlert('Verificando credenciales en PostgreSQL...', 'info');
-    setLoading(btn, true);
+      const email    = emailEl.value.trim();
+      const password = passEl.value;
 
-    try {
+      showAlert('Verificando credenciales en PostgreSQL...', 'info');
+      setLoading(btn, true);
+
+      try {
       // Las credenciales van en el tercer argumento (authorizationParams)
       // Se usa 'as any' porque AstroSignInOptions no re-exporta callbackUrl en su tipo
       await signIn('credentials', { callbackUrl: '/' } as any, { email, password });
@@ -262,51 +278,60 @@ if (session) {
       } else {
         showAlert('Error de inicio de sesión: ' + msg, 'error');
       }
-    } finally {
-      setLoading(btn, false);
-    }
-  });
-
-  // ─── Registro ────────────────────────────────────────────────
-  document.getElementById('register-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn      = document.getElementById('btn-register-submit') as HTMLButtonElement;
-    const name     = (document.getElementById('reg-name') as HTMLInputElement).value.trim();
-    const email    = (document.getElementById('reg-email') as HTMLInputElement).value.trim();
-    const password = (document.getElementById('reg-password') as HTMLInputElement).value;
-    const role     = (document.getElementById('reg-role') as HTMLSelectElement).value;
-
-    if (password.length < 8) {
-      showAlert('La contraseña debe tener al menos 8 caracteres.', 'error');
-      return;
-    }
-
-    showAlert(`Registrando como "${role}" en PostgreSQL...`, 'info');
-    setLoading(btn, true);
-
-    try {
-      const res  = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        showAlert(`¡Cuenta creada como "${data.user.role}"! Redirigiendo al login...`, 'success');
-        setTimeout(() => {
-          switchTab('login');
-          (document.getElementById('login-email') as HTMLInputElement).value = email;
-        }, 1500);
-      } else {
-        showAlert(data.message || 'Error al registrar el usuario.', 'error');
+      } finally {
+        setLoading(btn, false);
       }
-    } catch (err: any) {
-      showAlert('Error de conexión con el servidor: ' + err.message, 'error');
-    } finally {
-      setLoading(btn, false);
-    }
-  });
+    });
+
+    // ─── Registro ────────────────────────────────────────────────
+    document.getElementById('register-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn      = document.getElementById('btn-register-submit') as HTMLButtonElement;
+      const nameEl   = document.getElementById('reg-name') as HTMLInputElement;
+      const emailEl  = document.getElementById('reg-email') as HTMLInputElement;
+      const passEl   = document.getElementById('reg-password') as HTMLInputElement;
+      const roleEl   = document.getElementById('reg-role') as HTMLSelectElement;
+
+      if (!nameEl || !emailEl || !passEl || !roleEl) return;
+
+      const name     = nameEl.value.trim();
+      const email    = emailEl.value.trim();
+      const password = passEl.value;
+      const role     = roleEl.value;
+
+      if (password.length < 8) {
+        showAlert('La contraseña debe tener al menos 8 caracteres.', 'error');
+        return;
+      }
+
+      showAlert(`Registrando como "${role}" en PostgreSQL...`, 'info');
+      setLoading(btn, true);
+
+      try {
+        const res  = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, role }),
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          showAlert(`¡Cuenta creada como "${data.user?.role || role}"! Redirigiendo al login...`, 'success');
+          setTimeout(() => {
+            switchTab('login');
+            const loginEmail = document.getElementById('login-email') as HTMLInputElement;
+            if (loginEmail) loginEmail.value = email;
+          }, 1500);
+        } else {
+          showAlert(data.message || 'Error al registrar el usuario.', 'error');
+        }
+      } catch (err: any) {
+        showAlert('Error de conexión con el servidor: ' + err.message, 'error');
+      } finally {
+        setLoading(btn, false);
+      }
+    });
+  }); // fin DOMContentLoaded
 </script>
 
 <style>

@@ -162,34 +162,63 @@ const navLinks = [
 </nav>
 
 <script>
-  const { signOut } = await import("auth-astro/client");
+  document.addEventListener('DOMContentLoaded', () => {
+    let signOut: any;
+    
+    // Importación dinámica para evitar que un fallo en Vite rompa el resto del script
+    import("auth-astro/client")
+      .then(mod => {
+        signOut = mod.signOut;
+      })
+      .catch(err => console.error("Error cargando auth-astro", err));
 
-  // Logout function
-  const handleLogout = () => {
-    signOut();
-  };
+    // Logout function
+    const handleLogout = async () => {
+      if (signOut) {
+        signOut();
+      } else {
+        // Fallback robusto en caso de que auth-astro falle internamente
+        try {
+          const res = await fetch('/api/auth/csrf');
+          const data = await res.json();
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '/api/auth/signout';
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'csrfToken';
+          csrfInput.value = data.csrfToken;
+          form.appendChild(csrfInput);
+          document.body.appendChild(form);
+          form.submit();
+        } catch (err) {
+          window.location.href = '/api/auth/signout';
+        }
+      }
+    };
 
-  // Attach to both desktop and mobile buttons
-  document
-    .getElementById("nav-logout-btn")
-    ?.addEventListener("click", handleLogout);
-  document
-    .getElementById("nav-logout-btn-mobile")
-    ?.addEventListener("click", handleLogout);
+    // Attach to both desktop and mobile buttons
+    document
+      .getElementById("nav-logout-btn")
+      ?.addEventListener("click", handleLogout);
+    document
+      .getElementById("nav-logout-btn-mobile")
+      ?.addEventListener("click", handleLogout);
 
-  // Mobile menu toggle
-  const mobileBtn = document.getElementById("mobile-menu-btn");
-  const mobileMenu = document.getElementById("mobile-menu");
-  const iconBars = document.getElementById("menu-icon-bars");
-  const iconClose = document.getElementById("menu-icon-close");
+    // Mobile menu toggle
+    const mobileBtn = document.getElementById("mobile-menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+    const iconBars = document.getElementById("menu-icon-bars");
+    const iconClose = document.getElementById("menu-icon-close");
 
-  if (mobileBtn && mobileMenu) {
-    mobileBtn.addEventListener("click", () => {
-      mobileMenu.classList.toggle("hidden");
-      iconBars?.classList.toggle("hidden");
-      iconBars?.classList.toggle("inline-flex");
-      iconClose?.classList.toggle("hidden");
-      iconClose?.classList.toggle("inline-flex");
-    });
-  }
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener("click", () => {
+        mobileMenu.classList.toggle("hidden");
+        iconBars?.classList.toggle("hidden");
+        iconBars?.classList.toggle("inline-flex");
+        iconClose?.classList.toggle("hidden");
+        iconClose?.classList.toggle("inline-flex");
+      });
+    }
+  });
 </script>

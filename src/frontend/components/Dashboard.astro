@@ -161,7 +161,7 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
         <div class="grid grid-cols-3 gap-2">
           <span id="weather-humidity" class="bg-blue-100/50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">💧</span><span class="value">--%</span></span>
           <span id="weather-rain" class="bg-green-100/50 dark:bg-stone-900/50 text-green-700 dark:text-stone-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">🌧️</span><span class="value">--%</span></span>
-          <span id="weather-wind" class="bg-yellow-100/50 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">💨</span><span class="value">-- km/h</span></span>
+          <span id="weather-irradiance" class="bg-yellow-100/50 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">🔆</span><span class="value">-- W/m²</span></span>
         </div>
       </div>
 
@@ -463,7 +463,7 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
         const tempEl = document.getElementById("weather-temp");
         const humEl = document.getElementById("weather-humidity");
         const rainEl = document.getElementById("weather-rain");
-        const windEl = document.getElementById("weather-wind");
+        const irradianceEl = document.getElementById("weather-irradiance");
         const iconEl = document.getElementById("weather-icon");
         const titleEl = document.getElementById("weather-title");
 
@@ -473,7 +473,7 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
           tempEl.textContent = Math.round(data.temperature).toString();
         if (humEl) humEl.innerHTML = `<span class="text-lg">💧</span><span class="value">${data.humidity}%</span>`;
         if (rainEl) rainEl.innerHTML = `<span class="text-lg">🌧️</span><span class="value">${data.rainProbability}%</span>`;
-        if (windEl) windEl.innerHTML = `<span class="text-lg">💨</span><span class="value">${data.windSpeed} km/h</span>`;
+        if (irradianceEl) irradianceEl.innerHTML = `<span class="text-lg">🔆</span><span class="value">${Math.round(data.irradiance)} W/m²</span>`;
         if (titleEl) {
           titleEl.textContent = data.isFallback
             ? "Clima (Medellín)"

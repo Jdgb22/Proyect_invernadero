@@ -239,72 +239,96 @@ const userName = session?.user?.name || "Usuario del Sistema";
 </div>
 
 <script>
-  import { signOut } from "auth-astro/client";
-  
-  // Script para manejar las pestañas
-  const tabs = document.querySelectorAll('.settings-tab');
-  const panels = document.querySelectorAll('.settings-panel');
+  document.addEventListener('DOMContentLoaded', () => {
+    let signOut: any;
+    import("auth-astro/client").then(mod => {
+      signOut = mod.signOut;
+    }).catch(err => console.error("Error cargando auth-astro", err));
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => {
-        t.classList.remove('bg-[#f4fce3]', 'text-green-900', 'border-green-200', 'dark:bg-stone-800', 'dark:text-white', 'dark:border-[#166534]', 'shadow-sm');
-        t.classList.add('text-stone-600', 'border-transparent', 'dark:text-stone-400');
+    // Script para manejar las pestañas
+    const tabs = document.querySelectorAll('.settings-tab');
+    const panels = document.querySelectorAll('.settings-panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => {
+          t.classList.remove('bg-[#f4fce3]', 'text-green-900', 'border-green-200', 'dark:bg-stone-800', 'dark:text-white', 'dark:border-[#166534]', 'shadow-sm');
+          t.classList.add('text-stone-600', 'border-transparent', 'dark:text-stone-400');
+        });
+
+        if (tab.getAttribute('data-target') === 'danger') {
+          tab.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200', 'dark:bg-rose-900/20', 'dark:text-rose-400', 'dark:border-rose-800/50', 'shadow-sm');
+          tab.classList.remove('text-stone-600', 'border-transparent', 'dark:text-stone-400');
+        } else {
+          tab.classList.add('bg-[#f4fce3]', 'text-green-900', 'border-green-200', 'dark:bg-stone-800', 'dark:text-white', 'dark:border-[#166534]', 'shadow-sm');
+          tab.classList.remove('text-stone-600', 'border-transparent', 'dark:text-stone-400');
+        }
+
+        panels.forEach(p => p.classList.add('hidden'));
+        panels.forEach(p => p.classList.remove('block'));
+
+        const targetId = tab.getAttribute('data-target');
+        const targetPanel = document.getElementById(`${targetId}-panel`);
+        if (targetPanel) {
+          targetPanel.classList.remove('hidden');
+          targetPanel.classList.add('block');
+        }
       });
-
-      if (tab.getAttribute('data-target') === 'danger') {
-        tab.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200', 'dark:bg-rose-900/20', 'dark:text-rose-400', 'dark:border-rose-800/50', 'shadow-sm');
-        tab.classList.remove('text-stone-600', 'border-transparent', 'dark:text-stone-400');
-      } else {
-        tab.classList.add('bg-[#f4fce3]', 'text-green-900', 'border-green-200', 'dark:bg-stone-800', 'dark:text-white', 'dark:border-[#166534]', 'shadow-sm');
-        tab.classList.remove('text-stone-600', 'border-transparent', 'dark:text-stone-400');
-      }
-
-      panels.forEach(p => p.classList.add('hidden'));
-      panels.forEach(p => p.classList.remove('block'));
-
-      const targetId = tab.getAttribute('data-target');
-      const targetPanel = document.getElementById(`${targetId}-panel`);
-      if (targetPanel) {
-        targetPanel.classList.remove('hidden');
-        targetPanel.classList.add('block');
-      }
     });
+
+    const getSileo = () => (window as any).sileo;
+
+    const btnGuardar = document.querySelector('.bg-green-600.hover\\:bg-green-700');
+    if (btnGuardar) {
+      btnGuardar.addEventListener('click', () => {
+        getSileo()?.success({ title: "¡Cambios guardados correctamente!" });
+      });
+    }
+
+    const btnDescargar = document.querySelector('.bg-stone-100.hover\\:bg-stone-200');
+    if (btnDescargar) {
+      btnDescargar.addEventListener('click', () => {
+        getSileo()?.info({ title: "Generando archivo CSV..." });
+        setTimeout(() => {
+          getSileo()?.success({ title: "Descarga completada." });
+        }, 1500);
+      });
+    }
+
+    const btnRestablecer = document.querySelector('.bg-rose-100.hover\\:bg-rose-200');
+    if (btnRestablecer) {
+      btnRestablecer.addEventListener('click', () => {
+        getSileo()?.error({ title: "Esta acción eliminará todos los datos. Confirma de nuevo." });
+      });
+    }
+
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        getSileo()?.info({ title: "Cerrando sesión..." });
+        setTimeout(async () => {
+          if (signOut) {
+            signOut();
+          } else {
+            try {
+              const res = await fetch('/api/auth/csrf');
+              const data = await res.json();
+              const form = document.createElement('form');
+              form.method = 'POST';
+              form.action = '/api/auth/signout';
+              const csrfInput = document.createElement('input');
+              csrfInput.type = 'hidden';
+              csrfInput.name = 'csrfToken';
+              csrfInput.value = data.csrfToken;
+              form.appendChild(csrfInput);
+              document.body.appendChild(form);
+              form.submit();
+            } catch (err) {
+              window.location.href = '/api/auth/signout';
+            }
+          }
+        }, 800);
+      });
+    }
   });
-
-  const getSileo = () => (window as any).sileo;
-
-  const btnGuardar = document.querySelector('.bg-green-600.hover\\:bg-green-700');
-  if (btnGuardar) {
-    btnGuardar.addEventListener('click', () => {
-      getSileo()?.success({ title: "¡Cambios guardados correctamente!" });
-    });
-  }
-
-  const btnDescargar = document.querySelector('.bg-stone-100.hover\\:bg-stone-200');
-  if (btnDescargar) {
-    btnDescargar.addEventListener('click', () => {
-      getSileo()?.info({ title: "Generando archivo CSV..." });
-      setTimeout(() => {
-        getSileo()?.success({ title: "Descarga completada." });
-      }, 1500);
-    });
-  }
-
-  const btnRestablecer = document.querySelector('.bg-rose-100.hover\\:bg-rose-200');
-  if (btnRestablecer) {
-    btnRestablecer.addEventListener('click', () => {
-      getSileo()?.error({ title: "Esta acción eliminará todos los datos. Confirma de nuevo." });
-    });
-  }
-
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      getSileo()?.info({ title: "Cerrando sesión..." });
-      setTimeout(() => {
-        signOut();
-      }, 800);
-    });
-  }
 </script>
