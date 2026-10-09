@@ -1,4 +1,3 @@
-#!/usr/bin/env sh
 echo "🔒 Ejecutando controles DevSecOps (pre-commit)..."
 npx lint-staged
 
