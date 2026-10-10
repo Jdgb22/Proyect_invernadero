@@ -1,8 +1,7 @@
 ---
 // Settings.astro
 import { getSession } from "auth-astro/server";
-import { Blobatar } from "@blobatar/react";
-import "blobatar/motion.css";
+import BlobatarAvatar from "./BlobatarAvatar.tsx";
 
 const session = await getSession(Astro.request);
 const userEmail = session?.user?.email || "usuario@ejemplo.com";
@@ -51,7 +50,7 @@ const userName = session?.user?.name || "Usuario del Sistema";
                 {session?.user?.image ? (
                   <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
                 ) : (
-                  <Blobatar client:load name={userEmail} animate="hover" size={80} />
+                  <BlobatarAvatar client:load name={userEmail} size={80} />
                 )}
               </div>
               <button class="absolute bottom-0 right-0 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-full p-1.5 shadow-sm text-sm hover:bg-stone-50 dark:hover:bg-stone-600 transition-colors">

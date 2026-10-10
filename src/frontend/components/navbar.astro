@@ -1,7 +1,6 @@
 ---
 import { getSession } from "auth-astro/server";
-import { Blobatar } from "@blobatar/react";
-import "blobatar/motion.css";
+import BlobatarAvatar from "./BlobatarAvatar.tsx";
 
 const session = await getSession(Astro.request);
 const currentPath = Astro.url.pathname;
@@ -64,7 +63,7 @@ const navLinks = [
             {session.user?.image ? (
               <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
             ) : (
-              <Blobatar client:load name={userEmail} animate="hover" size={40} />
+              <BlobatarAvatar client:load name={userEmail} size={40} />
             )}
           </div>
         )}
@@ -142,7 +141,7 @@ const navLinks = [
               {session.user?.image ? (
                 <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
               ) : (
-                <Blobatar client:load name={userEmail} animate="hover" size={40} />
+                <BlobatarAvatar client:load name={userEmail} size={40} />
               )}
             </div>
             <div class="text-sm font-semibold text-green-900 dark:text-stone-200 truncate">
