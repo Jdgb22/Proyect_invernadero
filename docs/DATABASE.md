@@ -14,6 +14,18 @@ PostgreSQL 17. Dos dominios: **autenticación** (usado activamente por Auth.js y
 createdb invernadero
 psql invernadero -f src/db/auth-schema.sql
 psql invernadero -f src/db/invernadero.sql
+# (Opcional) migración idempotente solo para bases creadas con el esquema anterior:
+psql invernadero -f src/db/migrations/001-roles-fincas.sql
+```
+
+Cuentas y datos de ejemplo (Node ≥ 22, lee `.env`):
+
+```bash
+# Crea/actualiza una cuenta privilegiada (por defecto Superadmin)
+ADMIN_EMAIL=tu@correo.com ADMIN_PASSWORD='Secreta123' node scripts/seed-admin.mjs
+
+# Crea "Finca demo" con dueño Agropecuario, 20 plantas y lecturas de ejemplo
+node scripts/seed-demo.mjs
 ```
 
 Conexión vía `.env` (ver [README](../README.md)):
@@ -36,23 +48,25 @@ POSTGRES_DATABASE=invernadero
 ### `user_role_enum`
 
 ```sql
-CREATE TYPE user_role_enum AS ENUM ('Super admin', 'Admin', 'Agronomo', 'Campesino');
+CREATE TYPE user_role_enum AS ENUM ('Superadmin', 'Admin', 'Agropecuario', 'Campesino');
 ```
+
+> La migración `001-roles-fincas.sql` renombra los valores antiguos (`Super admin`→`Superadmin`, `Agronomo`→`Agropecuario`) de forma idempotente. Ver [AUTH §6](./AUTH.md) para el alcance de cada rol.
 
 ### `users`
 
-| Columna | Tipo | Notas |
-| :--- | :--- | :--- |
-| `id` | `SERIAL PK` | Id interno (Auth.js lo expone como string en JWT). |
-| `name` | `VARCHAR(255)` | Obligatorio en registro. Login también acepta buscar por `name`. |
-| `email` | `VARCHAR(255) UNIQUE` | Opcional si hay `phone`. Único case-insensitive (validado en app). |
-| `phone` | `VARCHAR(50)` | Opcional si hay `email`. Normalizado (sin espacios/guiones). |
-| `birth_date` | `DATE` | Opcional; debe ser fecha real no futura. |
-| `password` | `VARCHAR(255)` | Hash **bcrypt** (`$2a$/$2b$`, salt 10). Nunca texto plano. |
-| `role` | `user_role_enum NOT NULL DEFAULT 'Campesino'` | **Registro siempre inserta `Campesino`**. Cambios de rol = `UPDATE` directo o panel admin. |
-| `emailVerified` | `TIMESTAMPTZ` | Lo gestiona el adaptador OAuth. |
-| `image` | `TEXT` | Avatar (Google o generado). |
-| `created_at` / `updated_at` | `TIMESTAMPTZ` | `updated_at` se refresca en reset-password. |
+| Columna                     | Tipo                                          | Notas                                                                                                                             |
+| :-------------------------- | :-------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                        | `SERIAL PK`                                   | Id interno (Auth.js lo expone como string en JWT).                                                                                |
+| `name`                      | `VARCHAR(255)`                                | Obligatorio en registro. Login también acepta buscar por `name`.                                                                  |
+| `email`                     | `VARCHAR(255) UNIQUE`                         | Opcional si hay `phone`. Único case-insensitive (validado en app).                                                                |
+| `phone`                     | `VARCHAR(50)`                                 | Opcional si hay `email`. Normalizado (sin espacios/guiones).                                                                      |
+| `birth_date`                | `DATE`                                        | Opcional; debe ser fecha real no futura.                                                                                          |
+| `password`                  | `VARCHAR(255)`                                | Hash **bcrypt** (`$2a$/$2b$`, salt 10). Nunca texto plano.                                                                        |
+| `role`                      | `user_role_enum NOT NULL DEFAULT 'Campesino'` | Registro inserta `Campesino` o `Agropecuario` según `accountType` (nunca staff). Cambios de rol = `UPDATE` directo o panel admin. |
+| `emailVerified`             | `TIMESTAMPTZ`                                 | Lo gestiona el adaptador OAuth.                                                                                                   |
+| `image`                     | `TEXT`                                        | Avatar (Google o generado).                                                                                                       |
+| `created_at` / `updated_at` | `TIMESTAMPTZ`                                 | `updated_at` se refresca en reset-password.                                                                                       |
 
 Índices: `idx_users_email (email)`, `idx_users_role (role)`.
 
@@ -60,59 +74,25 @@ CREATE TYPE user_role_enum AS ENUM ('Super admin', 'Admin', 'Agronomo', 'Campesi
 
 `id PK · userId FK→users(id) ON DELETE CASCADE · type · provider · providerAccountId · refresh_token · access_token · expires_at · token_type · scope · id_token · session_state`. Única `(provider, providerAccountId)`.
 
+> **Permanace vacía salvo que se use "Continuar con Google"**. Con login por credenciales (email/teléfono + contraseña) nunca se inserta aquí; que esté vacía es lo normal.
+
 ### `sessions`
 
-`id PK · sessionToken UNIQUE · userId FK→users · expires`. Con estrategia JWT actual tiene uso reducido (ver [AUTH](./AUTH.md)).
+`id PK · sessionToken UNIQUE · userId FK→users(id) · expires`. Con estrategia **JWT** (`session.strategy='jwt'`) **permanece vacía**: la sesión viaja firmada en la cookie, no en BD. Solo se usaría con estrategia `database` (ver [AUTH §1](./AUTH.md)).
 
 ### `verification_token`
 
-`identifier PK · token PK · expires`. Guarda el **código de 6 dígitos** de recuperación (`identifier` = email o teléfono canónico, `expires` = +15 min). Se borra al emitir uno nuevo y al consumirlo.
+`identifier PK · token PK · expires`. Guarda el **código de 6 dígitos** de recuperación (`identifier` = email o teléfono canónico, `expires` = +15 min). Se borra al emitir uno nuevo y al consumirlo. **Vacía** salvo que haya una recuperación en curso.
+
+> **Estado de tablas en un despliegue típico sin OAuth:** `users` con tus cuentas, `fincas`/`plantas`/`lecturas` con datos agronómicos, y `accounts`/`sessions`/`verification_token` en **0 filas** (no indica error).
 
 ---
 
 ## 3. Dominio agronómico (`invernadero.sql`)
 
-### `tipo_medicion_enum`
+Modelo multi-tenant **por finca**: cada finca tiene 20 plantas (matriz 4×5) y cada fila de `lecturas` es una visita a una planta. Script idempotente; las tablas se ejecutan tras `auth-schema.sql`.
 
-```sql
-CREATE TYPE tipo_medicion_enum AS ENUM (
-  'crecimiento', 'ph', 'productividad',
-  'temperatura_atmosferica', 'temperatura_suelo', 'humedad'
-);
-```
-
-### `plantas`
-
-| Columna | Tipo | Notas |
-| :--- | :--- | :--- |
-| `id` | `INTEGER PK` (seq `plantas_id_seq`) | Corresponde a `P-01…P-20` de la matriz (`plantNumber`). |
-| `nombre` | `VARCHAR(100) NOT NULL` | Ej. código `T0-P1`. |
-| `especie` | `VARCHAR(100)` | Cultivo (ej. gulupa — ver `public/gulupa.svg`). |
-| `ubicacion` | `VARCHAR(50)` | Fila/columna (`t0…t3`, `Col 1…Col 5`). |
-| `estado` | `VARCHAR(20) DEFAULT 'activa'` | `activa` / inactiva. |
-
-### `mediciones`
-
-Modelo **EAV por tipo** (una fila por variable medida):
-
-| Columna | Tipo | Notas |
-| :--- | :--- | :--- |
-| `id` | `BIGINT PK` (seq `mediciones_id_seq`) | Equivale a `MetricRecord.id` (`MET-…`). |
-| `planta_id` | `INTEGER NOT NULL` | FK lógica → `plantas(id)`. |
-| `tipo` | `tipo_medicion_enum NOT NULL` | Qué se midió. |
-| `valor` | `NUMERIC(10,2) NOT NULL` | Numérico. `productividad`/`sanidad` (cualitativas) van como `subtipo` o tabla futura. |
-| `subtipo` | `VARCHAR(50)` | Matiz (ej. `interna/externa/suelo` para temperatura, `Alta/Media/Baja`). |
-| `fecha_medida` | `TIMESTAMPTZ NOT NULL DEFAULT NOW()` | Equivale a `fecha + hora` (`timestampTexto`). |
-| `usuario_id` | `INTEGER` | Quién midió → `users(id)` (equivale a `responsable`). |
-| `created_at` | `TIMESTAMPTZ DEFAULT NOW()` | Auditoría de carga. |
-
-### `responsable`
-
-`id PK · nombre NOT NULL · cargo (rol: Campesino/Agrónomo…) · activo DEFAULT true · fecha_registro`. Catálogo de quién toma datos (equivale a `responsable + responsableRol + avatarColor`).
-
-### `relaciones`
-
-Correlaciones entre dos medidas: `id PK · tipo_relacion NOT NULL · plantida_id · tipo_medida1 · valor1 · tipo_medida2 · valor2 · fecha_registro`. Ej. pH vs sanidad por planta/fecha (base para análisis futuro).
+Tablas: `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas`, `lecturas` — detalle de columnas en [§5](#5-multi-tenant-fincas-plantas-y-lecturas).
 
 ---
 
@@ -122,57 +102,92 @@ Correlaciones entre dos medidas: `id PK · tipo_relacion NOT NULL · plantida_id
 erDiagram
     users ||--o{ accounts : "tiene (OAuth)"
     users ||--o{ sessions : "tiene"
-    users ||--o{ mediciones : "mide (usuario_id)"
-    plantas ||--o{ mediciones : "recibe (planta_id)"
-    responsable ||--o{ mediciones : "cataloga"
-    plantas ||--o{ relaciones : "correlaciona"
+    users ||--o{ fincas : "posee (dueno_id)"
+    users ||--o{ finca_miembros : "pertenece"
+    fincas ||--o{ finca_miembros : "tiene"
+    fincas ||--o{ finca_invitaciones : "invita"
+    fincas ||--o{ plantas : "contiene"
+    fincas ||--o{ lecturas : "registra"
+    plantas ||--o{ lecturas : "recibe"
+    users ||--o{ lecturas : "mide (responsable_id)"
+    fincas {
+        int id PK
+        string nombre
+        int dueno_id FK
+        bool activa
+    }
+    finca_miembros {
+        int id PK
+        int finca_id FK
+        int user_id FK
+        string rol_finca
+    }
+    lecturas {
+        bigint id PK
+        int finca_id FK
+        int planta_id FK
+        date fecha
+        string hora
+        real ph_suelo
+        int responsable_id FK
+    }
     users {
         int id PK
         string name
         string email UK
         string phone
         date birth_date
-        string password_hash
+        string password
         enum role
-    }
-    mediciones {
-        bigint id PK
-        int planta_id FK
-        enum tipo
-        numeric valor
-        string subtipo
-        timestamptz fecha_medida
-        int usuario_id FK
     }
     plantas {
         int id PK
-        string nombre
-        string especie
-        string ubicacion
-        string estado
+        int finca_id FK
+        string fila
+        string columna
+        string plant_id
     }
 ```
 
 ---
 
-## 5. Estado real y brecha conocida ⚠️
+## 5. Multi-tenant: fincas, plantas y lecturas
 
-Hoy el **frontend agronómico no lee estas tablas**: `src/backend/services/metricsData.ts` trabaja con `initialMetricsData: MetricRecord[] = []` (vacío) y `POST /api/sync-sheets` **devuelve `records` al cliente sin `INSERT` en PG**. El dataset vive en memoria del navegador tras importar/sincronizar. Solo el dominio auth persiste en PG.
+El modelo de datos agronómicos es por finca (una fila de `lecturas` = una visita a una planta). Es el esquema definido en `src/db/invernadero.sql`.
 
-**Ruta de migración sugerida** (no implementada; registrar como ADR si se prioriza):
+### `fincas`
 
-1. `POST /api/sync-sheets` → además de devolver, `INSERT` en `mediciones` (una fila por `tipo` con `planta_id` resuelto, `fecha_medida`, `usuario_id` de la sesión).
-2. `GET /api/metrics` nuevo → lee `mediciones` + `plantas` y arma `PlantMatrixItem[]` (reemplaza `initialMetricsData`).
-3. Backfill del histórico 2026-09-14→30 desde el CSV maestro.
-4. Cualitativas (`sanidad`, `productividad`, `faseCrecimiento`) → usar `subtipo` o nueva tabla `evaluaciones`.
+`id PK · nombre · descripcion · ubicacion · dueno_id FK→users(id) ON DELETE RESTRICT · activa BOOL DEFAULT true · created_at · updated_at`. Archivar = `activa=false` (restaurable). Hard delete solo Superadmin.
 
-Mientras tanto: **no borres `invernadero.sql`**; es el esquema objetivo. Y toda exportación Excel sale del dataset en memoria, no de PG.
+### `finca_miembros` (N:N usuario↔finca)
+
+`id PK · finca_id FK ON DELETE CASCADE · user_id FK ON DELETE CASCADE · rol_finca ∈ {dueno, miembro} · created_at`. Único `(finca_id, user_id)`.
+
+### `finca_invitaciones`
+
+`id PK · finca_id FK · codigo VARCHAR(20) UNIQUE · creado_por FK · expira_en · usos_maximos · usos_usados · activa · created_at`. Código de 8 caracteres (nanoid + `nanoid-dictionary`, alfabeto sin caracteres confusos, mayúsculas, sin prefijo). El canje descuenta usos y crea la membresía en una transacción (`FOR UPDATE OF i`).
+
+### `plantas` (por finca)
+
+`id PK · finca_id FK ON DELETE CASCADE · fila ∈ {t0..t3} · columna ∈ {Col 1..Col 5} · plant_id`. Único `(finca_id, fila, columna)`. Por defecto 20 plantas (4×5) al crear la finca.
+
+### `lecturas` (por finca)
+
+`id BIGSERIAL PK · finca_id FK · planta_id FK →plantas(id) ON DELETE CASCADE · fecha DATE · hora VARCHAR(20) · ph_suelo · temp_interna · temp_externa · temp_suelo · humedad · altura_cm · crecimiento · fase · productividad · sanidad · responsable_id FK→users SET NULL · observaciones · created_at`. Único `(finca_id, planta_id, fecha, hora)` (upsert idempotente). Índices `(finca_id, fecha)` y `(planta_id)`.
 
 ---
 
-## 6. Mantenimiento
+## 6. Estado real
+
+- **Auth**: persiste en PG (dominio §2).
+- **Datos agronómicos**: ahora **sí persisten**. `POST /api/sync-sheets` (tras exigir sesión + acceso a la finca activa) hace `INSERT … ON CONFLICT` en `lecturas`. `Metrics.astro` e `Historial.astro` leen desde PG vía `getLecturasByFinca(fincaId)` y se scopean por `finca_activa`. `GET /api/fincas/:id/lecturas` expone las lecturas con control de membresía.
+- **Fallback**: `metricsData.ts` (`initialMetricsData = []`) solo se usa cuando no hay finca activa; ya no es la fuente del tablero.
+
+---
+
+## 7. Mantenimiento
 
 - Backup antes de cada sprint de campo: `pg_dump invernadero > backup_$(date +%F).sql`.
 - Códigos expirados se acumulan solo si el usuario nunca los usa: `DELETE FROM verification_token WHERE expires < NOW();` (cron sugerido diario).
 - Tras `RESET` de contraseña, `updated_at` se actualiza solo; auditar con `SELECT id, name, role, updated_at FROM users ORDER BY updated_at DESC;`.
-- Cambio de rol: `UPDATE users SET role = 'Agronomo', updated_at = NOW() WHERE email = 'x@y.z';` (valores exactos del enum, con mayúsculas y espacio en `Super admin`).
+- Cambio de rol: `UPDATE users SET role = 'Agropecuario', updated_at = NOW() WHERE email = 'x@y.z';` (valores exactos del enum: `Superadmin`, `Admin`, `Agropecuario`, `Campesino`). También disponible en `/admin` para Superadmins.

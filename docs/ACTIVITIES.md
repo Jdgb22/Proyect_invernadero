@@ -52,16 +52,18 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Usuario accede a Historial] --> B[Pegar URL pública del Sheet]
+    A[Dueño de la finca accede a Historial] --> B[Pegar URL pública del Sheet]
     B --> C[POST /api/sync-sheets: normalizar a export CSV]
     C --> D[Descargar y parsear CSV sin credenciales]
     D --> E{Registros válidos?}
     E -- No --> F[Mostrar error 422: revisar permisos del documento]
     F --> A
     E -- Sí --> H[Resolver matriz 4x5 + defaults + regla 29/30-sep]
-    H --> I[Devolver records al cliente en memoria]
-    I --> K[Mostrar confirmación N mediciones importadas]
-    K --> L[Dashboard y Métricas se actualizan]
+    H --> I[Persistir en lecturas de la finca activa ON CONFLICT]
+    I --> J[Devolver records al cliente]
+    J --> K[Mostrar conteo importado]
+    K --> L[Dashboard/Métricas recargan desde PG]
+    A -. no dueño .-> X[403 / botón oculto]
 ```
 
-> Dirección Sheets → app (no se escribe en Sheets) y sin persistencia en PG (ver DATABASE §5).
+> Dirección **Sheets → app** (nunca se escribe en Sheets). **Solo el dueño** de la finca activa puede sincronizar (ni miembros ni staff); los datos **persisten en `lecturas`** de la finca (ver DATABASE §5).

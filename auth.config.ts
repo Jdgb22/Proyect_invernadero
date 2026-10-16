@@ -1,10 +1,10 @@
-import 'dotenv/config';
-import { defineConfig } from 'auth-astro';
-import Credentials from '@auth/core/providers/credentials';
-import Google from '@auth/core/providers/google';
-import PostgresAdapter from '@auth/pg-adapter';
-import bcrypt from 'bcryptjs';
-import { pool } from './src/db/client';
+import "dotenv/config";
+import { defineConfig } from "auth-astro";
+import Credentials from "@auth/core/providers/credentials";
+import Google from "@auth/core/providers/google";
+import PostgresAdapter from "@auth/pg-adapter";
+import bcrypt from "bcryptjs";
+import { pool } from "./src/db/client";
 
 /**
  * Configuración de Auth.js para el Proyecto Invernadero.
@@ -13,19 +13,27 @@ import { pool } from './src/db/client';
  *  - Credentials: login con email + contraseña hasheada (bcrypt) en PostgreSQL
  *  - Google: OAuth con Google (requiere GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET)
  *
- * Roles disponibles: 'Super admin' | 'Admin' | 'Agronomo' | 'Campesino'
- * Los roles se almacenan en la tabla `users` de pgAdmin.
+ * Roles disponibles: 'Superadmin' | 'Admin' | 'Agropecuario' | 'Campesino'
+ *  - Superadmin: control total del sistema (cuentas creadas manualmente).
+ *  - Admin: asistente/operador; ve todas las fincas y archiva, no gestiona usuarios ni borra fincas.
+ *  - Agropecuario: dueño de finca(s).
+ *  - Campesino: trabaja en fincas a las que se une por invitación.
+ * Los roles se almacenan en la tabla `users`; la autorización real se relee de la BD
+ * en cada operación sensible (ver src/backend/services/authz.ts).
  *
  * Estrategia de sesión: JWT (no requiere tabla `sessions` activa)
  *
  * @see db/auth-schema.sql para el esquema de tablas requerido en pgAdmin
  */
-const authSecret = process.env.AUTH_SECRET || (import.meta as any).env?.AUTH_SECRET;
-if (!authSecret && process.env.NODE_ENV === 'production') {
-  throw new Error('[Auth] Falta AUTH_SECRET en variables de entorno (.env)');
+const authSecret =
+  process.env.AUTH_SECRET || (import.meta as any).env?.AUTH_SECRET;
+if (!authSecret && process.env.NODE_ENV === "production") {
+  throw new Error("[Auth] Falta AUTH_SECRET en variables de entorno (.env)");
 }
 if (!authSecret) {
-  console.warn('[Auth] AUTH_SECRET no definido. Usando clave temporal solo para desarrollo. Crea tu .env (ver .env.example).');
+  console.warn(
+    "[Auth] AUTH_SECRET no definido. Usando clave temporal solo para desarrollo. Crea tu .env (ver .env.example).",
+  );
 }
 
 export default defineConfig({
@@ -33,30 +41,43 @@ export default defineConfig({
   adapter: PostgresAdapter(pool),
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || (import.meta as any).env?.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || (import.meta as any).env?.GOOGLE_CLIENT_SECRET || '',
+      clientId:
+        process.env.GOOGLE_CLIENT_ID ||
+        (import.meta as any).env?.GOOGLE_CLIENT_ID ||
+        "",
+      clientSecret:
+        process.env.GOOGLE_CLIENT_SECRET ||
+        (import.meta as any).env?.GOOGLE_CLIENT_SECRET ||
+        "",
       allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
-      name: 'Credenciales',
+      name: "Credenciales",
       credentials: {
-        email:    { label: 'Correo Electrónico', type: 'email' },
-        password: { label: 'Contraseña',         type: 'password' },
+        email: { label: "Correo Electrónico", type: "email" },
+        password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
-        const identifier = ((credentials?.email || (credentials as any)?.username) as string | undefined)?.trim();
+        const identifier = (
+          (credentials?.email || (credentials as any)?.username) as
+            string | undefined
+        )?.trim();
         const password = credentials?.password as string | undefined;
 
         if (!identifier || !password) {
-          console.warn('[Auth] Intento de login sin email/usuario o contraseña');
+          console.warn(
+            "[Auth] Intento de login sin email/usuario o contraseña",
+          );
           return null;
         }
 
         try {
-          console.log(`[Auth] Consultando usuario en PostgreSQL: ${identifier}`);
+          console.log(
+            `[Auth] Consultando usuario en PostgreSQL: ${identifier}`,
+          );
           const res = await pool.query(
-            'SELECT * FROM users WHERE LOWER(COALESCE(email, \'\')) = LOWER($1) OR LOWER(COALESCE(name, \'\')) = LOWER($1) OR phone = $1',
-            [identifier]
+            "SELECT * FROM users WHERE LOWER(COALESCE(email, '')) = LOWER($1) OR phone = $1",
+            [identifier],
           );
           const user = res.rows[0];
 
@@ -71,53 +92,60 @@ export default defineConfig({
           try {
             if (
               user.password &&
-              (user.password.startsWith('$2a$') || user.password.startsWith('$2b$'))
+              (user.password.startsWith("$2a$") ||
+                user.password.startsWith("$2b$"))
             ) {
               isValidPassword = await bcrypt.compare(password, user.password);
             }
           } catch (bcryptErr) {
-            console.warn('[Auth] Error comparando hash bcrypt:', bcryptErr);
+            console.warn("[Auth] Error comparando hash bcrypt:", bcryptErr);
           }
 
           if (isValidPassword) {
-            console.log(`[Auth] Login exitoso: ${user.email || user.phone || user.name} (Rol: ${user.role || 'Campesino'})`);
+            console.log(
+              `[Auth] Login exitoso: ${user.email || user.phone || user.name} (Rol: ${user.role || "Campesino"})`,
+            );
             return {
-              id:    user.id.toString(),
-              name:  user.name || (user.email ? user.email.split('@')[0] : user.phone || 'Usuario'),
+              id: user.id.toString(),
+              name:
+                user.name ||
+                (user.email
+                  ? user.email.split("@")[0]
+                  : user.phone || "Usuario"),
               email: user.email || `${user.phone || user.id}@invernadero.local`,
               image: user.image || null,
-              role:  user.role  || 'Campesino',
+              role: user.role || "Campesino",
             };
           }
 
           console.warn(`[Auth] Contraseña incorrecta para: ${identifier}`);
           return null;
         } catch (error) {
-          console.error('[Auth] Error al consultar PostgreSQL:', error);
+          console.error("[Auth] Error al consultar PostgreSQL:", error);
           return null;
         }
       },
     }),
   ],
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
-  secret: authSecret || 'dev-only-insecure-key-do-not-use-in-production',
+  secret: authSecret || "dev-only-insecure-key-do-not-use-in-production",
   pages: {
-    signIn: '/',
+    signIn: "/",
   },
   callbacks: {
     async session({ session, token }: any) {
       if (token && session.user) {
         session.user.id = token.sub as string;
-        (session.user as any).role = (token.role as string) || 'Campesino';
+        (session.user as any).role = (token.role as string) || "Campesino";
       }
       return session;
     },
     async jwt({ token, user }: any) {
       if (user) {
-        token.sub  = user.id;
-        token.role = (user as any).role || 'Campesino';
+        token.sub = user.id;
+        token.role = (user as any).role || "Campesino";
       }
       return token;
     },

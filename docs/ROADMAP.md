@@ -4,10 +4,10 @@
 
 ## v1.1 — Endurecimiento y persistencia (siguiente)
 
-- [ ] **SEC-01/02**: sesión verificada en handlers + middleware protege `/metrics`, `/historial`, `/settings` (redirect `/signin`).
+- [ ] **SEC-01/02**: sesión verificada en handlers + middleware protege `/metrics`, `/historial`, `/settings` (redirect a `/` con `?desde=`).
 - [ ] **SEC-04/05**: Zod password `min(8)` + rate-limit en `register`/`forgot-password`.
 - [ ] **SEC-03**: proxy servidor para AQI (rotar token demo).
-- [ ] **RF-21**: `POST /api/sync-sheets` persiste en `mediciones` (idempotente por planta+fecha+tipo) + `GET /api/metrics` desde PG + backfill 2026-09-14→30. Requiere ADR (supersede ADR-005 parcial).
+- [x] **RF-21 (persistencia)**: `POST /api/sync-sheets` persiste en `lecturas` (idempotente por finca+planta+fecha+hora). Pendiente: `GET /api/metrics` desde PG + backfill 2026-09-14→30.
 - [ ] **TESTING §4**: Vitest con `resolvePlantCoordinates`, `parseCSV`,schemas Zod (exportar helpers privados primero).
 - [ ] Unificar etiqueta de rol (`'Admin'` vs `'admin'`, SEC-06).
 
@@ -19,6 +19,6 @@
 
 ## v2.0 — IoT y escala
 
-- [ ] **RF-22**: ingesta ESP32/Arduino (WebSocket/MQTT → `mediciones`); reevaluar Firebase si hay streaming real.
+- [ ] **RF-22**: ingesta ESP32/Arduino (WebSocket/MQTT → `lecturas`); reevaluar Firebase si hay streaming real.
 - [ ] Multi-invernadero (`invernadero` deja de ser constante).
-- [ ] Roles granulares en UI (hoy: tag cosmético + Sheets solo-Admin implícito).
+- [ ] Roles granulares en UI (Sheets ya es **dueño-only**; pendiente pulir permisos de finca en la interfaz).

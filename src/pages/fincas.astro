@@ -1,0 +1,253 @@
+---
+import Layout from "../frontend/layouts/Layout.astro";
+import Navbar from "../frontend/components/navbar.astro";
+import { getAuthUser } from "../backend/services/authz";
+import { listFincasForUser } from "../backend/services/fincas";
+
+const user = await getAuthUser(Astro.request);
+if (!user) return Astro.redirect("/");
+
+const fincas = await listFincasForUser(user.id, user.role);
+const puedeCrear = user.role !== "Campesino";
+const rolLabel: Record<string, string> = {
+  Superadmin: "Superadmin",
+  Admin: "Admin",
+  Agropecuario: "Agropecuario",
+  Campesino: "Campesino",
+};
+---
+
+<Layout>
+  <Navbar />
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-green-950 dark:text-white mb-1">Mis Fincas</h1>
+        <p class="text-green-700 dark:text-stone-300">
+          Selecciona una finca para trabajar o únete con un código de invitación.
+        </p>
+      </div>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-300">
+        <span class="w-1.5 h-1.5 rounded-full bg-lime-500"></span> {rolLabel[user.role] ?? user.role}
+      </span>
+    </div>
+
+    <div id="finca-alert" class="hidden mb-6 px-4 py-3 rounded-xl text-sm font-medium"></div>
+
+    <!-- Unirse con código -->
+    <div class="bg-white dark:bg-stone-800 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-700 p-6 mb-8">
+      <h2 class="text-lg font-bold text-green-950 dark:text-white mb-1">¿Tienes un código de invitación?</h2>
+      <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
+        Pégalo aquí para unirte a una finca como trabajador.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input
+          id="join-code"
+          type="text"
+          placeholder="Ej: K7M4XP9Q"
+          class="flex-1 px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white uppercase tracking-wide focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none shadow-sm"
+        />
+        <button
+          id="join-btn"
+          class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors"
+        >
+          Unirme a la finca
+        </button>
+      </div>
+    </div>
+
+    <!-- Crear finca -->
+    {
+      puedeCrear && (
+        <div class="bg-white dark:bg-stone-800 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-700 p-6 mb-8">
+          <h2 class="text-lg font-bold text-green-950 dark:text-white mb-1">Crear una finca</h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
+            Como Agropecuario eres el dueño: puedes invitar trabajadores y configurar la finca.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input id="new-nombre" type="text" placeholder="Nombre (ej: Finca La Esperanza)"
+              class="px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none shadow-sm" />
+            <input id="new-ubicacion" type="text" placeholder="Ubicación (opcional)"
+              class="px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none shadow-sm" />
+            <input id="new-descripcion" type="text" placeholder="Descripción (opcional)"
+              class="px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none shadow-sm" />
+          </div>
+          <button
+            id="create-btn"
+            class="mt-4 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors"
+          >
+            Crear finca
+          </button>
+        </div>
+      )
+    }
+
+    <!-- Lista de fincas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {
+        fincas.length === 0 ? (
+          <div class="md:col-span-2 text-center py-16 bg-white dark:bg-stone-800 rounded-2xl border border-dashed border-stone-300 dark:border-stone-600">
+            <p class="text-5xl mb-3">🌱</p>
+            <p class="font-semibold text-stone-700 dark:text-stone-300">Aún no perteneces a ninguna finca</p>
+            <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
+              Pide un código de invitación al dueño de la finca o crea una si eres Agropecuario.
+            </p>
+          </div>
+        ) : (
+          fincas.map((f) => (
+            <div
+              class={`bg-white dark:bg-stone-800 rounded-2xl shadow-sm border p-6 transition-all hover:shadow-md ${
+                f.activa
+                  ? "border-stone-200 dark:border-stone-700"
+                  : "border-stone-200 dark:border-stone-700 opacity-70"
+              }`}
+            >
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <h3 class="font-bold text-lg text-green-950 dark:text-white">{f.nombre}</h3>
+                  <p class="text-xs text-stone-500 dark:text-stone-400">
+                    Dueño: {f.dueno_nombre || "—"} · {f.miembros_count ?? 0} miembro(s)
+                  </p>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                  <span
+                    class={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                      f.rol_finca === "dueno"
+                        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                        : "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                    }`}
+                  >
+                    {f.rol_finca === "dueno" ? "Dueño" : "Miembro"}
+                  </span>
+                  {!f.activa && (
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-stone-200 text-stone-600 dark:bg-stone-700 dark:text-stone-300">
+                      Archivada
+                    </span>
+                  )}
+                </div>
+              </div>
+              {f.descripcion && (
+                <p class="text-sm text-stone-600 dark:text-stone-300 mb-2">{f.descripcion}</p>
+              )}
+              {f.ubicacion && (
+                <p class="text-xs text-stone-500 dark:text-stone-400 mb-4">📍 {f.ubicacion}</p>
+              )}
+              <div class="flex flex-wrap gap-2">
+                {f.activa ? (
+                  <button
+                    data-activar={f.id}
+                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors activar-btn"
+                  >
+                    Trabajar aquí →
+                  </button>
+                ) : (
+                  <span class="px-4 py-2 text-xs font-semibold text-stone-500 bg-stone-100 dark:bg-stone-700 dark:text-stone-400 rounded-lg">
+                    Finca archivada
+                  </span>
+                )}
+                <a
+                  href={`/fincas/${f.id}`}
+                  class="px-4 py-2 bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-800 dark:text-stone-200 text-xs font-semibold rounded-lg transition-colors"
+                >
+                  {f.rol_finca === "dueno" || user.role === "Superadmin" || user.role === "Admin"
+                    ? "Gestionar"
+                    : "Ver detalles"}
+                </a>
+              </div>
+            </div>
+          ))
+        )
+      }
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const sileo = () => (window as any).sileo;
+
+  function alerta(msg: string, tipo: "success" | "error" | "info") {
+    const box = document.getElementById("finca-alert")!;
+    box.textContent = msg;
+    box.className = `mb-6 px-4 py-3 rounded-xl text-sm font-medium ${
+      tipo === "success"
+        ? "bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
+        : tipo === "error"
+          ? "bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800"
+          : "bg-stone-50 text-stone-700 border border-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700"
+    }`;
+    sileo()?.[tipo]?.({ title: msg });
+  }
+
+  async function activarFinca(fincaId: number) {
+    const res = await fetch("/api/finca/activa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fincaId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "No se pudo activar la finca.");
+    return data;
+  }
+
+  document.querySelectorAll<HTMLButtonElement>(".activar-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = Number(btn.dataset.activar);
+      btn.disabled = true;
+      try {
+        const data = await activarFinca(id);
+        alerta(`Ahora trabajas en "${data.finca.nombre}".`, "success");
+        setTimeout(() => (window.location.href = "/metrics"), 600);
+      } catch (err: any) {
+        alerta(err.message || "Error al activar la finca.", "error");
+        btn.disabled = false;
+      }
+    });
+  });
+
+  document.getElementById("join-btn")?.addEventListener("click", async () => {
+    const codigo = (document.getElementById("join-code") as HTMLInputElement).value.trim();
+    if (!codigo) return alerta("Ingresa un código de invitación.", "error");
+    const btn = document.getElementById("join-btn") as HTMLButtonElement;
+    btn.disabled = true;
+    try {
+      const res = await fetch("/api/invitaciones/usar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "No se pudo canjear el código.");
+      alerta(data.message, "success");
+      setTimeout(() => (window.location.href = "/fincas"), 800);
+    } catch (err: any) {
+      alerta(err.message || "Error al canjear el código.", "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById("create-btn")?.addEventListener("click", async () => {
+    const nombre = (document.getElementById("new-nombre") as HTMLInputElement).value.trim();
+    const ubicacion = (document.getElementById("new-ubicacion") as HTMLInputElement).value.trim();
+    const descripcion = (document.getElementById("new-descripcion") as HTMLInputElement).value.trim();
+    if (nombre.length < 2) return alerta("El nombre debe tener al menos 2 caracteres.", "error");
+    const btn = document.getElementById("create-btn") as HTMLButtonElement;
+    btn.disabled = true;
+    try {
+      const res = await fetch("/api/fincas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, ubicacion, descripcion }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "No se pudo crear la finca.");
+      await activarFinca(data.finca.id);
+      alerta(`Finca "${data.finca.nombre}" creada con sus 20 plantas.`, "success");
+      setTimeout(() => (window.location.href = `/fincas/${data.finca.id}`), 800);
+    } catch (err: any) {
+      alerta(err.message || "Error al crear la finca.", "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>

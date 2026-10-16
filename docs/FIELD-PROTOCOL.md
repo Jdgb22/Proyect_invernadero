@@ -35,7 +35,7 @@ Si un sensor falló ese día, escribe **`N/D`** (no inventes números: el sistem
 
 1. Revisa: 20 filas (una por planta), sin IDs vacíos ni fechas mezcladas.
 2. Comparte la hoja como **lectora** (_"Cualquier persona con el enlace puede ver"_) o **publícala como CSV**.
-3. En la app: Historial → **Conectar Google Sheets** → pegar URL → confirmar el conteo (esperado: 20 por día).
+3. En la app, con la **cuenta dueña de la finca**, Historial → **Conectar Google Sheets** → pegar URL → confirmar el conteo (esperado: 20 por día). Los miembros pueden usar **Importar Excel/CSV**.
 4. Verifica en el Dashboard que tu fila ya no esté gris.
 
 ## 5. Errores frecuentes

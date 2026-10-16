@@ -1,9 +1,9 @@
-export interface WeatherData {
+interface WeatherData {
   temperature: number;
   humidity: number;
   rainProbability: number;
   weatherCode: number;
-  irradiance: number;
+  windSpeed: number;
   isFallback: boolean;
   source?: string;
 }
@@ -58,7 +58,7 @@ export async function fetchWeatherData(
       humidity: 60,
       rainProbability: 0,
       weatherCode: 0,
-      irradiance: 450,
+      windSpeed: 5,
       source: "Offline Fallback",
       isFallback: true,
     };
@@ -67,7 +67,7 @@ export async function fetchWeatherData(
 
 async function fetchOpenMeteo(lat: number, lon: number) {
   const res = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,shortwave_radiation&hourly=precipitation_probability&timezone=auto`,
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=precipitation_probability&timezone=auto`,
   );
 
   if (!res.ok)
@@ -85,7 +85,7 @@ async function fetchOpenMeteo(lat: number, lon: number) {
     humidity: current.relative_humidity_2m,
     rainProbability: rainProb,
     weatherCode: current.weather_code,
-    irradiance: current.shortwave_radiation,
+    windSpeed: current.wind_speed_10m,
   };
 }
 

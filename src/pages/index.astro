@@ -1,20 +1,36 @@
 ---
 import { getSession } from "auth-astro/server";
 import Dashboard from "../frontend/components/Dashboard.astro";
+import SinFinca from "../frontend/components/SinFinca.astro";
 import Welcome from "../frontend/components/Welcome.astro";
 import Layout from "../frontend/layouts/Layout.astro";
 import Navbar from "../frontend/components/navbar.astro";
+import { resolveActiveFinca } from "../backend/services/fincas";
+import { getFincaCookie } from "../backend/services/authz";
 
 const session = await getSession(Astro.request);
 const isAuthenticated = !!session;
+const ctx = await resolveActiveFinca(Astro.request);
+const tieneFincaActiva = !!ctx?.finca;
+const tieneFincas = (ctx?.fincas.length ?? 0) > 0;
+
+// Staff (Superadmin/Admin): su "inicio" es el panel de fincas. Solo entran al
+// tablero de una finca cuando la seleccionan explícitamente (cookie finca_activa).
+const rol = ctx?.user?.role;
+const esStaff = rol === "Superadmin" || rol === "Admin";
+const tieneFincaSeleccionada = (Number(getFincaCookie(Astro.request)) || 0) > 0;
+if (esStaff && (!tieneFincaSeleccionada || !ctx?.finca)) {
+  return Astro.redirect("/admin");
+}
 ---
+
 
 <Layout>
   {
     isAuthenticated ? (
       <>
         <Navbar />
-        <Dashboard />
+        {tieneFincaActiva ? <Dashboard /> : <SinFinca tieneFincas={tieneFincas} />}
       </>
     ) : (
       <Welcome />

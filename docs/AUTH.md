@@ -9,10 +9,10 @@
 ## 1. Arquitectura
 
 ```
- Navegador ──/signin──▶ signIn('credentials' | 'google') ──▶ Auth.js ──▶ PostgreSQL
-   │                                                                     users/accounts/
-   │                                                                     verification_token
-   └────────◀ JWT en cookie segura ───────────────────────────────────────┘
+ Navegador ──/ (login)──▶ signIn('credentials' | 'google') ──▶ Auth.js ──▶ PostgreSQL
+   │                                                                       users/accounts/
+   │                                                                       verification_token
+   └────────◀ JWT en cookie segura ────────────────────────────────────────┘
  Páginas (/ , /metrics, /historial, /settings) leen getSession(Astro.request)
 ```
 
@@ -20,6 +20,7 @@
 - `trustHost: true` + fix de proxy en `middleware.ts` (`x-forwarded-proto/host` → `AUTH_URL`) para Cloudflare/Vercel.
 - `AUTH_SECRET` obligatorio en producción (lanza error si falta); en dev usa clave temporal con warning.
 - Google con `allowDangerousEmailAccountLinking: true` (vincula OAuth a cuenta existente por email).
+- **`accounts`/`sessions` nacen vacías**: con credenciales + estrategia JWT no se escribe en ellas (`accounts` solo se llena al usar Google OAuth; `sessions` queda sin uso). Es lo esperado, no un fallo (ver [DATABASE §2](./DATABASE.md)).
 
 ---
 
@@ -31,7 +32,7 @@
 2. Compara con `bcrypt.compare(password, user.password)` (solo hashes `$2a$/$2b$`).
 3. Éxito → `{ id, name, email (o phone@invernadero.local), image, role }`. Fallo → `null` → Auth.js responde `CredentialsSignin`.
 
-En `/signin`, el cliente llama `signIn('credentials', { callbackUrl: '/' }, { email, password })` y luego fuerza `window.location.href = '/'`.
+En `/` (login/registro, antes `/signin`), el cliente llama `signIn('credentials', { callbackUrl: '/' }, { email, password })` y luego fuerza `window.location.href = '/'`. La ruta `/signin` se conserva solo como alias que redirige a `/` (conservando `?desde=` y `?codigo=`).
 
 ## 3. Login con Google
 
@@ -39,7 +40,7 @@ Botón `Continuar con Google` (`<SignIn provider="google">`). Requiere `GOOGLE_C
 
 ## 4. Registro
 
-`POST /api/auth/register` → valida (nombre, contacto, email/teléfono únicos, fecha real no futura, contraseña) → `bcrypt.genSalt(10)` + `hash` → `INSERT INTO users … role='Campesino'` → `201` con usuario (sin contraseña). **El rol del formulario se ignora**: toda cuenta nace `Campesino`. Detalle de campos y errores en [ENDPOINTS](./ENDPOINTS.md).
+`POST /api/auth/register` → valida (nombre, contacto, email/teléfono únicos, fecha real no futura, contraseña) → `bcrypt.genSalt(10)` + `hash` → `INSERT INTO users …` → `201` con usuario (sin contraseña). **El usuario elige el rol al registrarse** (`accountType` ∈ {`Campesino` def., `Agropecuario`}; el enum Zod impide pedir roles staff). Si es `Agropecuario` y envía `fincaNombre` (opcional), se crea su primera finca. Detalle de campos y errores en [ENDPOINTS](./ENDPOINTS.md).
 
 ## 5. Recuperación de contraseña (código 6 dígitos, 15 min)
 
@@ -58,21 +59,42 @@ jwt({ token, user }); // login: token.sub = user.id, token.role = user.role ?? '
 session({ session, token }); // cada request: session.user.id = token.sub, session.user.role = token.role
 ```
 
-Roles (`user_role_enum`): `Campesino` (defecto) · `Agronomo` · `Admin` · `Super admin`.
-El JWT **no se refresca solo** ante un cambio de rol en BD: el usuario debe **cerrar y volver a iniciar sesión**. Cambio de rol: `UPDATE users SET role='Admin' WHERE email='…'`.
+Roles (`user_role_enum`): `Superadmin` · `Admin` · `Agropecuario` · `Campesino` (defecto).
 
-Las páginas muestran el rol (`/metrics`, `/historial`: `Administrador de Cultivo` si `role==='admin'`, si no `Operario de Campo` — ojo: compara minúscula `'admin'`, nunca coincide con el enum `'Admin'`; las páginas siempre muestran _Operario de Campo_. Bug cosmético conocido).
+| Rol              | Alcance                                                                                                           |
+| :--------------- | :---------------------------------------------------------------------------------------------------------------- |
+| **Superadmin**   | Control total: gestiona usuarios/roles, borra fincas (hard delete). Cuentas creadas con `scripts/seed-admin.mjs`. |
+| **Admin**        | Ve todas las fincas, archiva/restaura y asiste en operación. **No** gestiona usuarios/roles ni borra fincas.      |
+| **Agropecuario** | Dueño de finca(s): = Campesino + gestión (editar, invitar, expulsar) en SUS fincas.                               |
+| **Campesino**    | Trabaja en las fincas a las que se une por invitación. Puede pertenecer a varias (N:N). No configura la finca.    |
 
-## 7. Protección de rutas ⚠️ (leer antes de tocar)
+> **El JWT no es fuente de verdad para el rol.** La autorización se relee de la BD en cada operación sensible vía `getAuthUser()` (`src/backend/services/authz.ts`). Así, un cambio de rol o la pérdida de membresía surte efecto aunque el token siga vigente. Las etiquetas visibles en `/metrics` y `/historial` se generan desde el rol real.
 
-| Capa                                                                           | Qué protege                                                                                   | Estado                                                    |
-| :----------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------- | :-------------------------------------------------------- |
-| `middleware.ts` (rutas)                                                        | Solo `pathname.startsWith('/dashboard')` → redirect `/`                                       | **Muerta**: no existe `/dashboard`. No protege nada real. |
-| `middleware.ts` (headers)                                                      | **Toda respuesta**: `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `HSTS`, `CSP` base | **Activa** (defensa en profundidad, `1ccbf24`).           |
-| Páginas (`index/metrics/historial/settings`)                                   | `getSession` → sin sesión renderizan `Welcome`                                                | **Activa**, pero es render-condicional, no redirect 302.  |
-| Handlers API (`export-excel`, `sync-sheets`, `siata`, `register/forgot/reset`) | Nada interno (sí validación **Zod**)                                                          | Dependen de llamarse desde páginas con sesión.            |
+### Fincas y membresías
 
-**Endurecimiento recomendado** (pendiente): en `middleware.ts` proteger `/metrics`, `/historial`, `/settings` (+ `/api/export-excel`, `/api/sync-sheets` salvo auth públicos) con `getSession` + `redirect('/signin')`, o verificar sesión dentro de cada handler sensible.
+- `fincas` (multi-tenant) con `dueno_id`; `finca_miembros` es la relación N:N usuario↔finca con `rol_finca ∈ {dueno, miembro}`.
+- `plantas` y `lecturas` llevan `finca_id`: **los datos agronómicos están separados por finca**.
+- La finca activa se guarda en la cookie httpOnly `finca_activa`; en cada API se valida contra la BD (membresía o staff). Ver `getFincaAccess`, `canManageFinca`, `canArchiveFinca`, `canViewFincaData`, `canWriteFincaData`.
+- **Invitaciones** (`finca_invitaciones`): código de 8 caracteres (nanoid + `nanoid-dictionary`, sin prefijo; p.ej. `K7M4XP9Q`) + link `/invitar/<codigo>`, con expiración, usos máximos y revocación. El canje (`redeemInvitacion`) es atómico (`FOR UPDATE`). Tope de **5 fincas creadas por usuario**.
+- **Archivar**: el dueño o un Admin oculta la finca (restaurable). **Hard delete**: solo Superadmin.
+- **Conectar/sincronizar Google Sheets**: exclusivo del **dueño** de la finca (`rol_finca = 'dueno'`). Los miembros (p. ej. un agronomo invitado) y el staff reciben `403` (`canConnectSheets`, `POST /api/sync-sheets`). La UI oculta el botón "Conectar Google Sheets" a quien no sea dueño; registrar mediciones manualmente (`.csv/.xlsx`) sigue permitido a cualquier miembro.
+
+### Página de inicio (`/`) según rol
+
+- **Staff (Superadmin/Admin) sin finca activa** → el "Inicio" los lleva al panel **`/admin`** (lista de fincas); desde ahí, la acción **Entrar** fija la finca activa (cookie `finca_activa`) y abre su tablero.
+- **Agropecuario/Campesino** → `/` muestra el tablero (`Dashboard`) si tienen finca activa, o `SinFinca` (crear/unirse) si no.
+- En el navbar, el staff ve `Panel` + (`Tablero`/`Métricas`/`Historial` solo con finca activa) + `Fincas` + `Configuración`; el resto ve `Inicio`/`Métricas`/`Historial`/`Fincas`/`Configuración`.
+
+## 7. Protección de rutas
+
+| Capa                         | Qué protege                                                                                                                                                                                       | Estado                                               |
+| :--------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------- |
+| `middleware.ts` (headers)    | **Toda respuesta**: `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `COOP`, `HSTS`, `CSP`                                                                            | **Activa**.                                          |
+| `middleware.ts` (rutas)      | Páginas `/metrics /historial /settings /fincas /admin` → redirect a `/` con `?desde=`; APIs `/api/fincas /api/invitaciones /api/admin /api/finca /api/sync-sheets /api/export-excel` → `401` JSON | **Activa**.                                          |
+| `middleware.ts` (rate-limit) | `register`, `forgot-password`, `reset-password`, `callback/credentials`, `invitaciones/usar` (por IP)                                                                                             | **Activa** (`src/backend/services/rateLimit.ts`).    |
+| Handlers API                 | Verificación de sesión + autorización de finca dentro de cada handler (`getAuthUser`, `getFincaAccess`)                                                                                           | **Activa**. Los endpoints de datos exigen membresía. |
+
+> Defensa en profundidad: el middleware filtra el acceso grueso, pero cada handler de datos vuelve a validar sesión y permisos (Zero Trust).
 
 ## 8. Variables y archivos
 

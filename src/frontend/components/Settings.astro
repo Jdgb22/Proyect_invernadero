@@ -1,12 +1,24 @@
 ---
 // Settings.astro
 import { getSession } from "auth-astro/server";
-import { Blobatar } from "@blobatar/react";
-import "blobatar/motion.css";
+import BlobatarAvatar from "./BlobatarAvatar.tsx";
+import { getAuthUser } from "../../backend/services/authz";
+import { listFincasForUser } from "../../backend/services/fincas";
 
 const session = await getSession(Astro.request);
 const userEmail = session?.user?.email || "usuario@ejemplo.com";
 const userName = session?.user?.name || "Usuario del Sistema";
+
+const user = await getAuthUser(Astro.request);
+const fincas = user ? await listFincasForUser(user.id, user.role) : [];
+
+const roleBadge: Record<string, { label: string; cls: string }> = {
+  Superadmin: { label: "Superadmin", cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300" },
+  Admin: { label: "Admin", cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300" },
+  Agropecuario: { label: "Agropecuario", cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
+  Campesino: { label: "Campesino", cls: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300" },
+};
+const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
 ---
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -19,12 +31,15 @@ const userName = session?.user?.name || "Usuario del Sistema";
   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
     <!-- Sidebar de Navegación -->
     <div class="md:col-span-1">
-      <nav class="flex flex-col gap-2 sticky top-8">
+      <nav class="flex flex-col gap-2 md:sticky md:top-20">
         <button class="settings-tab active flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium bg-[#f4fce3] text-green-900 border border-green-200 dark:bg-stone-800 dark:text-white dark:border-[#166534] shadow-sm" data-target="profile">
           <span class="text-xl">👤</span> Perfil de Usuario
         </button>
         <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="system">
           <span class="text-xl">⚙️</span> Preferencias del Sistema
+        </button>
+        <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="fincas">
+          <span class="text-xl">🌾</span> Mis Fincas
         </button>
         <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="notifications">
           <span class="text-xl">🔔</span> Notificaciones
@@ -51,7 +66,7 @@ const userName = session?.user?.name || "Usuario del Sistema";
                 {session?.user?.image ? (
                   <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
                 ) : (
-                  <Blobatar client:load name={userEmail} animate="hover" size={80} />
+                  <BlobatarAvatar client:load name={userEmail} size={80} />
                 )}
               </div>
               <button class="absolute bottom-0 right-0 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-full p-1.5 shadow-sm text-sm hover:bg-stone-50 dark:hover:bg-stone-600 transition-colors">
@@ -61,8 +76,8 @@ const userName = session?.user?.name || "Usuario del Sistema";
             <div>
               <h3 class="text-lg font-semibold text-stone-900 dark:text-white">{userName}</h3>
               <p class="text-stone-500 dark:text-stone-400 text-sm">{userEmail}</p>
-              <span class="inline-flex mt-2 items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-300">
-                <span class="w-1.5 h-1.5 rounded-full bg-lime-500"></span> Administrador
+              <span class={`inline-flex mt-2 items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.cls}`}>
+                <span class="w-1.5 h-1.5 rounded-full bg-current"></span> {badge.label}
               </span>
             </div>
           </div>
@@ -146,6 +161,56 @@ const userName = session?.user?.name || "Usuario del Sistema";
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Panel de Fincas -->
+      <div id="fincas-panel" class="settings-panel hidden bg-white dark:bg-stone-800 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden">
+        <div class="p-6 border-b border-stone-100 dark:border-stone-700">
+          <h2 class="text-xl font-bold text-green-950 dark:text-white">Mis Fincas</h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Fincas a las que perteneces. Únete a nuevas con un código.</p>
+        </div>
+        <div class="p-6 space-y-5">
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input id="settings-join-code" type="text" placeholder="Ej: K7M4XP9Q"
+              class="flex-1 px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white uppercase tracking-wide focus:ring-2 focus:ring-green-500 outline-none shadow-sm" />
+            <button id="settings-join-btn"
+              class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+              Unirme con código
+            </button>
+          </div>
+          <ul class="divide-y divide-stone-100 dark:divide-stone-700/60">
+            {
+              fincas.length === 0 ? (
+                <li class="py-4 text-sm text-stone-500 dark:text-stone-400 text-center">
+                  Aún no perteneces a ninguna finca.
+                </li>
+              ) : (
+                fincas.map((f) => (
+                  <li class="py-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p class="font-semibold text-stone-900 dark:text-white">{f.nombre}</p>
+                      <p class="text-xs text-stone-500 dark:text-stone-400">
+                        {f.rol_finca === "dueno" ? "Dueño" : "Miembro"} · {f.miembros_count ?? 0} miembro(s)
+                        {!f.activa && " · Archivada"}
+                      </p>
+                    </div>
+                    <div class="flex gap-2">
+                      <a href={`/fincas/${f.id}`} class="px-3 py-1.5 text-xs font-semibold bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 rounded-lg text-stone-800 dark:text-stone-200 transition-colors">
+                        Ver
+                      </a>
+                      {f.rol_finca !== "dueno" && f.activa && (
+                        <button data-salir={f.id} class="px-3 py-1.5 text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 rounded-lg text-rose-700 dark:text-rose-300 transition-colors">
+                          Salir
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                ))
+              )
+            }
+          </ul>
+          <a href="/fincas" class="inline-block text-sm font-semibold text-green-600 dark:text-green-400 hover:underline">Ir a Mis Fincas →</a>
         </div>
       </div>
 
@@ -330,5 +395,47 @@ const userName = session?.user?.name || "Usuario del Sistema";
         }, 800);
       });
     }
+
+    // --- Unirse / salir de fincas ---
+  document.getElementById('settings-join-btn')?.addEventListener('click', async () => {
+    const input = document.getElementById('settings-join-code') as HTMLInputElement;
+    const codigo = input.value.trim();
+    if (!codigo) {
+      getSileo()?.error({ title: "Ingresa un código de invitación." });
+      return;
+    }
+    try {
+      const res = await fetch('/api/invitaciones/usar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'No se pudo canjear el código.');
+      getSileo()?.success({ title: data.message });
+      setTimeout(() => location.reload(), 900);
+    } catch (err: any) {
+      getSileo()?.error({ title: err.message || 'Error al canjear el código.' });
+    }
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-salir]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('¿Salir de esta finca? Perderás acceso a sus datos.')) return;
+      try {
+        const res = await fetch('/api/fincas/salir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fincaId: Number(btn.dataset.salir) }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'No se pudo salir.');
+        getSileo()?.success({ title: data.message });
+        setTimeout(() => location.reload(), 800);
+      } catch (err: any) {
+        getSileo()?.error({ title: err.message || 'Error al salir de la finca.' });
+      }
+    });
+  });
   });
 </script>

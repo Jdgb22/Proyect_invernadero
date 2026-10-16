@@ -104,7 +104,13 @@
 
 ### US-011: Importación desde Google Sheets
 
-- **Usuario:** Usuario con permisos de administrador
-- **Descripción:** El usuario importa mediciones **desde** una hoja pública de Google Sheets (dirección Sheets → app; no se escribe en Sheets).
-- **Mecanismo:** `POST /api/sync-sheets { url }` (convierte a CSV, parsea columnas y devuelve `records`; viven en memoria del navegador, no persisten en PG).
+- **Usuario:** **Dueño** de la finca activa (`rol_finca='dueno'`)
+- **Descripción:** El usuario importa lecturas **desde** una hoja pública de Google Sheets (dirección Sheets → app; no se escribe en Sheets).
+- **Mecanismo:** `POST /api/sync-sheets { url }` (convierte a CSV, parsea columnas y **persiste en `lecturas` de la finca activa**). Otros miembros y staff reciben `403` (usar Importar Excel/CSV).
 - **Resultado esperado:** Mediciones visibles en Dashboard/Métricas tras la importación.
+
+### US-012: Panel del staff y finca activa
+
+- **Usuario:** Superadmin / Admin
+- **Descripción:** El staff aterriza en el panel `/admin` (lista de todas las fincas). Con **Entrar** fija la `finca_activa` (cookie) y abre su tablero/métricas/historial como si fuera un miembro; puede archivar/restaurar. Solo Superadmin gestiona usuarios y elimina fincas.
+- **Resultado esperado:** El staff opera cualquier finca sin ser miembro; el navbar muestra `Panel` y, con finca activa, `Tablero`/`Métricas`/`Historial`.

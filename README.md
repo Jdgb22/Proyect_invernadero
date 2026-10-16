@@ -1,6 +1,6 @@
 # 🌿 Proyecto Invernadero (Macollo) - Monitoreo Agronómico
 
-Plataforma web para el **monitoreo agronómico de un invernadero real**: matriz de **20 plantas (4 filas × 5 columnas)**, métricas de suelo y ambiente (pH, temperaturas, humedad, crecimiento, sanidad, productividad), **historial por fecha** con importación/exportación Excel y sincronización con **Google Sheets**, más clima externo (**SIATA** local + **Open-Meteo** global).
+Plataforma web **multi-finca** para el **monitoreo agronómico**: matriz de **20 plantas (4 filas × 5 columnas)** por finca, métricas de suelo y ambiente (pH, temperaturas, humedad, crecimiento, sanidad, productividad), **historial por fecha** con importación/exportación Excel y sincronización con **Google Sheets**, más clima externo (**Open-Meteo** global; **SIATA** local latente). Roles: `Superadmin`, `Admin`, `Agropecuario`, `Campesino`.
 
 **Autores:**
 
@@ -9,7 +9,7 @@ Plataforma web para el **monitoreo agronómico de un invernadero real**: matriz 
 - Mateo Herrera
 - Juan David Giraldo
 - Alejandro Florez
-- Luis Angel Mesa
+- Victor Manuel Cordoba Larez
 
 > 👤 **¿Eres usuario final?** Ve directo al [Manual de Usuario](./MANUAL_USUARIO.md). Este README es para desarrollo y despliegue.
 
@@ -17,14 +17,15 @@ Plataforma web para el **monitoreo agronómico de un invernadero real**: matriz 
 
 ## ✨ Funcionalidades por módulo
 
-| Módulo (ruta)                       | Qué hace                                                                                                                                                                                                                  |
-| :---------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Inicio** (`/`)                    | Dashboard con matriz 4×5 de plantas, semáforo 🟢 Óptimo / 🟡 Atención / 🔴 Crítico / ⚪ Sin datos, cards de humedad y temp. aire, modal de detalle por planta (pH, temp suelo/aire, crecimiento, productividad, sanidad). |
-| **Métricas** (`/metrics`)           | Promedios globales y por fila, badges de pH (Óptimo 6.0–6.8 / Atención / Crítico), sanidad y productividad, tabla estilo Excel con modal y gráficos por planta.                                                           |
-| **Historial** (`/historial`)        | Consulta cronológica por fecha, **importación Excel/CSV**, **conexión Google Sheets** (URL pública → CSV), **exportación `.xlsx`** con ExcelJS.                                                                           |
-| **Configuración** (`/settings`)     | Perfil (nombre editable, correo solo lectura), tema Claro/Oscuro/Auto, frecuencia de sincronización IoT, notificaciones y zona de peligro.                                                                                |
-| **Auth** (`/signin`, `/api/auth/*`) | Login email+contraseña (bcrypt + PostgreSQL), registro con rol (`Campesino/Agrónomo/Admin/Super admin`), OAuth Google, recuperación por código (email/SMS, ~15 min). Sesión JWT con rol.                                  |
-| **Clima externo**                   | Proxy `/api/siata` (evita CORS) para SIATA Medellín + `fetchWeatherData()` a Open-Meteo como respaldo global.                                                                                                             |
+| Módulo (ruta)                                    | Qué hace                                                                                                                                                                                                                                                                                                           |
+| :----------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Inicio** (`/`)                                 | Dashboard con matriz 4×5 de plantas, semáforo 🟢 Óptimo / 🟡 Atención / 🔴 Crítico / ⚪ Sin datos, cards de humedad y temp. aire, modal de detalle por planta (pH, temp suelo/aire, crecimiento, productividad, sanidad). Para **Superadmin/Admin** sin finca elegida, el inicio es el panel de fincas (`/admin`). |
+| **Métricas** (`/metrics`)                        | Promedios globales y por fila, badges de pH (Óptimo 6.0–6.8 / Atención / Crítico), sanidad y productividad, tabla estilo Excel con modal y gráficos por planta.                                                                                                                                                    |
+| **Historial** (`/historial`)                     | Consulta cronológica por fecha, **importación Excel/CSV**, **conexión Google Sheets** (URL pública → CSV, **solo el dueño de la finca**), **exportación `.xlsx`** con ExcelJS.                                                                                                                                     |
+| **Configuración** (`/settings`)                  | Perfil (nombre editable, correo solo lectura), tema Claro/Oscuro/Auto, frecuencia de sincronización IoT, notificaciones y zona de peligro.                                                                                                                                                                         |
+| **Fincas** (`/fincas`, `/fincas/[id]`, `/admin`) | Multi-tenant: crear finca o unirse por invitación (código 8 chars), cambiar finca activa, gestionar miembros e invitaciones. `/admin` es el panel del staff (fincas + **Entrar**; usuarios y hard-delete solo `Superadmin`).                                                                                       |
+| **Auth** (`/` → `/api/auth/*`)                   | Login email/nombre/teléfono+contraseña (bcrypt + PostgreSQL), registro con `accountType` (`Campesino`/`Agropecuario`), OAuth Google, recuperación por código (email/SMS, ~15 min). Sesión JWT con rol releído de BD. (`/signin` es alias a `/`.)                                                                   |
+| **Clima externo**                                | Proxy `/api/siata` (evita CORS) para SIATA Medellín + `fetchWeatherData()` a Open-Meteo como respaldo global.                                                                                                                                                                                                      |
 
 ---
 
@@ -54,13 +55,13 @@ Construido con SSR moderno. Detalle en [ARCHITECTURE.md](./ARCHITECTURE.md) y [d
 ├── frontend/components/  # Dashboard, Metrics, Historial, Settings, Welcome, navbar
 ├── frontend/layouts/     # Layout.astro (head, metadatos, navbar)
 ├── frontend/styles/      # global.css (Tailwind)
-├── pages/                # /index, /signin, /metrics, /historial, /settings
-├── pages/api/            # auth/register, auth/forgot-password, auth/reset-password,
-│                         # export-excel, sync-sheets, siata
-├── backend/services/     # metricsData.ts (matriz 20 plantas), weather.ts, siata.ts
+├── pages/                # /index (portada + login), /signin (alias→/), /metrics, /historial, /settings, /fincas, /admin, /invitar/[codigo]
+├── pages/api/            # auth/* (register, check-availability, forgot/reset), fincas/*, invitaciones/*,
+│                         # admin/*, export-excel, sync-sheets, siata
+├── backend/services/     # metricsData, weather, siata, authz, fincas, lecturas, rateLimit
 ├── services/             # notifications.ts (email/SMS recuperación)
-├── db/                   # auth-schema.sql, invernadero.sql, client.ts (pool pg)
-├── middleware.ts         # Guarda de rutas privadas + fix proxy (Cloudflare/Vercel)
+├── db/                   # auth-schema.sql, invernadero.sql (+ migrations/), client.ts (pool pg)
+├── middleware.ts         # Guarda rutas privadas + security headers + rate-limit + fix proxy
 └── env.d.ts
 /auth.config.ts           # Credentials + Google, JWT con rol, PostgresAdapter
 ```
@@ -108,7 +109,7 @@ Construido con SSR moderno. Detalle en [ARCHITECTURE.md](./ARCHITECTURE.md) y [d
 
 3. **Base de datos:** crea la BD `invernadero` y ejecuta en orden:
    - `src/db/auth-schema.sql` (tablas `users`, cuentas OAuth, tokens de recuperación)
-   - `src/db/invernadero.sql` (tipos como `tipo_medicion_enum`, tablas de mediciones)
+   - `src/db/invernadero.sql` (modelo por finca: `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas`, `lecturas`)
 
    ```bash
    createdb invernadero
@@ -125,13 +126,14 @@ Construido con SSR moderno. Detalle en [ARCHITECTURE.md](./ARCHITECTURE.md) y [d
    > En segundo plano: `pnpm astro dev --background`. Gestión: `pnpm astro dev stop`, `pnpm astro dev status`, `pnpm astro dev logs`.
 
 5. **Abre `http://localhost:4321`:**
-   - Ve a `/signin` → pestaña **Registrarse** → crea tu usuario (rol `Super admin` para el primero).
-   - Inicia sesión → entrarás al Dashboard `/`.
-   - Si ves tarjetas grises (`--`/`N/D`), ve a `/historial` e importa un Excel/CSV o conecta Google Sheets.
+   - Ve a `/` → pestaña **Registrarse** → crea tu usuario eligiendo `Campesino` (te unes con un código) o `Agropecuario` (creas tu finca).
+   - Las cuentas privilegiadas (`Admin`/`Superadmin`) se crean por script: `node scripts/seed-admin.mjs`.
+   - Inicia sesión → entrarás al Dashboard `/` (o a `/admin` si eres staff sin finca elegida, o a `/fincas` si aún no tienes finca activa).
+   - Si ves tarjetas grises (`--`/`N/D`), ve a `/historial` e importa un Excel/CSV o conecta Google Sheets (solo el **dueño** de la finca).
 
 ### Roles y sesiones
 
-Roles: `Campesino` (defecto) · `Agrónomo` · `Admin` · `Super admin`. El rol se guarda en `users.role` y viaja en el JWT (`auth.config.ts` → callbacks `jwt`/`session`). El `middleware.ts` protege rutas privadas y corrige `x-forwarded-proto/host` detrás de proxies (Cloudflare/Vercel).
+Roles: `Superadmin` · `Admin` · `Agropecuario` · `Campesino`. El rol se guarda en `users.role` y viaja en el JWT; `getAuthUser` lo **relee de BD** en cada petición (`auth.config.ts` → callbacks `jwt`/`session`). El acceso a datos se decide por **membresía de finca** (`finca_miembros`) + cookie `finca_activa`. El `middleware.ts` protege rutas privadas, aplica security headers y corrige `x-forwarded-proto/host` detrás de proxies (Cloudflare/Vercel).
 
 ---
 
@@ -153,9 +155,10 @@ Roles: `Campesino` (defecto) · `Agrónomo` · `Admin` · `Super admin`. El rol 
 | :--------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
 | `[Auth] Falta AUTH_SECRET` en producción | Define `AUTH_SECRET` en `.env` / Vercel.                                                                         |
 | Login siempre "Credenciales incorrectas" | Usuario no existe o hash bcrypt inválido; verifica `users` en pgAdmin. El login acepta email, nombre o teléfono. |
-| Tarjetas `--` / `N/D`                    | No hay mediciones; importa desde `/historial`.                                                                   |
+| Tarjetas `--` / `N/D`                    | No hay lecturas en la finca activa; importa desde `/historial`.                                                  |
 | Google OAuth no aparece / falla          | Faltan `GOOGLE_CLIENT_ID/SECRET` o URL de retorno no autorizada.                                                 |
-| Sheets: "Error de autenticación"         | La hoja no es pública/legible o el rol no es Admin.                                                              |
+| Sheets: "Error de autenticación"         | La hoja no es pública/legible o no tienes permiso en la finca activa.                                            |
+| Redirige a `/fincas` al entrar           | No hay finca activa; crea una o únete por invitación.                                                            |
 
 ---
 
@@ -164,10 +167,10 @@ Roles: `Campesino` (defecto) · `Agrónomo` · `Admin` · `Super admin`. El rol 
 - [👤 Manual de Usuario](./MANUAL_USUARIO.md) - Guía paso a paso (roles, dashboard 4×5 + 3D, métricas, historial, settings, FAQ).
 - [📑 Índice de docs](./docs/README.md) - Mapa de toda la documentación.
 - [Arquitectura](./docs/ARCHITECTURE.md) - Estructura `src/`, flujos, decisiones (SSR, JWT, proxy SIATA, DB).
-- [Rutas](./docs/ROUTES.md) - Rutas reales (`/`, `/signin`, `/metrics`, `/historial`, `/settings` + API).
-- [Endpoints](./docs/ENDPOINTS.md) - Referencia exacta de los 7 endpoints con bodies, códigos y `curl`.
+- [Rutas](./docs/ROUTES.md) - Rutas reales (`/` login+portada, `/metrics`, `/historial`, `/settings`, `/admin` + API).
+- [Endpoints](./docs/ENDPOINTS.md) - Referencia exacta de los endpoints (auth, fincas, invitaciones, admin, datos) con bodies, códigos y `curl`.
 - [Auth](./docs/AUTH.md) - Credentials + Google, JWT con rol, recuperación 6 dígitos/15 min, brechas.
-- [Base de Datos](./docs/DATABASE.md) - Esquemas auth + agronómico, ER, brecha dataset-en-memoria.
+- [Base de Datos](./docs/DATABASE.md) - Esquemas auth + agronómico multi-tenant (`fincas`, `plantas`, `lecturas`), ER.
 - [Despliegue](./docs/DEPLOYMENT.md) - Vercel SSR, env vars, checklist y rollback.
 - [Decisiones (ADRs)](./docs/decisions/) - Los 7 porqués (SSR, PG, Auth.js, SIATA, Sheets, bcrypt, bypass SIATA).
 - [Datos](./docs/DATA-DICTIONARY.md) + [Protocolo de campo](./docs/FIELD-PROTOCOL.md) + [Demo](./docs/DEMO-DATA.md) - Campos, cómo llenar la hoja y fixture CSV.
