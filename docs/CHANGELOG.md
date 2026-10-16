@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Documentación 2026-10-09: typo `(/ Sein)` → `(/)` en MANUAL_USUARIO; OAuth corregido a solo Google en USE_CASES/USER_STORIES; `.env.example` + README completados con `AUTH_TRUST_HOST`, `SMTP_HOST/PORT/FROM` (verificados contra `notifications.ts` y `auth.config.ts`).
+
 ### Added
 
 - **Multi-tenant con 4 roles** (`Superadmin`, `Admin`, `Agropecuario`, `Campesino`): migración `src/db/migrations/001-roles-fincas.sql` + tablas `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas`, `lecturas`.

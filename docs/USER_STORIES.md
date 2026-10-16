@@ -5,13 +5,13 @@
 ### US-001: Iniciar sesión
 
 - **Usuario:** Cualquier usuario registrado
-- **Descripción:** El usuario puede iniciar sesión en la aplicación usando sus credenciales (email y contraseña) o proveedores de OAuth (Google, GitHub).
+- **Descripción:** El usuario puede iniciar sesión en la aplicación usando sus credenciales (email y contraseña) o el proveedor OAuth Google.
 - **Condiciones previas:** El usuario debe haber creado una cuenta.
 - **Flujo principal:**
   1. El usuario navega a la página de login.
   2. El usuario ingresa su email y contraseña.
   3. El sistema valida las credenciales.
-  4. El usuario es redirigido al dashboard.
+  4. El usuario es redirigido a `/` (Dashboard).
 - **Resultado esperado:** Sesión activa y acceso al dashboard.
 
 ### US-002: Cerrar sesión

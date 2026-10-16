@@ -1,11 +1,10 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🔒 Ejecutando controles DevSecOps (pre-commit)..."
 npx lint-staged
 
-# Comprobar si se están intentando subir secretos o archivos .env
-if git diff --cached --name-only | grep -E '\.env|credentials|secret'; then
+# Comprobar si se están intentando subir secretos o archivos .env reales
+# (se permite la plantilla .env.example, que no contiene secretos)
+if git diff --cached --name-only | grep -E '\.env|credentials|secret' | grep -v '\.env\.example$'; then
   echo "🚨 ERROR DE SEGURIDAD: Estás intentando hacer commit de un archivo sensible (.env o credentials)."
   echo "Por favor, elimínalo del staging area (git reset HEAD <archivo>)."
   exit 1

@@ -16,7 +16,7 @@
 
 **Flujo alternativo (OAuth):**
 
-- Usuario usa proveedor Google/GitHub para iniciar sesión
+- Usuario usa el proveedor Google para iniciar sesión
 - Sistema recibe token del proveedor y crea sesión local
 
 **Post-conditions:**

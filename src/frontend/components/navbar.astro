@@ -252,60 +252,91 @@ const badge = roleBadge[role] || roleBadge.Campesino;
 </nav>
 
 <script>
-  const { signOut } = await import("auth-astro/client");
+  document.addEventListener('DOMContentLoaded', () => {
+    let signOut: any;
+    
+    // Importación dinámica para evitar que un fallo en Vite rompa el resto del script
+    import("auth-astro/client")
+      .then(mod => {
+        signOut = mod.signOut;
+      })
+      .catch(err => console.error("Error cargando auth-astro", err));
 
-  const handleLogout = () => {
-    signOut();
-  };
-
-  document
-    .getElementById("nav-logout-btn")
-    ?.addEventListener("click", handleLogout);
-  document
-    .getElementById("nav-logout-btn-mobile")
-    ?.addEventListener("click", handleLogout);
-
-  // Selector de finca activa
-  async function cambiarFinca(fincaId: string) {
-    if (!fincaId) return;
-    try {
-      const res = await fetch("/api/finca/activa", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fincaId: Number(fincaId) }),
-      });
-      if (res.ok) {
-        (window as any).sileo?.success?.({ title: "Finca activa cambiada." });
-        setTimeout(() => window.location.reload(), 350);
+    // Logout function
+    const handleLogout = async () => {
+      if (signOut) {
+        signOut();
       } else {
-        const data = await res.json().catch(() => ({}));
-        (window as any).sileo?.error?.({ title: data.message || "No se pudo cambiar de finca." });
+        // Fallback robusto en caso de que auth-astro falle internamente
+        try {
+          const res = await fetch('/api/auth/csrf');
+          const data = await res.json();
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '/api/auth/signout';
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'csrfToken';
+          csrfInput.value = data.csrfToken;
+          form.appendChild(csrfInput);
+          document.body.appendChild(form);
+          form.submit();
+        } catch (err) {
+          window.location.href = '/api/auth/signout';
+        }
       }
-    } catch {
-      (window as any).sileo?.error?.({ title: "Error al cambiar de finca." });
+    };
+
+    // Attach to both desktop and mobile buttons
+    document
+      .getElementById("nav-logout-btn")
+      ?.addEventListener("click", handleLogout);
+    document
+      .getElementById("nav-logout-btn-mobile")
+      ?.addEventListener("click", handleLogout);
+
+    // Selector de finca activa
+    async function cambiarFinca(fincaId: string) {
+      if (!fincaId) return;
+      try {
+        const res = await fetch("/api/finca/activa", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fincaId: Number(fincaId) }),
+        });
+        if (res.ok) {
+          (window as any).sileo?.success?.({ title: "Finca activa cambiada." });
+          setTimeout(() => window.location.reload(), 350);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          (window as any).sileo?.error?.({ title: data.message || "No se pudo cambiar de finca." });
+        }
+      } catch {
+        (window as any).sileo?.error?.({ title: "Error al cambiar de finca." });
+      }
     }
-  }
 
-  document.getElementById("finca-switcher")?.addEventListener("change", (e) => {
-    cambiarFinca((e.target as HTMLSelectElement).value);
-  });
-  document.getElementById("finca-switcher-mobile")?.addEventListener("change", (e) => {
-    cambiarFinca((e.target as HTMLSelectElement).value);
-  });
-
-  // Mobile menu toggle
-  const mobileBtn = document.getElementById("mobile-menu-btn");
-  const mobileMenu = document.getElementById("mobile-menu");
-  const iconBars = document.getElementById("menu-icon-bars");
-  const iconClose = document.getElementById("menu-icon-close");
-
-  if (mobileBtn && mobileMenu) {
-    mobileBtn.addEventListener("click", () => {
-      mobileMenu.classList.toggle("hidden");
-      iconBars?.classList.toggle("hidden");
-      iconBars?.classList.toggle("inline-flex");
-      iconClose?.classList.toggle("hidden");
-      iconClose?.classList.toggle("inline-flex");
+    document.getElementById("finca-switcher")?.addEventListener("change", (e) => {
+      cambiarFinca((e.target as HTMLSelectElement).value);
     });
-  }
+    document.getElementById("finca-switcher-mobile")?.addEventListener("change", (e) => {
+      cambiarFinca((e.target as HTMLSelectElement).value);
+    });
+
+    // Mobile menu toggle
+    const mobileBtn = document.getElementById("mobile-menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+    const iconBars = document.getElementById("menu-icon-bars");
+    const iconClose = document.getElementById("menu-icon-close");
+
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener("click", () => {
+        mobileMenu.classList.toggle("hidden");
+        iconBars?.classList.toggle("hidden");
+        iconBars?.classList.toggle("inline-flex");
+        iconClose?.classList.toggle("hidden");
+        iconClose?.classList.toggle("inline-flex");
+      });
+    }
+  });
 </script>
