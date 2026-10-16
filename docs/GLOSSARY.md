@@ -14,6 +14,14 @@
 - **Matriz:** 4 filas (`t0–t3`, tratamientos) × 5 columnas (`Col 1–5`); códigos `T{f}-P{c}` e IDs `P-01–P-20`.
 - **Toma:** medición de campo de un día (rango real 2026-09-14→30).
 
+## Multi-finca y roles de finca
+
+- **Finca:** unidad multi-tenant con 20 plantas (matriz 4×5) y sus `lecturas`. Un usuario puede pertenecer a varias (N:N en `finca_miembros`).
+- **Dueño:** quien creó la finca (`finca_miembros.rol_finca='dueno'`); la gestiona (editar, invitar, expulsar) y **solo él** conecta/sincroniza Google Sheets.
+- **Miembro:** usuario unido por invitación; lee/registra mediciones (Excel/CSV) pero no configura la finca ni sincroniza Sheets.
+- **Staff:** roles de sistema `Superadmin`/`Admin`; ven todas las fincas y operan sus datos sin ser miembros. Su inicio es `/admin` (**Entrar** fija la finca activa).
+- **Finca activa:** la finca sobre la que opera la sesión; cookie httpOnly `finca_activa`, revalidada contra la BD en cada API.
+
 ## Técnico
 
 - **SSR:** render en servidor por request (Astro `output: server`).
@@ -21,6 +29,6 @@
 - **Proxy SIATA:** `/api/siata` (evitaba CORS, timeout 3 s). **Pausado**: sin consumidores internos desde `efed143` (ver ADR-007).
 - **Fuente climática actual:** Open-Meteo directo + fallback offline (22 °C/60 %/viento 5 km/h). Widget con **viento (km/h)**, no irradiación.
 - **CSV-first:** ingesta Sheets sin credenciales vía `export?format=csv`.
-- **EAV:** `mediciones` guarda una fila por `(planta, tipo, fecha)` con `tipo_medicion_enum`.
+- **Finca / lectura:** cada finca tiene 20 plantas; una `lecturas` guarda una visita a una planta (pH, temperaturas, humedad, altura, fase, sanidad…).
 - **AQI:** índice de calidad del aire (waqi.info) mostrado en el Dashboard.
 - **MACOLLO:** marca del producto (logo `gulupa.svg`); **Proyecto Invernadero** es el proyecto académico que lo contiene.

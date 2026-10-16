@@ -9,10 +9,10 @@
 
 **Flujo básico (registro + login):**
 
-1. Usuario navega a `/signin`, pestaña Registrarse
+1. Usuario navega a `/` (login/registro), pestaña Registrarse
 2. Usuario ingresa nombre, email/teléfono y contraseña (cliente exige ≥ 8; servidor ≥ 6)
-3. `POST /api/auth/register` valida unicidad y guarda hash bcrypt; **toda cuenta nace con rol `Campesino`** (el selector de rol del formulario es informativo)
-4. Usuario inicia sesión en la pestaña Iniciar Sesión (o con Google OAuth) y es redirigido a `/` (Dashboard)
+3. `POST /api/auth/register` valida unicidad y guarda hash bcrypt; **el rol se asigna desde `accountType`** (`Campesino`/`Agropecuario`; los roles staff no se pueden pedir). Si es `Agropecuario` y envía `fincaNombre`, se crea su primera finca.
+4. Usuario inicia sesión en la pestaña Iniciar Sesión (o con Google OAuth) y es redirigido a `/` (Dashboard); si es **staff (Admin/Superadmin) sin finca elegida**, a `/admin` para elegirla con **Entrar**.
 
 **Flujo alternativo (OAuth):**
 
@@ -137,21 +137,20 @@
 
 ### Caso de Uso: CU-006 - Importación desde Google Sheets
 
-**Actor(es):** Administrador, Sistema de integración
-**Descripción:** El usuario **importa** mediciones **desde** una hoja pública de Google Sheets (dirección Sheets → app; no se escribe en Sheets). **Implementado:** `POST /api/sync-sheets { url }` normaliza a `export?format=csv`, parsea columnas (`ID_planta`, `fecha`, `T_Ext_C`, `T_Int_C`, `humedad_Pct`, `T_Planta_C`, `Ph`, `ALtura_cm`…), resuelve la matriz 4×5 y devuelve `records` al cliente **sin persistir en PG** (viven en memoria del navegador). Sin programación por intervalo.
+**Actor(es):** Dueño de la finca (`rol_finca = 'dueno'`), Sistema de integración
+**Descripción:** El usuario **importa** lecturas **desde** una hoja pública de Google Sheets (dirección Sheets → app; no se escribe en Sheets). **Implementado:** `POST /api/sync-sheets { url }` normaliza a `export?format=csv`, parsea columnas (`ID_planta`, `fecha`, `T_Ext_C`, `T_Int_C`, `humedad_Pct`, `T_Planta_C`, `Ph`, `ALtura_cm`…), resuelve la matriz 4×5, **persiste en `lecturas` de la finca activa** (`INSERT … ON CONFLICT` por finca+planta+fecha+hora) y devuelve `records` al cliente. Sin programación por intervalo.
 
 **Flujo básico:**
 
-1. Usuario accede a `/historial` → "Conectar Google Sheets"
+1. **Dueño** de la finca activa accede a `/historial` → "Conectar Google Sheets" (el botón no aparece a miembros ni staff y la API responde `403` si no es dueño)
 2. Usuario pega la URL pública (documento con lectura _"Cualquier persona con el enlace"_ o _"Publicado en la web como CSV"_)
 3. Sistema descarga el CSV, valida fechas/IDs (incluye regla 29/30-sep sin temp. de suelo) y muestra conteo importado
-4. Dashboard/Métricas se actualizan en memoria; opcionalmente se exporta a Excel
+4. Dashboard/Métricas recargan desde PG (scopeadas por finca activa); opcionalmente se exporta a Excel
 
 **Post-conditions:**
 
-- Datos transferidos a Google Sheets
-- Configuración de intervalo guardada
-- Historial de sincronizaciones registrado
+- Datos importados a `lecturas` de la finca activa (dirección Sheets → app; nunca se escribe en Sheets)
+- El tablero/métricas reflejan las nuevas mediciones
 
 ---
 

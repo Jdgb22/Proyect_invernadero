@@ -11,7 +11,7 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
         <h2 class="text-2xl font-bold text-green-950 dark:text-white mb-1">Dashboard Principal</h2>
         <p class="text-green-700 dark:text-stone-300 text-sm">Monitoreo de cultivos reales y simulación ambiental del invernadero.</p>
       </div>
-      <div id="dashboard-sync-indicator" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-stone-100 dark:bg-stone-900/60 text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700">
+      <div id="dashboard-sync-indicator" class="inline-flex max-w-full items-center justify-center text-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-stone-100 dark:bg-stone-900/60 text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700">
         <span class="w-2 h-2 rounded-full bg-stone-400"></span>
         <span id="dashboard-sync-text">Esperando sincronización de datos reales</span>
       </div>
@@ -19,7 +19,7 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
 
     <div class="grid lg:grid-cols-2 gap-6 items-start">
       <!-- Matriz de Plantas (4x5 = 20 Plantas) -->
-      <div class="flex flex-col">
+      <div class="flex flex-col min-w-0">
     <div
       class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
     >
@@ -43,7 +43,7 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
       </div>
     </div>
 
-    <div id="dashboard-plant-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+    <div id="dashboard-plant-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
       {
         plants.map((p) => {
           const m = p.latestMetric;
@@ -123,11 +123,11 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
   </div>
 
 
-  <div class="flex flex-col">
+  <div class="flex flex-col min-w-0">
     <!-- Contenedor para Three.js -->
     <div
       id="three-container"
-      class="w-full h-96 bg-green-900 rounded-xl overflow-hidden shadow-inner relative"
+      class="w-full h-72 sm:h-96 bg-green-900 rounded-xl overflow-hidden shadow-inner relative"
     >
       <div
         id="time-display"
@@ -307,14 +307,19 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
-    // Ajustar el canvas si la ventana cambia de tamaño
-    window.addEventListener("resize", () => {
-      if (container) {
-        camera.aspect = container.clientWidth / container.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
-      }
-    });
+    // Ajustar el canvas al tamaño real del contenedor (ventana o layout)
+    const resizeRenderer = () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w === 0 || h === 0) return;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    window.addEventListener("resize", resizeRenderer);
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(resizeRenderer).observe(container);
+    }
 
     // Añadir un suelo simple (para notar mejor las sombras/iluminación)
     const groundGeometry = new THREE.PlaneGeometry(50, 50);

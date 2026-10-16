@@ -1,16 +1,22 @@
 import type { APIRoute } from "astro";
-import { z } from "zod";
 import ExcelJS from "exceljs";
 import {
-  getAllPlantsGrid,
+  buildPlantsGridFromRecords,
   type PlantMatrixItem,
   type MetricRecord,
 } from "../../backend/services/metricsData";
+import {
+  getFincaAccess,
+  canViewFincaData,
+  unauthorized,
+  forbidden,
+} from "../../backend/services/authz";
+import { resolveActiveFinca } from "../../backend/services/fincas";
+import { getLecturasByFinca } from "../../backend/services/lecturas";
 
-// Definimos un schema genérico de Zod para asegurarnos de que la estructura que llega del cliente sea válida.
-const ExportRequestSchema = z.object({
-  plants: z.array(z.any()).min(1, "No hay plantas para exportar"),
-});
+function sanitizeFilename(text: string): string {
+  return text.replace(/[^\wáéíóúÁÉÍÓÚñÑ-]+/g, "_").slice(0, 60) || "Finca";
+}
 
 // Estilos comunes para ExcelJS
 const COLORS = {
@@ -42,28 +48,29 @@ const BORDER_THIN: Partial<ExcelJS.Borders> = {
 };
 
 export const POST: APIRoute = async ({ request }) => {
+  const ctx = await resolveActiveFinca(request);
+  if (!ctx) return unauthorized();
+  if (!ctx.finca) {
+    return new Response(
+      JSON.stringify({
+        error: "Selecciona una finca activa antes de exportar.",
+      }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  const access = await getFincaAccess(ctx.finca.id, ctx.user);
+  if (!canViewFincaData(access)) {
+    return forbidden("No tienes acceso a los datos de esta finca.");
+  }
+
   try {
-    let plants: PlantMatrixItem[] = [];
-    try {
-      const rawBody = await request.json();
-      const parsed = ExportRequestSchema.safeParse(rawBody);
-
-      if (parsed.success) {
-        // En un entorno Zero Trust, deberíamos validar los campos internos de PlantMatrixItem también.
-        plants = parsed.data.plants as PlantMatrixItem[];
-      }
-    } catch {
-      // Si no se envió cuerpo o no se pudo parsear, usar datos iniciales
-    }
-
-    if (plants.length === 0) {
-      plants = getAllPlantsGrid();
-    }
+    const records = await getLecturasByFinca(ctx.finca.id);
+    const plants: PlantMatrixItem[] = buildPlantsGridFromRecords(records);
 
     const buffer = await generateExcelBuffer(plants);
 
     const nowStr = new Date().toISOString().slice(0, 10);
-    const filename = `Macollo_Mediciones_Invernadero_${nowStr}.xlsx`;
+    const filename = `${sanitizeFilename(ctx.finca.nombre)}_Mediciones_${nowStr}.xlsx`;
 
     return new Response(buffer, {
       status: 200,
@@ -91,12 +98,28 @@ export const POST: APIRoute = async ({ request }) => {
   }
 };
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ request }) => {
+  const ctx = await resolveActiveFinca(request);
+  if (!ctx) return unauthorized();
+  if (!ctx.finca) {
+    return new Response(
+      JSON.stringify({
+        error: "Selecciona una finca activa antes de exportar.",
+      }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  const access = await getFincaAccess(ctx.finca.id, ctx.user);
+  if (!canViewFincaData(access)) {
+    return forbidden("No tienes acceso a los datos de esta finca.");
+  }
+
   try {
-    const plants = getAllPlantsGrid();
+    const records = await getLecturasByFinca(ctx.finca.id);
+    const plants: PlantMatrixItem[] = buildPlantsGridFromRecords(records);
     const buffer = await generateExcelBuffer(plants);
     const nowStr = new Date().toISOString().slice(0, 10);
-    const filename = `Macollo_Mediciones_Invernadero_${nowStr}.xlsx`;
+    const filename = `${sanitizeFilename(ctx.finca.nombre)}_Mediciones_${nowStr}.xlsx`;
 
     return new Response(buffer, {
       status: 200,

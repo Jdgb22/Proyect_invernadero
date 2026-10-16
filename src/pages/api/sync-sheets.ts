@@ -9,6 +9,14 @@ import {
   resolvePlantCoordinates,
   type MetricRecord,
 } from "../../backend/services/metricsData";
+import {
+  getFincaAccess,
+  canConnectSheets,
+  unauthorized,
+  forbidden,
+} from "../../backend/services/authz";
+import { resolveActiveFinca } from "../../backend/services/fincas";
+import { insertLecturas } from "../../backend/services/lecturas";
 
 // Zod Schema para validación estricta de la petición (Zero Trust)
 const SyncRequestSchema = z.object({
@@ -103,6 +111,24 @@ function parseCSV(text: string): string[][] {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  const ctx = await resolveActiveFinca(request);
+  if (!ctx) return unauthorized();
+  if (!ctx.finca) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "Selecciona una finca activa antes de sincronizar mediciones.",
+      }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  const access = await getFincaAccess(ctx.finca.id, ctx.user);
+  if (!canConnectSheets(access)) {
+    return forbidden(
+      "Solo el dueño de la finca puede conectar y sincronizar Google Sheets.",
+    );
+  }
+
   try {
     const rawBody = await request.json();
 
@@ -602,10 +628,22 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    let guardadas = 0;
+    try {
+      guardadas = await insertLecturas(
+        ctx.finca.id,
+        parsedRecords,
+        ctx.user.id,
+      );
+    } catch (persistErr) {
+      console.error("[Sync] No se pudieron guardar las lecturas:", persistErr);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         count: parsedRecords.length,
+        guardadas,
         records: parsedRecords,
         message: `Se importaron exitosamente ${parsedRecords.length} mediciones reales desde Google Sheets.`,
       }),

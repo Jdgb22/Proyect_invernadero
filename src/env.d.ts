@@ -1,19 +1,21 @@
 /// <reference types="astro/client" />
 
-declare module '@auth/core/types' {
+type SystemRole = "Superadmin" | "Admin" | "Agropecuario" | "Campesino";
+
+declare module "@auth/core/types" {
   interface Session {
     user: {
-      role?: string;
+      role?: SystemRole;
     } & DefaultSession["user"];
   }
 
   interface User {
-    role?: string;
+    role?: SystemRole;
   }
 }
 
-declare module '@auth/core/jwt' {
+declare module "@auth/core/jwt" {
   interface JWT {
-    role?: string;
+    role?: SystemRole;
   }
 }

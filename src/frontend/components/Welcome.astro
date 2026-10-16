@@ -4,12 +4,12 @@ const today = new Date().toISOString().slice(0, 10);
 ---
 
 <div
-  class="min-h-screen flex flex-col lg:flex-row w-full bg-stone-50 dark:bg-stone-900"
+  class="min-h-dvh flex flex-col lg:flex-row w-full bg-stone-50 dark:bg-stone-900"
 >
   <!-- Left Side: Video Panel -->
   <div
     id="farmer-panel"
-    class="w-full h-72 lg:h-auto lg:min-h-screen lg:w-1/2 relative bg-stone-950 dark:bg-black overflow-hidden flex items-center justify-center flex-shrink-0"
+    class="w-full h-64 sm:h-72 lg:h-auto lg:min-h-dvh lg:w-1/2 relative bg-stone-950 dark:bg-black overflow-hidden flex items-center justify-center flex-shrink-0"
   >
     <!-- Video de bienvenida -->
     <video
@@ -63,9 +63,9 @@ const today = new Date().toISOString().slice(0, 10);
 
   <!-- Right Side: Auth Forms Panel -->
   <div
-    class="flex flex-col justify-center w-full lg:w-1/2 p-6 sm:p-10 lg:p-20 bg-white dark:bg-stone-900 overflow-y-auto"
+    class="flex flex-col w-full lg:w-1/2 p-6 sm:p-10 lg:p-20 bg-white dark:bg-stone-900 lg:h-dvh overflow-y-auto"
   >
-    <div class="max-w-md w-full mx-auto">
+    <div class="max-w-md w-full m-auto">
       
       <!-- Selector de Modo (Tabs Login / Registro) -->
       <div id="auth-tabs-container" class="relative flex p-1 mb-8 bg-stone-100 dark:bg-stone-800 rounded-2xl border border-stone-200/80 dark:border-stone-700/80">
@@ -108,7 +108,7 @@ const today = new Date().toISOString().slice(0, 10);
           <label
             for="username"
             class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
-            >Usuario, Correo o Celular</label
+            >Correo o Celular</label
           >
           <input
             id="username"
@@ -116,7 +116,7 @@ const today = new Date().toISOString().slice(0, 10);
             type="text"
             autocomplete="username"
             class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
-            placeholder="admin@ejemplo.com, 3001234567 o usuario"
+            placeholder="juan@ejemplo.com o 3001234567"
           />
         </div>
 
@@ -148,7 +148,7 @@ const today = new Date().toISOString().slice(0, 10);
               </svg>
               <!-- Ícono Ocultar (ojo tachado) -->
               <svg id="eye-hide" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
               </svg>
             </button>
           </div>
@@ -225,6 +225,21 @@ const today = new Date().toISOString().slice(0, 10);
 
       <!-- ── FORMULARIO CREAR CUENTA ── -->
       <form id="register-form" class="space-y-4 hidden" novalidate>
+        <div
+          id="reg-feedback-message"
+          class="hidden p-3 rounded-lg text-sm text-center border font-medium"
+        ></div>
+
+        <div class="flex items-center gap-3">
+          <div class="flex gap-1.5">
+            <span class="reg-dot h-1.5 w-6 rounded-full bg-green-600 transition-colors"></span>
+            <span class="reg-dot h-1.5 w-6 rounded-full bg-stone-200 dark:bg-stone-700 transition-colors"></span>
+          </div>
+          <span id="reg-step-label" class="text-xs font-medium text-stone-500 dark:text-stone-400">Paso 1 de 2</span>
+        </div>
+
+        <!-- PASO 1: Datos personales -->
+        <div id="reg-step-1" class="space-y-4">
         <!-- Nombre completo -->
         <div>
           <label
@@ -300,6 +315,19 @@ const today = new Date().toISOString().slice(0, 10);
           />
         </div>
 
+        <div class="pt-1">
+          <button
+            id="reg-next-btn"
+            type="button"
+            class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-500 hover:to-lime-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:-translate-y-0.5"
+          >
+            Continuar
+          </button>
+        </div>
+        </div>
+
+        <!-- PASO 2: Tu cuenta -->
+        <div id="reg-step-2" class="space-y-4 hidden">
         <!-- Contraseña -->
         <div>
           <label
@@ -328,17 +356,59 @@ const today = new Date().toISOString().slice(0, 10);
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
               <svg id="eye-reg-hide" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
               </svg>
             </button>
           </div>
         </div>
 
-        <div class="pt-1">
+        <div>
+          <label
+            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+          >
+            Tipo de cuenta
+          </label>
+          <div
+            id="reg-account-type-toggle"
+            class="flex gap-1 p-1 bg-stone-100 dark:bg-stone-700/50 rounded-xl"
+            role="radiogroup"
+            aria-label="Tipo de cuenta"
+          >
+            <button type="button" data-value="Campesino" class="seg-btn active">Trabajo en una finca</button>
+            <button type="button" data-value="Agropecuario" class="seg-btn">Tengo mi propia finca</button>
+          </div>
+          <input type="hidden" id="reg-account-type" name="accountType" value="Campesino" />
+        </div>
+
+        <div id="reg-finconombre-group" class="hidden">
+          <label
+            for="reg-finconombre"
+            class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
+          >
+            Nombre de tu finca <span class="text-green-800 dark:text-green-400">*</span>
+          </label>
+          <input
+            id="reg-finconombre"
+            name="fincaNombre"
+            type="text"
+            autocomplete="off"
+            class="block w-full px-4 py-3 bg-stone-50 border border-stone-200 dark:border-stone-600 rounded-xl placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-stone-700/50 dark:text-white text-sm transition-all shadow-sm"
+            placeholder="Ej: Finca La Esperanza"
+          />
+        </div>
+
+        <div class="pt-1 flex gap-2">
+          <button
+            id="reg-back-btn"
+            type="button"
+            class="flex-shrink-0 px-4 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-semibold hover:bg-stone-100 dark:hover:bg-stone-700/60 transition-all"
+          >
+            Atrás
+          </button>
           <button
             id="register-btn"
             type="submit"
-            class="w-full flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-500 hover:to-lime-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+            class="flex-1 flex justify-center items-center gap-2 py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-500 hover:to-lime-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
           >
             <span id="reg-btn-text">Crear Cuenta</span>
             <svg
@@ -361,11 +431,7 @@ const today = new Date().toISOString().slice(0, 10);
             </svg>
           </button>
         </div>
-
-        <div
-          id="reg-feedback-message"
-          class="hidden p-3 rounded-lg text-sm text-center border font-medium"
-        ></div>
+        </div>
 
         <!-- Enlace para ir a login -->
         <p class="text-center text-sm text-stone-500 dark:text-stone-400 pt-2">
@@ -472,7 +538,7 @@ const today = new Date().toISOString().slice(0, 10);
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
                 <svg id="eye-forgot-hide" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
                 </svg>
               </button>
             </div>
@@ -591,6 +657,35 @@ const today = new Date().toISOString().slice(0, 10);
   const regBtnSpinner = document.getElementById("reg-btn-spinner")!;
   const regFeedbackMsg = document.getElementById("reg-feedback-message") as HTMLElement;
 
+  // Pasos del registro
+  const regStep1 = document.getElementById("reg-step-1") as HTMLElement | null;
+  const regStep2 = document.getElementById("reg-step-2") as HTMLElement | null;
+  const regNextBtn = document.getElementById("reg-next-btn");
+  const regBackBtn = document.getElementById("reg-back-btn");
+  const regStepLabel = document.getElementById("reg-step-label");
+  const regDots = document.querySelectorAll<HTMLElement>("#register-form .reg-dot");
+
+  let currentRegStep: 1 | 2 = 1;
+
+  function showRegStep(step: 1 | 2, animate = true) {
+    if (!regStep1 || !regStep2) return;
+    regStep1.classList.toggle("hidden", step !== 1);
+    regStep2.classList.toggle("hidden", step !== 2);
+    regDots.forEach((dot, i) => {
+      const on = i < step;
+      dot.classList.toggle("bg-green-600", on);
+      dot.classList.toggle("bg-stone-200", !on);
+      dot.classList.toggle("dark:bg-stone-700", !on);
+    });
+    if (regStepLabel) regStepLabel.textContent = step === 1 ? "Paso 1 de 2" : "Paso 2 de 2";
+    regFeedbackMsg.classList.add("hidden");
+    if (animate) {
+      const dir: 1 | -1 = step >= currentRegStep ? -1 : 1;
+      animateAuthIn(step === 1 ? regStep1 : regStep2, dir);
+    }
+    currentRegStep = step;
+  }
+
   // Botones y estados de recuperación
   const btnForgotSend = document.getElementById("btn-forgot-send") as HTMLButtonElement;
   const btnForgotSendText = document.getElementById("btn-forgot-send-text")!;
@@ -671,14 +766,20 @@ const today = new Date().toISOString().slice(0, 10);
     });
   }
 
-  function animateAuthIn(el: HTMLElement) {
+  function animateAuthIn(el: HTMLElement, dir: 1 | -1 = 1) {
+    el.style.setProperty("--auth-slide-from", dir >= 0 ? "18px" : "-18px");
     el.classList.remove("auth-anim-in");
     void el.offsetWidth;
     el.classList.add("auth-anim-in");
   }
 
+  const MODE_RANK: Record<string, number> = { login: 0, register: 1, forgot: 2 };
+  let currentMode = "login";
+
   // Función para cambiar de vista (Login / Registro / Recuperar Contraseña)
   function setAuthMode(mode: 'login' | 'register' | 'forgot') {
+    const dir: 1 | -1 = (MODE_RANK[mode] ?? 1) >= (MODE_RANK[currentMode] ?? 0) ? -1 : 1;
+    currentMode = mode;
     // Ocultar todos los formularios
     loginForm.classList.add("hidden");
     registerForm.classList.add("hidden");
@@ -704,6 +805,7 @@ const today = new Date().toISOString().slice(0, 10);
       authTabsContainer.classList.remove("hidden");
       googleAuthContainer.classList.remove("hidden");
       registerForm.classList.remove("hidden");
+      showRegStep(1, false);
 
       tabRegisterBtn.className = `${TAB_BASE} font-bold text-stone-900 dark:text-white`;
       tabLoginBtn.className = `${TAB_BASE} font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200`;
@@ -723,8 +825,8 @@ const today = new Date().toISOString().slice(0, 10);
     }
 
     const activePanel = mode === 'login' ? loginForm : mode === 'register' ? registerForm : forgotContainer;
-    animateAuthIn(activePanel);
-    if (authTitle.parentElement) animateAuthIn(authTitle.parentElement);
+    animateAuthIn(activePanel, dir);
+    if (authTitle.parentElement) animateAuthIn(authTitle.parentElement, dir);
   }
 
   tabLoginBtn?.addEventListener("click", () => setAuthMode('login'));
@@ -737,6 +839,10 @@ const today = new Date().toISOString().slice(0, 10);
   // Mostrar error si viene en los parámetros de la URL (?error=...)
   const urlParams = new URLSearchParams(window.location.search);
   const authError = urlParams.get('error');
+
+  // Destino tras iniciar sesión (?desde=/invitar/XXXX). Solo rutas internas, evita open-redirect.
+  const rawDesde = urlParams.get('desde') || '';
+  const safeDesde = /^\/(?!\/)/.test(rawDesde) ? rawDesde : '/';
   if (authError && errorMsg) {
     if (authError === 'OAuthAccountNotLinked') {
       errorMsg.textContent = 'El correo ya está registrado con otro método de autenticación.';
@@ -823,7 +929,7 @@ const today = new Date().toISOString().slice(0, 10);
         // Reproducir video antes de redirigir a Google
         await playWelcomeVideo();
 
-        await signIn("google", { callbackUrl: "/" } as any);
+        await signIn("google", { callbackUrl: safeDesde } as any);
       } catch (err) {
         console.error(err);
         setLoginLoading(false);
@@ -844,7 +950,7 @@ const today = new Date().toISOString().slice(0, 10);
       const password = (document.getElementById("password") as HTMLInputElement).value;
 
       if (!username || !password) {
-        errorMsg.textContent = "Por favor ingresa usuario/correo/celular y contraseña.";
+        errorMsg.textContent = "Por favor ingresa tu correo o celular y contraseña.";
         errorMsg.classList.remove("hidden");
         return;
       }
@@ -863,7 +969,7 @@ const today = new Date().toISOString().slice(0, 10);
         email: username,
         password: password,
         redirect: false,
-        callbackUrl: "/",
+        callbackUrl: safeDesde,
       } as any);
 
       if ((result as any)?.error) {
@@ -872,7 +978,7 @@ const today = new Date().toISOString().slice(0, 10);
         errorMsg.classList.remove("hidden");
         if (welcomeVideo) welcomeVideo.pause();
       } else {
-        window.location.href = "/";
+        window.location.href = safeDesde;
       }
     } catch (err: any) {
       console.error(err);
@@ -884,56 +990,105 @@ const today = new Date().toISOString().slice(0, 10);
     }
   });
 
+  const accountTypeInput = document.getElementById("reg-account-type") as HTMLInputElement | null;
+  const fincaNombreGroup = document.getElementById("reg-finconombre-group");
+  const accountTypeBtns = document.querySelectorAll<HTMLButtonElement>("#reg-account-type-toggle .seg-btn");
+  accountTypeBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      accountTypeBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      if (accountTypeInput) accountTypeInput.value = btn.dataset.value || "Campesino";
+      fincaNombreGroup?.classList.toggle("hidden", btn.dataset.value !== "Agropecuario");
+    });
+  });
+
+  function regError(msg: string) {
+    regFeedbackMsg.textContent = msg;
+    regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
+    regFeedbackMsg.classList.remove("hidden");
+  }
+
+  function validateRegStep1(): boolean {
+    const name = (document.getElementById("reg-name") as HTMLInputElement).value.trim();
+    const email = (document.getElementById("reg-email") as HTMLInputElement).value.trim();
+    const phone = (document.getElementById("reg-phone") as HTMLInputElement).value.trim();
+    const birthDate = (document.getElementById("reg-birthdate") as HTMLInputElement).value;
+
+    if (!name) { regError("Por favor ingresa tu nombre completo."); return false; }
+    if (!email && !phone) { regError("Debes ingresar al menos tu correo electrónico o tu número celular."); return false; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { regError("El correo electrónico no es válido. Ejemplo: nombre@correo.com"); return false; }
+    if (phone && !/^\+?\d{7,15}$/.test(phone.replace(/[\s\-().]/g, ""))) { regError("El número de celular no es válido. Ejemplo: 3001234567"); return false; }
+    if (birthDate && (birthDate > new Date().toISOString().slice(0, 10) || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate))) { regError("La fecha de nacimiento no es válida."); return false; }
+    return true;
+  }
+
+  // Navegación entre pasos del registro
+  regNextBtn?.addEventListener("click", async () => {
+    if (!validateRegStep1()) return;
+
+    const email = (document.getElementById("reg-email") as HTMLInputElement).value.trim();
+    const phone = (document.getElementById("reg-phone") as HTMLInputElement).value.trim();
+    const nextBtn = regNextBtn as HTMLButtonElement;
+
+    if (email || phone) {
+      nextBtn.disabled = true;
+      nextBtn.classList.add("opacity-70", "cursor-wait");
+      try {
+        const res = await fetch("/api/auth/check-availability", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email || undefined, phone: phone || undefined }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          if (data.emailTaken) {
+            regError("Este correo electrónico ya está registrado. Inicia sesión o usa otro correo.");
+            return;
+          }
+          if (data.phoneTaken) {
+            regError("Este número de celular ya está registrado. Inicia sesión o usa otro número.");
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("No se pudo verificar la disponibilidad:", err);
+      } finally {
+        nextBtn.disabled = false;
+        nextBtn.classList.remove("opacity-70", "cursor-wait");
+      }
+    }
+
+    showRegStep(2);
+  });
+  regBackBtn?.addEventListener("click", () => showRegStep(1));
+
   // Registro de nuevo usuario (Rol Campesino)
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     regFeedbackMsg.classList.add("hidden");
+
+    if (!validateRegStep1()) {
+      showRegStep(1);
+      return;
+    }
 
     const name = (document.getElementById("reg-name") as HTMLInputElement).value.trim();
     const email = (document.getElementById("reg-email") as HTMLInputElement).value.trim();
     const phone = (document.getElementById("reg-phone") as HTMLInputElement).value.trim();
     const birthDate = (document.getElementById("reg-birthdate") as HTMLInputElement).value;
     const password = (document.getElementById("reg-password") as HTMLInputElement).value;
-
-    if (!name) {
-      regFeedbackMsg.textContent = "Por favor ingresa tu nombre completo.";
-      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
-      regFeedbackMsg.classList.remove("hidden");
-      return;
-    }
-
-    if (!email && !phone) {
-      regFeedbackMsg.textContent = "Debes ingresar al menos tu correo electrónico o tu número celular.";
-      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
-      regFeedbackMsg.classList.remove("hidden");
-      return;
-    }
-
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-      regFeedbackMsg.textContent = "El correo electrónico no es válido. Ejemplo: nombre@correo.com";
-      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
-      regFeedbackMsg.classList.remove("hidden");
-      return;
-    }
-
-    if (phone && !/^\+?\d{7,15}$/.test(phone.replace(/[\s\-().]/g, ""))) {
-      regFeedbackMsg.textContent = "El número de celular no es válido. Ejemplo: 3001234567";
-      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
-      regFeedbackMsg.classList.remove("hidden");
-      return;
-    }
-
-    if (birthDate && (birthDate > new Date().toISOString().slice(0, 10) || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate))) {
-      regFeedbackMsg.textContent = "La fecha de nacimiento no es válida.";
-      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
-      regFeedbackMsg.classList.remove("hidden");
-      return;
-    }
+    const accountType = (document.getElementById("reg-account-type") as HTMLInputElement)?.value || "Campesino";
+    const fincaNombre = (document.getElementById("reg-finconombre") as HTMLInputElement)?.value.trim() || "";
 
     if (!password || password.length < 8) {
-      regFeedbackMsg.textContent = "La contraseña debe tener al menos 8 caracteres.";
-      regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
-      regFeedbackMsg.classList.remove("hidden");
+      showRegStep(2);
+      regError("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+
+    if (accountType === "Agropecuario" && !fincaNombre) {
+      showRegStep(2);
+      regError("Ingresa el nombre de tu finca.");
       return;
     }
 
@@ -949,6 +1104,8 @@ const today = new Date().toISOString().slice(0, 10);
           phone: phone || undefined,
           birthDate: birthDate || undefined,
           password,
+          accountType,
+          fincaNombre: fincaNombre || undefined,
         }),
       });
 
@@ -963,7 +1120,10 @@ const today = new Date().toISOString().slice(0, 10);
       }
 
       // Registro exitoso: Mostrar mensaje y auto-login
-      regFeedbackMsg.textContent = "¡Cuenta creada exitosamente! Iniciando sesión...";
+      const regExtra = data.fincaCreada
+        ? ` Finca "${data.fincaCreada.nombre}" creada.`
+        : "";
+      regFeedbackMsg.textContent = `¡Cuenta creada exitosamente!${regExtra} Iniciando sesión...`;
       regFeedbackMsg.className = "p-3 rounded-lg bg-emerald-50 text-sm text-emerald-700 text-center border border-emerald-200 font-medium dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400";
       regFeedbackMsg.classList.remove("hidden");
 
@@ -976,10 +1136,10 @@ const today = new Date().toISOString().slice(0, 10);
         email: loginIdentifier,
         password: password,
         redirect: false,
-        callbackUrl: "/",
+        callbackUrl: safeDesde,
       } as any);
 
-      window.location.href = "/";
+      window.location.href = safeDesde;
 
     } catch (err) {
       console.error(err);
@@ -1105,18 +1265,30 @@ const today = new Date().toISOString().slice(0, 10);
 </script>
 
 <style>
+  .seg-btn {
+    flex: 1; padding: 0.55rem 0.5rem; border: none; border-radius: 0.55rem;
+    background: transparent; color: #78716c; cursor: pointer;
+    font-weight: 600; font-size: 0.78rem; transition: all 0.2s ease;
+  }
+  :global(.dark) .seg-btn { color: #a8a29e; }
+  .seg-btn.active {
+    background: #ffffff; color: #15803d;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  :global(.dark) .seg-btn.active { background: #292524; color: #86efac; }
+
   .auth-anim-in {
-    animation: authFadeSlide 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: authSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  @keyframes authFadeSlide {
+  @keyframes authSlideIn {
     from {
       opacity: 0;
-      transform: translateY(14px);
+      transform: translateX(var(--auth-slide-from, 18px));
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateX(0);
     }
   }
 </style>

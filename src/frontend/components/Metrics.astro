@@ -7,9 +7,12 @@
 
 import {
   getAllPlantsGrid,
+  buildPlantsGridFromRecords,
   type PlantMatrixItem,
   type MetricRecord
 } from "../../backend/services/metricsData";
+import { resolveActiveFinca } from "../../backend/services/fincas";
+import { getLecturasByFinca } from "../../backend/services/lecturas";
 
 interface Props {
   currentUserName?: string;
@@ -18,7 +21,11 @@ interface Props {
 
 const { currentUserName = "Administrador", currentUserRole = "Líder de Cultivo" } = Astro.props;
 
-const plants: PlantMatrixItem[] = getAllPlantsGrid();
+const ctx = await resolveActiveFinca(Astro.request);
+const fincaId = ctx?.finca?.id ?? "global";
+const plants: PlantMatrixItem[] = ctx?.finca
+  ? buildPlantsGridFromRecords(await getLecturasByFinca(ctx.finca.id))
+  : getAllPlantsGrid();
 
 // Helpers para badges y semáforos
 function getPhBadge(ph: number) {
@@ -118,11 +125,12 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
 
 <!-- Datos de plantas serializados de forma segura para el script de cliente -->
 <script id="plants-data-source" type="application/json" set:html={JSON.stringify(plants)}></script>
+<script is:inline define:vars={{ fincaId }}>window.__MACOLLO_FINCA_ID__ = fincaId;</script>
 
 <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
   
   <!-- Encabezado Principal -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#f4fce3] dark:bg-stone-800 p-6 rounded-2xl border border-green-200 dark:border-[#166534] shadow-sm">
+  <div class="flex flex-col md:flex-row md:flex-wrap md:items-center justify-between gap-4 bg-[#f4fce3] dark:bg-stone-800 p-6 rounded-2xl border border-green-200 dark:border-[#166534] shadow-sm">
     <div class="flex items-center gap-3.5">
       <div class="p-3 bg-gradient-to-br from-lime-600 to-teal-700 text-white rounded-2xl shadow-md">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +216,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
       </div>
 
       <!-- Leyenda de Estados -->
-      <div class="flex items-center gap-3 text-xs font-semibold text-green-700 dark:text-stone-300">
+      <div class="flex flex-wrap items-center gap-3 text-xs font-semibold text-green-700 dark:text-stone-300">
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-lime-500"></span> Óptimo
         </div>
@@ -222,7 +230,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
     </div>
 
     <!-- Cuadrícula 4x5 de 20 botones de planta -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
       {plants.map((plant) => {
         const m = plant.latestMetric;
         const hasData = Boolean(m.fecha);
@@ -2446,8 +2454,9 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
   });
 
   // --- SINCRONIZACIÓN EN TIEMPO REAL CON HISTORIAL Y GOOGLE SHEETS ---
-  const STORAGE_KEY_RECORDS = 'macollo_custom_history_records';
-  const STORAGE_KEY_RECORDS_ALT = 'aquasens_custom_history_records';
+  const FINCA_SCOPE = (window as any).__MACOLLO_FINCA_ID__ ?? 'global';
+  const STORAGE_KEY_RECORDS = `macollo_custom_history_records_${FINCA_SCOPE}`;
+  const STORAGE_KEY_RECORDS_ALT = `aquasens_custom_history_records_${FINCA_SCOPE}`;
 
   function getPhBadgeClient(ph: number) {
     if (ph >= 6.0 && ph <= 6.8) {

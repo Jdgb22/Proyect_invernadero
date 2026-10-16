@@ -28,3 +28,13 @@ pnpm-debug.log*
 
 # vercel
 .vercel/
+
+# never commit local secrets or scratch files
+cookies.txt
+test-db.js
+scratch.js
+*.pem
+credentials*.json
+
+# npm lockfile (usamos pnpm)
+package-lock.json

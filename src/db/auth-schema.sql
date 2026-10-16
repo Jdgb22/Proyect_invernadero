@@ -11,13 +11,17 @@
 -- ============================================================
 
 -- 1. Crear tipo ENUM para los roles del sistema
+--    Superadmin: control total del sistema (4 cuentas creadas manualmente).
+--    Admin: asistente/operador (ve todo y archiva fincas, no gestiona usuarios ni borra fincas).
+--    Agropecuario: dueño de finca(s); administra sus fincas y puede trabajar en ellas.
+--    Campesino: trabaja en una o varias fincas asignadas por invitación; no configura la finca.
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_enum') THEN
         CREATE TYPE user_role_enum AS ENUM (
-            'Super admin',
+            'Superadmin',
             'Admin',
-            'Agronomo',
+            'Agropecuario',
             'Campesino'
         );
     END IF;

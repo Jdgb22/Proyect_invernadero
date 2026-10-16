@@ -2,7 +2,9 @@
 
 ¡Bienvenido a **Macollo / Proyecto Invernadero**! Plataforma web para el **monitoreo agronómico de un invernadero real**: 20 plantas organizadas en matriz (4 filas × 5 columnas), métricas de suelo y ambiente, historial por fecha e integración con clima externo (SIATA / Open-Meteo) y Google Sheets.
 
-> **Rutas principales:** `Inicio (/ Sein)` · `Métricas (/metrics)` · `Historial (/historial)` · `Configuración (/settings)` · Acceso en `/signin`.
+> **Rutas principales:** `Inicio (/)` · `Métricas (/metrics)` · `Historial (/historial)` · `Configuración (/settings)` · `Fincas (/fincas)` · `Panel staff (/admin)`. El acceso (login/registro) está en `/` (la antigua `/signin` redirige a `/`).
+>
+> **Modelo multi-finca:** cada cuenta ve/opera sobre su **finca activa** (se elige en `/fincas` o en el panel). Cada finca tiene 20 plantas (matriz 4×5).
 
 ---
 
@@ -25,14 +27,16 @@
 
 Al registrarte eliges un rol (se guarda en la tabla `users` de PostgreSQL y viaja en la sesión JWT):
 
-| Rol                         | Qué puede hacer                                                                                                                         |
-| :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
-| **Campesino** (por defecto) | Consultar dashboard, métricas e historial. Uso operativo de campo. **Toda cuenta nueva recibe este rol.**                               |
-| **Agrónomo**                | Todo lo anterior + análisis de pH, sanidad y productividad por fila/planta. Se asigna por un administrador directo en la base de datos. |
-| **Admin**                   | Todo lo anterior + sincronización con Google Sheets y gestión de integraciones.                                                         |
-| **Super admin**             | Acceso total, incluyendo gestión de usuarios y parámetros críticos.                                                                     |
+| Rol                    | Qué puede hacer                                                                                                                                          |
+| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Campesino**          | Trabaja en las fincas a las que se une por invitación. Consulta dashboard, métricas e historial; registra mediciones. No configura la finca.             |
+| **Agropecuario**       | Todo lo del Campesino + crea sus propias fincas y las gestiona (editar, invitar, expulsar miembros). Es **dueño** de esas fincas.                        |
+| **Admin** (staff)      | Ve **todas** las fincas, entra a cualquiera (`/admin` → **Entrar**), las archiva/restaura y opera sus datos. No gestiona usuarios/roles ni borra fincas. |
+| **Superadmin** (staff) | Acceso total: además gestiona usuarios/roles y **elimina fincas** (hard delete) desde `/admin`.                                                          |
 
-> ⚠️ **Nota importante:** aunque el formulario de registro muestra un selector de rol, el servidor actualmente asigna siempre `Campesino` por seguridad (`POST /api/auth/register`). Si necesitas otro rol, un administrador debe cambiarlo en la tabla `users` (`UPDATE users SET role='Agronomo' WHERE email='...'`).
+> **Rol de finca vs. rol de sistema:** el rol de sistema (arriba) es global. Dentro de cada finca, quien la creó es **dueño** (`rol_finca='dueno'`) y el resto son **miembros**. Solo el **dueño** conecta/sincroniza Google Sheets; registrar mediciones manualmente (Excel/CSV) lo puede hacer cualquier miembro.
+
+> ⚠️ **Nota:** en el registro solo puedes elegir entre **Campesino** (por defecto) o **Agropecuario** (`POST /api/auth/register` rechaza roles staff). Los roles **Admin** y **Superadmin** se asignan desde fuera (panel `/admin` o `scripts/seed-admin.mjs`).
 
 Tu nombre y rol se muestran en el encabezado del Historial y Métricas como `Sesión activa: Nombre (Rol)`.
 
@@ -40,14 +44,16 @@ Tu nombre y rol se muestran en el encabezado del Historial y Métricas como `Ses
 
 ## 2. Acceso al sistema
 
-### 2.1. Iniciar sesión (`/signin`)
+### 2.1. Iniciar sesión (`/`)
 
-1. Abre la página `/signin`. Verás la tarjeta **Bienvenido / Sistema de monitoreo ambiental** con dos pestañas.
+1. Abre la página **`/`**. Verás la tarjeta **Bienvenido / Sistema de monitoreo ambiental** con dos pestañas.
 2. En la pestaña **Iniciar Sesión** ingresa:
    - **Correo Electrónico** (ej. `ejemplo@correo.com`). También puedes usar tu nombre de usuario o teléfono registrado.
    - **Contraseña**.
-3. Haz clic en **Iniciar Sesión**. Verás el mensaje `Verificando credenciales en PostgreSQL...` y luego `¡Sesión iniciada! Redirigiendo...`.
-4. Serás llevado automáticamente a `/` (Dashboard).
+3. Haz clic en **Iniciar Sesión**. Verás `Verificando credenciales en PostgreSQL...` y luego `¡Sesión iniciada! Redirigiendo...`.
+4. Serás llevado a `/` (Dashboard). Si eres **staff (Admin/Superadmin) sin finca elegida**, irás a `/admin` para elegir la finca con **Entrar**.
+
+> La ruta antigua **`/signin`** sigue existiendo pero solo **redirige a `/`** (conservando invitaciones `?codigo=` / `?desde=`).
 
 **Alternativa con Google:** haz clic en **Continuar con Google** (debajo del divisor `o continúa con`). Se usa OAuth de Google y la cuenta se vincula automáticamente a tu correo.
 
@@ -221,14 +227,14 @@ Las fechas disponibles vienen de las mediciones reales cargadas (`REAL_DATES` en
 3. El sistema valida y previsualiza. Confirma para guardar en PostgreSQL.
 4. Vuelve al Dashboard/Métricas: las tarjetas grises ahora mostrarán datos.
 
-### 6.3. Conectar Google Sheets (solo Admin)
+### 6.3. Conectar Google Sheets (solo el dueño de la finca)
 
-1. Haz clic en **Conectar Google Sheets** (`btn-open-sheets-modal`).
+1. Haz clic en **Conectar Google Sheets** (`btn-open-sheets-modal`). Si no eres dueño de la finca activa, **el botón no aparece** (la API responde `403`).
 2. Pega la **URL pública del Sheet** (debe estar publicado como CSV o enlace de exportación, ej. `https://docs.google.com/spreadsheets/d/TU_ID/edit#gid=0`).
-3. El sistema convierte la URL a formato `export?format=csv`, descarga y sincroniza (`POST /api/sync-sheets`).
-4. Verás confirmación de éxito o error de autenticación/conexión.
+3. El sistema convierte la URL a formato `export?format=csv`, descarga y persiste en las `lecturas` de la finca activa (`POST /api/sync-sheets`).
+4. Verás confirmación de éxito o error de conexión.
 
-> Requiere rol Admin o superior. La sincronización puede ser `manual`, cada 5/15 min o cada hora según configuración.
+> Exclusivo del **dueño** de la finca (quien la creó) o de quien tenga `rol_finca='dueno'`. Ni los demás miembros ni el staff pueden conectar Sheets; ellos pueden **Importar Excel/CSV** manualmente (§6.2).
 
 ### 6.4. Exportar a Excel
 
@@ -268,7 +274,7 @@ Acciones irreversibles (requieren confirmación):
 
 - Borrar historial local / restablecer preferencias.
 - Cerrar todas las sesiones.
-- (Solo Super admin) Eliminar cuenta o datos del invernadero.
+- (Solo **Superadmin**) Eliminar cuenta de usuario o finca (hard delete) desde el panel `/admin`.
 
 > Lee siempre el mensaje de confirmación antes de aceptar.
 
@@ -305,8 +311,8 @@ Mediciones propias (importadas a memoria desde Excel/Sheets) + clima Open-Meteo 
 **Exportar Excel falla o descarga vacía.**
 Revisa que haya datos en el rango/fecha elegido y que tu sesión siga activa (si expiró, inicia sesión de nuevo).
 
-**Google Sheets dice "Error de autenticación".**
-La hoja debe estar **publicada/compartida como lector** (enlace `export?format=csv` accesible). Verifica el ID y que tengas rol Admin.
+**Google Sheets dice "Error de autenticación" o no veo el botón.**
+El botón **Conectar Google Sheets** solo aparece para el **dueño de la finca activa**; si eres miembro o staff, usa **Importar Excel/CSV**. Además, la hoja debe estar **publicada/compartida como lector** (enlace `export?format=csv` accesible). Verifica el ID del documento.
 
 **La página me devuelve al inicio.**
 Tu sesión expiró o no tienes rol suficiente. Inicia sesión de nuevo.

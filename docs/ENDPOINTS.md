@@ -5,11 +5,13 @@
 
 Base URL local: `http://localhost:4321`. Todos responden `Content-Type: application/json` salvo indicación.
 
+> **Auth**: las rutas de datos (`/api/fincas*`, `/api/finca*`, `/api/invitaciones*`, `/api/admin*`, `/api/sync-sheets`, `/api/export-excel`, `/api/siata`) exigen sesión (middleware → `401`) **y** revalidan permisos de finca dentro del handler. Las rutas públicas se limitan a `/api/auth/*`. Ver [ROUTES](./ROUTES.md) y [AUTH](./AUTH.md).
+
 ---
 
 ## Auth — `POST /api/auth/register`
 
-Crea un usuario con contraseña hasheada (bcrypt, salt 10 rondas). Validación **Zod Zero Trust** (`RegisterSchema`): `name` mín. 2, `email` formato válido (opcional), `phone` (opcional), `birthDate` (opcional), `password` mín. 6 (mensaje dice 8); `refine` exige al menos email o teléfono. Primer error Zod en `message` (400).
+Crea un usuario con contraseña hasheada (bcrypt, salt 10 rondas). Validación **Zod Zero Trust** (`RegisterSchema`): `name` mín. 2, `email` formato válido (opcional), `phone` (opcional), `birthDate` (opcional), `password` **mín. 8**, `accountType` ∈ {`Campesino` (def.), `Agropecuario`}, `fincaNombre` opcional (**obligatorio en la práctica para Agropecuario**); `refine` exige al menos email o teléfono. Primer error Zod en `message` (400). **No acepta `fincaCode`**: las invitaciones solo se canjean por `POST /api/invitaciones/usar`.
 
 **Archivo:** `src/pages/api/auth/register.ts` · **Auth:** no requerida.
 
@@ -21,29 +23,55 @@ Crea un usuario con contraseña hasheada (bcrypt, salt 10 rondas). Validación *
   "email": "juan@correo.com",
   "phone": "3001234567",
   "birthDate": "1990-05-01",
-  "password": "secreto123"
+  "password": "secreto123",
+  "accountType": "Agropecuario",
+  "fincaNombre": "Finca La Esperanza"
 }
 ```
 
-| Campo       | Requerido                         | Reglas (Zod + lógica)                                    |
-| :---------- | :-------------------------------- | :------------------------------------------------------- |
-| `name`      | Sí                                | Zod `min(2)` → `El nombre completo es obligatorio.`      |
-| `email`     | Uno de `email`/`phone` (`refine`) | Zod `email()`; único case-insensitive. Acepta `""`.      |
-| `phone`     | Uno de `email`/`phone`            | Dígitos `+?7–15` (normalizado); único. Acepta `""`.      |
-| `birthDate` | No                                | `YYYY-MM-DD` real, no futura. Acepta `""`.               |
-| `password`  | Sí                                | Zod `min(6)` (mensaje dice 8); cliente exige **≥ 8**.    |
-| `role`      | —                                 | **Ignorado**: el servidor inserta siempre `'Campesino'`. |
+| Campo         | Requerido                         | Reglas (Zod + lógica)                                                                  |
+| :------------ | :-------------------------------- | :------------------------------------------------------------------------------------- |
+| `name`        | Sí                                | Zod `min(2)` → `El nombre completo es obligatorio.`                                    |
+| `email`       | Uno de `email`/`phone` (`refine`) | Zod `email()`; único case-insensitive. Acepta `""`.                                    |
+| `phone`       | Uno de `email`/`phone`            | Dígitos `+?7–15` (normalizado); único. Acepta `""`.                                    |
+| `birthDate`   | No                                | `YYYY-MM-DD` real, no futura. Acepta `""`.                                             |
+| `password`    | Sí                                | Zod `min(8)` (servidor y cliente).                                                     |
+| `accountType` | No                                | `Campesino` (def.) o `Agropecuario`. Determina el rol del usuario. Staff no permitido. |
+| `fincaNombre` | Agropecuario (implícito)          | Nombre de su primera finca; obligatorio si `accountType=Agropecuario`.                 |
+| `role`        | —                                 | **Ignorado**: usar `accountType`; nunca asigna roles staff.                            |
 
 **Respuestas:**
 
-- `201` → `{ "message": "Cuenta creada exitosamente.", "user": { id, name, email, phone, birth_date, role } }`
-- `400` → `{ message }` (nombre obligatorio / contacto obligatorio / email o celular inválido o duplicado / fecha inválida / contraseña corta).
-- `500` → `{ message: "Error al registrar la cuenta en la base de datos.", error }`
+- `201` → `{ "message": "Cuenta creada y finca \"X\" lista." | "Cuenta creada exitosamente.", "user": { id, name, email, phone, birth_date, role }, "fincaCreada": { id, nombre } | null, "avisoCreacion": "…no se pudo crear la finca…" | null }`
+- `400` → `{ message }` (nombre obligatorio / contacto obligatorio / email o celular inválido o duplicado / fecha inválida / contraseña corta / Agropecuario sin `fincaNombre`).
+- `500` → `{ message: "Error al registrar la cuenta. Intenta de nuevo más tarde." }`
 
 ```bash
 curl -X POST http://localhost:4321/api/auth/register \
   -H 'Content-Type: application/json' \
   -d '{"name":"Prueba","email":"prueba@correo.com","password":"secreto123"}'
+```
+
+---
+
+## Auth — `POST /api/auth/check-availability`
+
+Comprueba si un correo y/o celular ya están registrados, para que el asistente de registro (`Welcome.astro`) valide el paso 1 antes de continuar. No requiere sesión.
+
+**Archivo:** `src/pages/api/auth/check-availability.ts` · **Auth:** no requerida.
+
+**Request body (JSON):** `{ "email"?: string, "phone"?: string }` (Zod `Schema`: ambos opcionales, con tope de longitud).
+
+**Respuestas:**
+
+- `200` → `{ "emailTaken": boolean, "phoneTaken": boolean }`. `phoneTaken` solo se evalúa si el celular normalizado cumple `+?7–15` dígitos.
+- `400` → `{ message: "Datos no válidos." }`
+- `500` → `{ message: "No se pudo verificar. Intenta de nuevo." }`
+
+```bash
+curl -X POST http://localhost:4321/api/auth/check-availability \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"prueba@correo.com"}'
 ```
 
 ---
@@ -114,7 +142,7 @@ Rutas automáticas de `auth-astro` (proveedores **Credentials** + **Google**, se
 
 Evita CORS consultando SIATA desde el servidor con timeout de 3 s.
 
-**Archivo:** `src/pages/api/siata.ts` · **Auth:** no requerida · **Query params:** ninguno.
+**Archivo:** `src/pages/api/siata.ts` · **Auth:** sesión requerida (middleware → `401`) · **Query params:** ninguno.
 
 > ⚠️ Desde `efed143`, `fetchWeatherData()` **ya no llama a este proxy** (SIATA fuera de línea; se usa Open-Meteo directo + fallback offline). El endpoint sigue vivo pero sin consumidores internos. Ver ADR-007.
 
@@ -129,9 +157,9 @@ curl http://localhost:4321/api/siata
 
 ## Datos — `POST /api/sync-sheets`
 
-Sincroniza mediciones desde una URL pública de Google Sheets/CSV. **Parsea y devuelve los registros; no los persiste en PostgreSQL** (el cliente los mantiene en memoria).
+Sincroniza mediciones desde una URL pública de Google Sheets/CSV. **Parsea los registros y los persiste en `lecturas` de la finca activa** (además de devolverlos al cliente, que los usa para pintar el tablero).
 
-**Archivo:** `src/pages/api/sync-sheets.ts` · **Auth:** no verificada en el handler (llamar solo desde páginas con sesión). Body validado con **Zod** (`SyncRequestSchema`: `url` debe ser URL; si no, `400 { success:false, error, details }`).
+**Archivo:** `src/pages/api/sync-sheets.ts` · **Auth:** sesión + **dueño de la finca activa** (`rol_finca = 'dueno'`; cookie `finca_activa`; middleware → `401`). Los miembros (p. ej. un agronomo invitado) y el staff reciben `403`. Sin finca activa → `400 { error }`. Body validado con **Zod** (`SyncRequestSchema`: `url` debe ser URL; si no, `400 { success:false, error, details }`). Tasa limitada por IP en el middleware.
 
 **Request body:**
 
@@ -147,8 +175,9 @@ El servidor normaliza la URL a `export?format=csv` (soporta `/d/e/` publicados, 
 
 **Respuestas:**
 
-- `200` → `{ success: true, count, records: MetricRecord[], message }`
-- `400` → `{ success: false, error }` (sin URL).
+- `200` → `{ success: true, count, guardadas, records: MetricRecord[], message }` (`guardadas` = filas insertadas/actualizadas en `lecturas`; deduplicadas por `(finca, planta, fecha, hora)`).
+- `400` → `{ success: false, error }` (sin URL, o **sin finca activa**).
+- `401/403` → sin sesión / sin permiso (solo el **dueño** de la finca puede conectar y sincronizar Sheets).
 - `422` → HTTP externo ≠ 2xx (pide compartir como _"Cualquier persona con el enlace"_ o _"Publicado en la web como CSV"_) / CSV vacío / sin registros válidos.
 - `500` → `{ success: false, error, details }`
 
@@ -156,18 +185,17 @@ El servidor normaliza la URL a `export?format=csv` (soporta `/d/e/` publicados, 
 
 ## Datos — `GET | POST /api/export-excel`
 
-Genera el reporte `.xlsx` con ExcelJS (3 hojas). **Auth:** no verificada en el handler (llamar solo desde páginas con sesión).
+Genera el reporte `.xlsx` con ExcelJS (3 hojas) de la **finca activa**.
 
-**Archivo:** `src/pages/api/export-excel.ts`.
+**Archivo:** `src/pages/api/export-excel.ts` · **Auth:** sesión + miembro/staff de la finca activa (middleware → `401`; sin finca activa → `400`).
 
-- `GET /api/export-excel` → usa la matriz del servidor (`getAllPlantsGrid()`).
-- `POST /api/export-excel` → body validado con **Zod** (`ExportRequestSchema`: `plants` array no vacío); si inválido o vacío, igual que GET (fallback a matriz del servidor, no 400).
+- `GET` / `POST /api/export-excel` → carga las lecturas de la finca activa desde PG (`getLecturasByFinca`) y arma `PlantMatrixItem[]` (`buildPlantsGridFromRecords`). El body se ignora (el servidor no acepta plantas enviadas por el cliente).
 
 **Respuesta `200` (binario):**
 
 ```http
 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-Content-Disposition: attachment; filename="Macollo_Mediciones_Invernadero_YYYY-MM-DD.xlsx"
+Content-Disposition: attachment; filename="<Finca>_Mediciones_YYYY-MM-DD.xlsx"
 ```
 
 Hojas: **1. Mediciones de Hoy** (16 columnas Fila→Observaciones, zebra, colores por sanidad, autofiltro, fila `PROMEDIO GENERAL` con fórmulas `AVERAGE`); **2. Historial Completo** (14 columnas, orden fecha desc); **3. Rangos Agronómicos** (pH 6.0–6.8, T_int 22–26 °C, T_ext 18–24 °C, T_suelo 19–22 °C, crecimiento 75–100 %, acciones recomendadas).
@@ -179,6 +207,37 @@ curl -OJ http://localhost:4321/api/export-excel
 curl -X POST http://localhost:4321/api/export-excel \
   -H 'Content-Type: application/json' -d '{"plants":[]}' -o reporte.xlsx
 ```
+
+---
+
+## Fincas y invitaciones
+
+Todas exigen sesión y revalidan membresía/rol dentro del handler. Niveles: `staff` (Superadmin/Admin, acceso total), `dueno`, `miembro`, `none`.
+
+| Ruta                                  | Método   | Descripción                                                                                | Nivel               |
+| :------------------------------------ | :------- | :----------------------------------------------------------------------------------------- | :------------------ |
+| `/api/fincas`                         | GET      | Lista fincas visibles (staff: todas)                                                       | Sesión              |
+| `/api/fincas`                         | POST     | Crea finca `{ nombre, descripcion?, ubicacion? }` + matriz 20 plantas (máx. 5 por usuario) | Agropecuario/staff  |
+| `/api/fincas/:id`                     | GET      | Detalle (miembros, invitaciones, plantas)                                                  | Miembro/staff       |
+| `/api/fincas/:id`                     | PATCH    | Edita `{ nombre?, descripcion?, ubicacion? }`                                              | Dueño/staff         |
+| `/api/fincas/:id`                     | DELETE   | **Hard delete** (borra finca y lecturas)                                                   | **Solo Superadmin** |
+| `/api/fincas/:id/archivo`             | POST     | `{ activa }` archiva/restaura                                                              | Dueño/staff         |
+| `/api/fincas/:id/miembros`            | GET      | Lista miembros                                                                             | Dueño/staff         |
+| `/api/fincas/:id/miembros?userId=N`   | DELETE   | Expulsa (no al dueño)                                                                      | Dueño/staff         |
+| `/api/fincas/:id/invitaciones`        | GET      | Lista invitaciones                                                                         | Dueño/staff         |
+| `/api/fincas/:id/invitaciones`        | POST     | Crea `{ expiraEn, usosMaximos }` → código nanoid de 8 chars (p.ej. `K7M4XP9Q`)             | Dueño/staff         |
+| `/api/fincas/:id/invitaciones/:invId` | DELETE   | Revoca                                                                                     | Dueño/staff         |
+| `/api/fincas/:id/lecturas`            | GET      | Lecturas de la finca (`MetricRecord[]`)                                                    | Miembro/staff       |
+| `/api/fincas/:id/lecturas`            | POST     | `{ records }` → upsert en `lecturas`                                                       | Miembro/staff       |
+| `/api/fincas/salir`                   | POST     | `{ fincaId }` abandona (si no eres dueño)                                                  | Miembro             |
+| `/api/finca/activa`                   | GET/POST | Lee/fija cookie `finca_activa`                                                             | Sesión              |
+| `/api/invitaciones/usar`              | POST     | `{ codigo }` canjea (rate-limited, atómico)                                                | Sesión              |
+| `/api/invitaciones/peek`              | GET      | `?codigo=` vista previa (nombre, expiración, usos)                                         | Sesión              |
+| `/api/admin/users`                    | GET      | `?q=` lista usuarios + `fincas_count`                                                      | Superadmin          |
+| `/api/admin/users/:id`                | PATCH    | `{ role }` cambia rol                                                                      | Superadmin          |
+| `/api/admin/users/:id`                | DELETE   | Elimina cuenta (no el último Superadmin, ni a uno mismo, ni a un dueño de finca)           | Superadmin          |
+
+Códigos: `400` body/acción inválida · `403` sin permiso · `404` inexistente · `409` ya miembro · `410` invitación revocada/expirada/agotada.
 
 ---
 

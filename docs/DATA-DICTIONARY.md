@@ -2,7 +2,7 @@
 
 > Fuente: `src/backend/services/metricsData.ts` (tipos), `src/pages/api/sync-sheets.ts` (columnas CSV), `src/pages/api/export-excel.ts` (hojas), `src/db/*.sql` (tablas). Para llenar hojas ver [FIELD-PROTOCOL](./FIELD-PROTOCOL.md).
 
-## 1. `MetricRecord` (registro canónico en memoria)
+## 1. `MetricRecord` (registro canónico, type TS)
 
 | Campo                                            | Tipo                                   | Ejemplo                             | Origen / notas                                                                            |
 | :----------------------------------------------- | :------------------------------------- | :---------------------------------- | :---------------------------------------------------------------------------------------- |
@@ -53,6 +53,6 @@ Valores texto nulo reconocidos como `null`: `nd, n/d, na, n/a, -, --, null, no t
 - **Hoja 2 Historial Completo** (14 col, orden fecha desc, autofiltro).
 - **Hoja 3 Rangos Agronómicos** (pH 6.0–6.8 · T_int 22–26 °C · T_ext 18–24 °C · T_suelo 19–22 °C · crecimiento 75–100 % + acciones).
 
-## 4. Correspondencia con PostgreSQL (objetivo, ver DATABASE.md §5)
+## 4. Correspondencia con PostgreSQL (ver DATABASE.md)
 
-`plantas(id↔P-NN, nombre↔code, ubicacion↔fila/col)` · `mediciones(planta_id, tipo↔campo, valor, subtipo↔matiz, fecha_medida↔fecha+hora, usuario_id↔responsable)` · `responsable(nombre, cargo)` · `tipo_medicion_enum`: `ph→phSuelo`, `temperatura_atmosferica→tempInterna/tempExterna` (vía `subtipo`), `temperatura_suelo→tempSuelo`, `humedad`, `crecimiento`, `productividad`.
+`plantas(id, finca_id, fila, columna, plant_id↔P-NN)` · `lecturas(finca_id, planta_id, fecha, hora, ph_suelo↔phSuelo, temp_interna↔tempInterna, temp_externa↔tempExterna, temp_suelo↔tempSuelo, humedad, altura_cm↔alturaCm, crecimiento, fase↔faseCrecimiento, productividad, sanidad, responsable_id↔responsable, observaciones)`. Cada fila del CSV se guarda como una **lectura** de la planta en la **finca activa** (`insertLecturas`).

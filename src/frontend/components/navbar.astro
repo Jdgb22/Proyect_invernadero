@@ -1,17 +1,68 @@
 ---
 import { getSession } from "auth-astro/server";
 import BlobatarAvatar from "./BlobatarAvatar.tsx";
+import { getAuthUser } from "../../backend/services/authz";
+import { listFincasForUser, getFincaById } from "../../backend/services/fincas";
+import { getFincaCookie } from "../../backend/services/authz";
 
 const session = await getSession(Astro.request);
 const currentPath = Astro.url.pathname;
 const userEmail = session?.user?.email || "usuario@ejemplo.com";
 
-const navLinks = [
-  { name: "Inicio", path: "/" },
-  { name: "Métricas", path: "/metrics" },
-  { name: "Historial", path: "/historial" },
-  { name: "Configuración", path: "/settings" },
-];
+const user = await getAuthUser(Astro.request);
+const fincas = user ? await listFincasForUser(user.id, user.role) : [];
+
+// Finca activa (cookie validada)
+let fincaActivaId: number | null = null;
+const cookieId = Number(getFincaCookie(Astro.request));
+if (user && Number.isInteger(cookieId) && cookieId > 0) {
+  const puedeUsar =
+    user.role === "Superadmin" ||
+    user.role === "Admin" ||
+    fincas.some((f) => f.id === cookieId && f.activa);
+  if (puedeUsar) fincaActivaId = cookieId;
+} else if (fincas.length === 1) {
+  fincaActivaId = fincas[0].id;
+}
+const fincaActiva = fincaActivaId ? await getFincaById(fincaActivaId) : null;
+
+const role = user?.role || "Campesino";
+const esStaff = role === "Superadmin" || role === "Admin";
+
+// Métricas e Historial son por finca: solo se muestran con una finca activa.
+// El staff (Superadmin/Admin) tiene como "inicio" el panel de fincas.
+const navLinks = esStaff
+  ? [
+      { name: "Panel", path: "/admin" },
+      ...(fincaActivaId !== null
+        ? [
+            { name: "Tablero", path: "/" },
+            { name: "Métricas", path: "/metrics" },
+            { name: "Historial", path: "/historial" },
+          ]
+        : []),
+      { name: "Fincas", path: "/fincas" },
+      { name: "Configuración", path: "/settings" },
+    ]
+  : [
+      { name: "Inicio", path: "/" },
+      ...(fincaActivaId !== null
+        ? [
+            { name: "Métricas", path: "/metrics" },
+            { name: "Historial", path: "/historial" },
+          ]
+        : []),
+      { name: "Fincas", path: "/fincas" },
+      { name: "Configuración", path: "/settings" },
+    ];
+
+const roleBadge: Record<string, { label: string; cls: string }> = {
+  Superadmin: { label: "Superadmin", cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300" },
+  Admin: { label: "Admin", cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300" },
+  Agropecuario: { label: "Agropecuario", cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
+  Campesino: { label: "Campesino", cls: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300" },
+};
+const badge = roleBadge[role] || roleBadge.Campesino;
 ---
 
 <nav
@@ -21,20 +72,44 @@ const navLinks = [
     <div class="flex justify-between h-16">
       <!-- Logo y Título -->
       <div class="flex items-center gap-3">
-        <img
-          src="/gulupa.svg"
-          alt="Logo"
-          class="w-10 h-10 object-contain drop-shadow-md"
-        />
-        <span
-          class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-lime-500 dark:from-green-400 dark:to-lime-400 tracking-tight"
-        >
-          Macollo
-        </span>
+        <a href="/" class="flex items-center gap-3">
+          <img
+            src="/gulupa.svg"
+            alt="Logo"
+            class="w-10 h-10 object-contain drop-shadow-md"
+          />
+          <span
+            class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-lime-500 dark:from-green-400 dark:to-lime-400 tracking-tight"
+          >
+            Macollo
+          </span>
+        </a>
+
+        <!-- Selector de finca activa -->
+        {
+          session && fincas.length > 0 && (
+            <div class="hidden sm:flex items-center ml-3 relative">
+              <select
+                id="finca-switcher"
+                class="appearance-none pl-8 pr-8 py-1.5 rounded-xl text-xs font-bold border border-green-200 dark:border-[#104d28] bg-white/80 dark:bg-stone-900/60 text-green-800 dark:text-green-300 outline-none focus:ring-2 focus:ring-green-500 cursor-pointer shadow-sm max-w-[180px] truncate"
+                title="Cambiar de finca"
+              >
+                {fincas.filter((f) => f.activa).map((f) => (
+                  <option value={f.id} selected={f.id === fincaActivaId}>
+                    {f.nombre}
+                  </option>
+                ))}
+                {!fincaActiva && <option value="" selected disabled>Elige una finca</option>}
+              </select>
+              <span class="pointer-events-none absolute left-2.5 text-sm">🌾</span>
+              <span class="pointer-events-none absolute right-2.5 text-stone-400 text-[10px]">▼</span>
+            </div>
+          )
+        }
       </div>
 
       <!-- Enlaces Desktop -->
-      <div class="hidden md:flex md:items-center md:space-x-1">
+      <div class="hidden xl:flex xl:items-center xl:space-x-1">
         {
           navLinks.map((link) => {
             const isActive =
@@ -43,7 +118,7 @@ const navLinks = [
             return (
               <a
                 href={link.path}
-                class={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                class={`px-3 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
                   isActive
                     ? "bg-green-50 dark:bg-stone-900/30 text-green-600 dark:text-stone-400"
                     : "text-green-700 dark:text-stone-300 hover:bg-green-50 dark:hover:bg-green-800/50 hover:text-green-500"
@@ -56,15 +131,18 @@ const navLinks = [
         }
       </div>
 
-      <!-- Botón Logout Desktop -->
-      <div class="hidden md:flex items-center gap-4 ml-4">
+      <!-- Usuario + Logout Desktop -->
+      <div class="hidden xl:flex items-center gap-3 ml-4">
         {session && (
-          <div class="w-10 h-10 rounded-full border-2 border-green-200 dark:border-[#104d28] shadow-sm bg-white dark:bg-stone-800 overflow-hidden flex items-center justify-center cursor-pointer" title={session.user?.name || userEmail}>
-            {session.user?.image ? (
-              <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
-            ) : (
-              <BlobatarAvatar client:load name={userEmail} size={40} />
-            )}
+          <div class="flex items-center gap-2">
+            <span class={`px-2.5 py-1 rounded-full text-[11px] font-bold ${badge.cls}`}>{badge.label}</span>
+            <div class="w-10 h-10 rounded-full border-2 border-green-200 dark:border-[#104d28] shadow-sm bg-white dark:bg-stone-800 overflow-hidden flex items-center justify-center cursor-pointer" title={session.user?.name || userEmail}>
+              {session.user?.image ? (
+                <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
+              ) : (
+                <BlobatarAvatar client:load name={userEmail} size={40} />
+              )}
+            </div>
           </div>
         )}
         <button
@@ -76,7 +154,7 @@ const navLinks = [
       </div>
 
       <!-- Botón Menú Móvil (Hamburger) -->
-      <div class="flex items-center md:hidden">
+      <div class="flex items-center xl:hidden">
         <button
           id="mobile-menu-btn"
           class="p-2 rounded-lg text-green-700 dark:text-stone-300 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none transition-colors"
@@ -111,9 +189,21 @@ const navLinks = [
   <!-- Menú Móvil Desplegable -->
   <div
     id="mobile-menu"
-    class="md:hidden hidden bg-[#f4fce3] dark:bg-[#062c16] border-b border-green-200 dark:border-[#104d28] absolute w-full shadow-lg"
+    class="xl:hidden hidden bg-[#f4fce3] dark:bg-[#062c16] border-b border-green-200 dark:border-[#104d28] absolute w-full shadow-lg max-h-[calc(100dvh-4rem)] overflow-y-auto"
   >
     <div class="px-4 pt-2 pb-6 space-y-1 shadow-inner">
+      {
+        session && fincas.filter((f) => f.activa).length > 0 && (
+          <div class="px-4 pb-3 mb-2 border-b border-green-100 dark:border-[#104d28]">
+            <label class="text-xs font-bold text-green-700 dark:text-stone-400">Finca activa</label>
+            <select id="finca-switcher-mobile" class="mt-1 w-full px-3 py-2 rounded-xl text-sm font-semibold border border-green-200 dark:border-[#104d28] bg-white dark:bg-stone-900 text-green-800 dark:text-green-300 outline-none">
+              {fincas.filter((f) => f.activa).map((f) => (
+                <option value={f.id} selected={f.id === fincaActivaId}>{f.nombre}</option>
+              ))}
+            </select>
+          </div>
+        )
+      }
       {
         navLinks.map((link) => {
           const isActive =
@@ -136,7 +226,7 @@ const navLinks = [
 
       <div class="pt-4 mt-4 border-t border-green-100 dark:border-[#104d28]">
         {session && (
-          <div class="flex items-center gap-3 px-4 mb-4">
+          <div class="flex items-center gap-3 px-4 mb-3">
             <div class="w-10 h-10 rounded-full border-2 border-green-200 dark:border-[#104d28] shadow-sm bg-white dark:bg-stone-800 overflow-hidden flex items-center justify-center">
               {session.user?.image ? (
                 <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
@@ -144,8 +234,9 @@ const navLinks = [
                 <BlobatarAvatar client:load name={userEmail} size={40} />
               )}
             </div>
-            <div class="text-sm font-semibold text-green-900 dark:text-stone-200 truncate">
-              {session.user?.name || userEmail}
+            <div class="min-w-0 flex-1 text-sm">
+              <div class="font-semibold text-green-900 dark:text-stone-200 truncate">{session.user?.name || userEmail}</div>
+              <span class={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${badge.cls}`}>{badge.label}</span>
             </div>
           </div>
         )}
@@ -163,18 +254,44 @@ const navLinks = [
 <script>
   const { signOut } = await import("auth-astro/client");
 
-  // Logout function
   const handleLogout = () => {
     signOut();
   };
 
-  // Attach to both desktop and mobile buttons
   document
     .getElementById("nav-logout-btn")
     ?.addEventListener("click", handleLogout);
   document
     .getElementById("nav-logout-btn-mobile")
     ?.addEventListener("click", handleLogout);
+
+  // Selector de finca activa
+  async function cambiarFinca(fincaId: string) {
+    if (!fincaId) return;
+    try {
+      const res = await fetch("/api/finca/activa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fincaId: Number(fincaId) }),
+      });
+      if (res.ok) {
+        (window as any).sileo?.success?.({ title: "Finca activa cambiada." });
+        setTimeout(() => window.location.reload(), 350);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        (window as any).sileo?.error?.({ title: data.message || "No se pudo cambiar de finca." });
+      }
+    } catch {
+      (window as any).sileo?.error?.({ title: "Error al cambiar de finca." });
+    }
+  }
+
+  document.getElementById("finca-switcher")?.addEventListener("change", (e) => {
+    cambiarFinca((e.target as HTMLSelectElement).value);
+  });
+  document.getElementById("finca-switcher-mobile")?.addEventListener("change", (e) => {
+    cambiarFinca((e.target as HTMLSelectElement).value);
+  });
 
   // Mobile menu toggle
   const mobileBtn = document.getElementById("mobile-menu-btn");
