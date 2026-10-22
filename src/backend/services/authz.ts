@@ -1,8 +1,3 @@
-// src/backend/services/authz.ts
-// Autorización central del sistema (Zero Trust).
-// El rol SIEMPRE se relee de la BD en operaciones sensibles: el JWT puede quedar
-// obsoleto tras un cambio de rol y no es fuente de verdad.
-
 import { pool } from "../../db/client";
 
 export type SystemRole = "Superadmin" | "Admin" | "Agropecuario" | "Campesino";
@@ -15,6 +10,8 @@ export interface AuthUser {
   id: number;
   role: SystemRole;
   name: string | null;
+  email: string | null;
+  image: string | null;
 }
 
 export function json(data: unknown, status = 200): Response {
@@ -38,6 +35,14 @@ export function notFound(message = "Recurso no encontrado."): Response {
   return json({ message }, 404);
 }
 
+export async function parseJsonBody(request: Request): Promise<unknown | null> {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Obtiene el usuario autenticado con su rol ACTUAL de la BD.
  * Devuelve null si no hay sesión o el usuario ya no existe.
@@ -52,7 +57,7 @@ export async function getAuthUser(request: Request): Promise<AuthUser | null> {
   if (!Number.isInteger(userId) || userId <= 0) return null;
 
   const res = await pool.query(
-    "SELECT id, role, name FROM users WHERE id = $1",
+    "SELECT id, role, name, email, image FROM users WHERE id = $1",
     [userId],
   );
   const row = res.rows[0];
@@ -62,6 +67,8 @@ export async function getAuthUser(request: Request): Promise<AuthUser | null> {
     id: row.id,
     role: (row.role as SystemRole) || "Campesino",
     name: row.name ?? null,
+    email: row.email ?? null,
+    image: row.image ?? null,
   };
 }
 
@@ -99,17 +106,8 @@ export async function getFincaAccess(
   return row.rol_finca === "dueno" ? "dueno" : "miembro";
 }
 
-/** Puede gestionar la finca (editar, invitaciones, miembros). */
-export function canManageFinca(role: SystemRole, access: FincaAccess): boolean {
+export function canManageFinca(access: FincaAccess): boolean {
   return access === "staff" || access === "dueno";
-}
-
-/** Puede archivar/restaurar la finca. */
-export function canArchiveFinca(
-  role: SystemRole,
-  access: FincaAccess,
-): boolean {
-  return canManageFinca(role, access);
 }
 
 /** Puede ver los datos agronómicos de la finca. */

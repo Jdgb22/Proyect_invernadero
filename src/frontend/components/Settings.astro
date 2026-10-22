@@ -1,16 +1,32 @@
 ---
-// Settings.astro
 import { getSession } from "auth-astro/server";
 import BlobatarAvatar from "./BlobatarAvatar.tsx";
-import { getAuthUser } from "../../backend/services/authz";
-import { listFincasForUser } from "../../backend/services/fincas";
+import {
+  getAuthUser,
+  canManageFinca,
+  canViewFincaData,
+  getFincaAccess,
+} from "../../backend/services/authz";
+import {
+  listFincasForUser,
+  resolveActiveFinca,
+} from "../../backend/services/fincas";
 
 const session = await getSession(Astro.request);
-const userEmail = session?.user?.email || "usuario@ejemplo.com";
-const userName = session?.user?.name || "Usuario del Sistema";
 
 const user = await getAuthUser(Astro.request);
+const userEmail = user?.email || session?.user?.email || "usuario@ejemplo.com";
+const userName = user?.name || session?.user?.name || "Usuario del Sistema";
+const userImage = user?.image || session?.user?.image || null;
 const fincas = user ? await listFincasForUser(user.id, user.role) : [];
+
+const ctx = await resolveActiveFinca(Astro.request);
+const fincaActiva = ctx?.finca ?? null;
+const fincaAccess = ctx?.finca
+  ? await getFincaAccess(ctx.finca.id, ctx.user)
+  : "none";
+const puedeExportar = Boolean(fincaActiva) && canViewFincaData(fincaAccess);
+const puedeRestablecer = Boolean(fincaActiva) && canManageFinca(fincaAccess);
 
 const roleBadge: Record<string, { label: string; cls: string }> = {
   Superadmin: { label: "Superadmin", cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300" },
@@ -21,37 +37,46 @@ const roleBadge: Record<string, { label: string; cls: string }> = {
 const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
 ---
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div
+  id="settings-scope"
+  data-finca-id={fincaActiva?.id ?? ""}
+  data-finca-nombre={fincaActiva?.nombre ?? ""}
+  data-can-export={String(puedeExportar)}
+  data-can-reset={String(puedeRestablecer)}
+  class="hidden"
+></div>
+
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <!-- Header -->
-  <div class="mb-8">
+  <div class="mb-6 lg:mb-8">
     <h1 class="text-3xl font-bold text-green-950 dark:text-white mb-2">Configuración</h1>
     <p class="text-green-700 dark:text-stone-300">Administra tus preferencias del sistema y perfil de usuario.</p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <!-- Sidebar de Navegación -->
-    <div class="md:col-span-1">
-      <nav class="flex flex-col gap-2 md:sticky md:top-20">
-        <button class="settings-tab active flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium bg-[#f4fce3] text-green-900 border border-green-200 dark:bg-stone-800 dark:text-white dark:border-[#166534] shadow-sm" data-target="profile">
+  <div class="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)] lg:gap-8 lg:items-start">
+    <!-- Sidebar de Navegación: fija a la izquierda en escritorio, chips desplazables en móvil -->
+    <aside class="mb-6 lg:mb-0 lg:sticky lg:top-20 lg:self-start">
+      <nav class="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 lg:pb-0 lg:flex-col lg:gap-2 lg:overflow-visible">
+        <button class="settings-tab active flex shrink-0 items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium whitespace-nowrap lg:w-full bg-[#f4fce3] text-green-900 border border-green-200 dark:bg-stone-800 dark:text-white dark:border-[#166534] shadow-sm" data-target="profile">
           <span class="text-xl">👤</span> Perfil de Usuario
         </button>
-        <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="system">
+        <button class="settings-tab flex shrink-0 items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium whitespace-nowrap lg:w-full text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="system">
           <span class="text-xl">⚙️</span> Preferencias del Sistema
         </button>
-        <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="fincas">
+        <button class="settings-tab flex shrink-0 items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium whitespace-nowrap lg:w-full text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="fincas">
           <span class="text-xl">🌾</span> Mis Fincas
         </button>
-        <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="notifications">
+        <button class="settings-tab flex shrink-0 items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium whitespace-nowrap lg:w-full text-stone-600 hover:bg-stone-50 hover:text-green-900 dark:text-stone-400 dark:hover:bg-stone-800/50 dark:hover:text-white border border-transparent" data-target="notifications">
           <span class="text-xl">🔔</span> Notificaciones
         </button>
-        <button class="settings-tab flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 border border-transparent" data-target="danger">
+        <button class="settings-tab flex shrink-0 items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors font-medium whitespace-nowrap lg:w-full text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 border border-transparent" data-target="danger">
           <span class="text-xl">⚠️</span> Zona de Peligro
         </button>
       </nav>
-    </div>
+    </aside>
 
     <!-- Contenido de Configuración -->
-    <div class="md:col-span-2 space-y-6">
+    <div class="min-w-0 space-y-6">
       
       <!-- Panel de Perfil -->
       <div id="profile-panel" class="settings-panel block bg-white dark:bg-stone-800 rounded-2xl shadow-sm border border-stone-200 dark:border-stone-700 overflow-hidden">
@@ -59,22 +84,23 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
           <h2 class="text-xl font-bold text-green-950 dark:text-white">Perfil de Usuario</h2>
           <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Información personal y de contacto.</p>
         </div>
-        <div class="p-6 space-y-6">
-          <div class="flex items-center gap-6">
+        <div class="p-5 sm:p-6 space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <div class="relative">
-              <div class="w-20 h-20 rounded-full border-4 border-[#f4fce3] dark:border-stone-700 shadow-sm overflow-hidden bg-white dark:bg-stone-800 flex items-center justify-center">
-                {session?.user?.image ? (
-                  <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
+              <div id="profile-avatar" class="w-20 h-20 rounded-full border-4 border-[#f4fce3] dark:border-stone-700 shadow-sm overflow-hidden bg-white dark:bg-stone-800 flex items-center justify-center">
+                {userImage ? (
+                  <img src={userImage} alt="Avatar" class="w-full h-full object-cover" />
                 ) : (
                   <BlobatarAvatar client:load name={userEmail} size={80} />
                 )}
               </div>
-              <button class="absolute bottom-0 right-0 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-full p-1.5 shadow-sm text-sm hover:bg-stone-50 dark:hover:bg-stone-600 transition-colors">
+              <button id="avatar-edit-btn" type="button" title="Cambiar foto de perfil" class="absolute bottom-0 right-0 bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-full p-1.5 shadow-sm text-sm hover:bg-stone-50 dark:hover:bg-stone-600 transition-colors">
                 ✏️
               </button>
+              <input id="avatar-input" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" />
             </div>
             <div>
-              <h3 class="text-lg font-semibold text-stone-900 dark:text-white">{userName}</h3>
+              <h3 id="profile-display-name" class="text-lg font-semibold text-stone-900 dark:text-white">{userName}</h3>
               <p class="text-stone-500 dark:text-stone-400 text-sm">{userEmail}</p>
               <span class={`inline-flex mt-2 items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.cls}`}>
                 <span class="w-1.5 h-1.5 rounded-full bg-current"></span> {badge.label}
@@ -85,7 +111,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
           <div class="grid grid-cols-1 gap-4 pt-4 border-t border-stone-100 dark:border-stone-700">
             <div>
               <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Nombre Completo</label>
-              <input type="text" value={userName} class="w-full px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all shadow-sm" />
+              <input id="profile-name" type="text" value={userName} maxlength="255" class="w-full px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all shadow-sm" />
             </div>
             <div>
               <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Correo Electrónico</label>
@@ -94,7 +120,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
           </div>
         </div>
         <div class="px-6 py-4 bg-stone-50 dark:bg-stone-900/50 border-t border-stone-100 dark:border-stone-700 flex justify-end">
-          <button class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+          <button id="profile-save-btn" type="button" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
             Guardar Cambios
           </button>
         </div>
@@ -110,7 +136,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
           <!-- Apariencia -->
           <div>
             <h3 class="text-sm font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-3">Apariencia</h3>
-            <div class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/30">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/30">
               <div class="flex items-center gap-3">
                 <span class="text-2xl">🌗</span>
                 <div>
@@ -118,7 +144,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
                   <p class="text-xs text-stone-500 dark:text-stone-400">Selecciona el modo claro, oscuro o del sistema.</p>
                 </div>
               </div>
-              <select class="px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-green-500 cursor-pointer shadow-sm">
+              <select id="theme-select" class="w-full sm:w-auto px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-green-500 cursor-pointer shadow-sm">
                 <option value="system">Automático (Sistema)</option>
                 <option value="light">Modo Claro</option>
                 <option value="dark">Modo Oscuro</option>
@@ -130,7 +156,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
           <div>
             <h3 class="text-sm font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-3">Sensores IoT</h3>
             <div class="space-y-3">
-              <div class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/30">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/30">
                 <div class="flex items-center gap-3">
                   <span class="text-2xl">📡</span>
                   <div>
@@ -138,7 +164,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
                     <p class="text-xs text-stone-500 dark:text-stone-400">Cada cuánto se actualizan los datos en tiempo real.</p>
                   </div>
                 </div>
-                <select class="px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-green-500 cursor-pointer shadow-sm">
+                <select id="sync-frequency-select" class="w-full sm:w-auto px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-green-500 cursor-pointer shadow-sm">
                   <option value="1">1 Minuto</option>
                   <option value="5" selected>5 Minutos</option>
                   <option value="15">15 Minutos</option>
@@ -146,7 +172,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
                 </select>
               </div>
 
-              <div class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/30">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-900/30">
                 <div class="flex items-center gap-3">
                   <span class="text-2xl">🌡️</span>
                   <div>
@@ -154,9 +180,9 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
                     <p class="text-xs text-stone-500 dark:text-stone-400">Formato para mostrar la temperatura del invernadero.</p>
                   </div>
                 </div>
-                <div class="flex bg-stone-200 dark:bg-stone-700 rounded-lg p-1 shadow-inner">
-                  <button class="px-3 py-1 rounded-md bg-white dark:bg-stone-600 text-stone-900 dark:text-white text-sm font-semibold shadow-sm">°C</button>
-                  <button class="px-3 py-1 rounded-md text-stone-500 dark:text-stone-400 text-sm font-medium hover:text-stone-900 dark:hover:text-white">°F</button>
+                <div id="temp-unit-toggle" data-no-temp-convert class="flex self-start sm:self-auto bg-stone-200 dark:bg-stone-700 rounded-lg p-1 shadow-inner">
+                  <button type="button" data-temp-unit="C" aria-pressed="true" class="px-3 py-1 rounded-md bg-white dark:bg-stone-600 text-stone-900 dark:text-white text-sm font-semibold shadow-sm">°C</button>
+                  <button type="button" data-temp-unit="F" aria-pressed="false" class="px-3 py-1 rounded-md text-stone-500 dark:text-stone-400 text-sm font-medium hover:text-stone-900 dark:hover:text-white">°F</button>
                 </div>
               </div>
             </div>
@@ -187,7 +213,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
                 </li>
               ) : (
                 fincas.map((f) => (
-                  <li class="py-3 flex items-center justify-between gap-3">
+                  <li class="py-3 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p class="font-semibold text-stone-900 dark:text-white">{f.nombre}</p>
                       <p class="text-xs text-stone-500 dark:text-stone-400">
@@ -221,7 +247,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
           <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Controla las alertas del estado del cultivo.</p>
         </div>
         <div class="p-6 space-y-4">
-          <label class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900/30 transition-colors cursor-pointer">
+          <label class="flex items-center justify-between gap-3 p-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900/30 transition-colors cursor-pointer">
             <div class="flex items-center gap-3">
               <span class="text-xl">📱</span>
               <div>
@@ -229,10 +255,10 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
                 <p class="text-xs text-stone-500 dark:text-stone-400">Recibe avisos cuando una planta esté en estado crítico (Ej: Falta de agua).</p>
               </div>
             </div>
-            <input type="checkbox" checked class="w-5 h-5 text-green-600 bg-stone-100 border-stone-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-stone-800 focus:ring-2 dark:bg-stone-700 dark:border-stone-600 cursor-pointer">
+            <input id="notify-critical" data-notify="critical" type="checkbox" checked class="shrink-0 w-5 h-5 text-green-600 bg-stone-100 border-stone-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-stone-800 focus:ring-2 dark:bg-stone-700 dark:border-stone-600 cursor-pointer">
           </label>
 
-          <label class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900/30 transition-colors cursor-pointer">
+          <label class="flex items-center justify-between gap-3 p-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900/30 transition-colors cursor-pointer">
             <div class="flex items-center gap-3">
               <span class="text-xl">📧</span>
               <div>
@@ -240,10 +266,10 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
                 <p class="text-xs text-stone-500 dark:text-stone-400">Reporte del crecimiento y salud general del invernadero.</p>
               </div>
             </div>
-            <input type="checkbox" checked class="w-5 h-5 text-green-600 bg-stone-100 border-stone-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-stone-800 focus:ring-2 dark:bg-stone-700 dark:border-stone-600 cursor-pointer">
+            <input id="notify-weekly" data-notify="weekly" type="checkbox" checked class="shrink-0 w-5 h-5 text-green-600 bg-stone-100 border-stone-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-stone-800 focus:ring-2 dark:bg-stone-700 dark:border-stone-600 cursor-pointer">
           </label>
           
-          <label class="flex items-center justify-between p-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900/30 transition-colors cursor-pointer">
+          <label class="flex items-center justify-between gap-3 p-4 rounded-xl border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900/30 transition-colors cursor-pointer">
             <div class="flex items-center gap-3">
               <span class="text-xl">🔋</span>
               <div>
@@ -251,7 +277,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
                 <p class="text-xs text-stone-500 dark:text-stone-400">Notificaciones sobre calibración de sensores de pH o batería.</p>
               </div>
             </div>
-            <input type="checkbox" class="w-5 h-5 text-green-600 bg-stone-100 border-stone-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-stone-800 focus:ring-2 dark:bg-stone-700 dark:border-stone-600 cursor-pointer">
+            <input id="notify-maintenance" data-notify="maintenance" type="checkbox" class="shrink-0 w-5 h-5 text-green-600 bg-stone-100 border-stone-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-stone-800 focus:ring-2 dark:bg-stone-700 dark:border-stone-600 cursor-pointer">
           </label>
         </div>
       </div>
@@ -266,9 +292,13 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <p class="font-bold text-stone-900 dark:text-white">Exportar Todos los Datos</p>
-              <p class="text-sm text-stone-500 dark:text-stone-400">Descarga un archivo CSV con todo el historial de métricas.</p>
+              <p class="text-sm text-stone-500 dark:text-stone-400">
+                {fincaActiva
+                  ? `Descarga en CSV todo el historial de "${fincaActiva.nombre}".`
+                  : "Selecciona una finca activa para poder exportar."}
+              </p>
             </div>
-            <button class="px-4 py-2 bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-800 dark:text-stone-200 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap shadow-sm border border-stone-200 dark:border-stone-600">
+            <button id="settings-export-csv" type="button" disabled={!puedeExportar} title={puedeExportar ? "Descargar CSV" : "Selecciona una finca activa"} class="px-4 py-2 bg-stone-100 hover:bg-stone-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-800 dark:text-stone-200 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap shadow-sm border border-stone-200 dark:border-stone-600">
               Descargar CSV
             </button>
           </div>
@@ -278,9 +308,11 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <p class="font-bold text-stone-900 dark:text-white">Restablecer Invernadero</p>
-              <p class="text-sm text-stone-500 dark:text-stone-400">Elimina todas las métricas actuales e historial. Los sensores se reiniciarán.</p>
+              <p class="text-sm text-stone-500 dark:text-stone-400">
+                Elimina todas las métricas e historial{fincaActiva ? ` de "${fincaActiva.nombre}"` : ""}. Esta acción no se puede deshacer.
+              </p>
             </div>
-            <button class="px-4 py-2 bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap border border-rose-200 dark:border-rose-800 shadow-sm">
+            <button id="settings-reset-data" type="button" disabled={!puedeRestablecer} title={puedeRestablecer ? "Eliminar historial" : "Solo el dueño, Admins o Superadmins pueden restablecer"} class="px-4 py-2 bg-rose-100 hover:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-rose-900/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap border border-rose-200 dark:border-rose-800 shadow-sm">
               Restablecer Datos
             </button>
           </div>
@@ -304,13 +336,29 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
 </div>
 
 <script>
+  import {
+    getNotifyCritical,
+    getNotifyMaintenance,
+    getNotifyWeekly,
+    getSyncMinutes,
+    getTempUnit,
+    getThemePreference,
+    markWeeklySummarySent,
+    setNotifyPreference,
+    setSyncMinutes,
+    setTempUnit,
+    setThemePreference,
+    type TempUnit,
+    type ThemePreference,
+  } from "../../shared/preferences";
+  import { writeStoredRecords } from "../../shared/clientStorage";
+
   document.addEventListener('DOMContentLoaded', () => {
     let signOut: any;
     import("auth-astro/client").then(mod => {
       signOut = mod.signOut;
     }).catch(err => console.error("Error cargando auth-astro", err));
 
-    // Script para manejar las pestañas
     const tabs = document.querySelectorAll('.settings-tab');
     const panels = document.querySelectorAll('.settings-panel');
 
@@ -343,29 +391,251 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
 
     const getSileo = () => (window as any).sileo;
 
-    const btnGuardar = document.querySelector('.bg-green-600.hover\\:bg-green-700');
-    if (btnGuardar) {
-      btnGuardar.addEventListener('click', () => {
-        getSileo()?.success({ title: "¡Cambios guardados correctamente!" });
+    const themeSelect = document.getElementById('theme-select') as HTMLSelectElement | null;
+    const syncSelect = document.getElementById('sync-frequency-select') as HTMLSelectElement | null;
+    const unitButtons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-temp-unit]'),
+    );
+    const UNIT_ACTIVE = ['bg-white', 'dark:bg-stone-600', 'text-stone-900', 'dark:text-white', 'font-semibold', 'shadow-sm'];
+    const UNIT_INACTIVE = ['text-stone-500', 'dark:text-stone-400', 'font-medium'];
+
+    const renderUnitButtons = () => {
+      const unit = getTempUnit();
+      unitButtons.forEach((button) => {
+        const active = button.dataset.tempUnit === unit;
+        button.classList.remove(...UNIT_ACTIVE, ...UNIT_INACTIVE);
+        button.classList.add(...(active ? UNIT_ACTIVE : UNIT_INACTIVE));
+        button.setAttribute('aria-pressed', String(active));
+      });
+    };
+
+    if (themeSelect) {
+      themeSelect.value = getThemePreference();
+      themeSelect.addEventListener('change', () => {
+        setThemePreference(themeSelect.value as ThemePreference);
       });
     }
 
-    const btnDescargar = document.querySelector('.bg-stone-100.hover\\:bg-stone-200');
-    if (btnDescargar) {
-      btnDescargar.addEventListener('click', () => {
-        getSileo()?.info({ title: "Generando archivo CSV..." });
-        setTimeout(() => {
-          getSileo()?.success({ title: "Descarga completada." });
-        }, 1500);
+    if (syncSelect) {
+      syncSelect.value = String(getSyncMinutes());
+      syncSelect.addEventListener('change', () => {
+        const minutes = Number(syncSelect.value);
+        setSyncMinutes(minutes);
+        getSileo()?.success({
+          title: `Sincronización automática cada ${minutes} minuto${minutes === 1 ? '' : 's'}.`,
+        });
       });
     }
 
-    const btnRestablecer = document.querySelector('.bg-rose-100.hover\\:bg-rose-200');
-    if (btnRestablecer) {
-      btnRestablecer.addEventListener('click', () => {
-        getSileo()?.error({ title: "Esta acción eliminará todos los datos. Confirma de nuevo." });
+    unitButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        setTempUnit(button.dataset.tempUnit as TempUnit);
+        renderUnitButtons();
+      });
+    });
+    renderUnitButtons();
+
+    const scopeEl = document.getElementById('settings-scope') as HTMLElement | null;
+    const fincaScope = scopeEl?.dataset.fincaId?.trim() || 'global';
+    const fincaNombre = scopeEl?.dataset.fincaNombre || 'esta finca';
+
+    const profileNameInput = document.getElementById('profile-name') as HTMLInputElement | null;
+    const profileSaveBtn = document.getElementById('profile-save-btn') as HTMLButtonElement | null;
+    const avatarEditBtn = document.getElementById('avatar-edit-btn');
+    const avatarInput = document.getElementById('avatar-input') as HTMLInputElement | null;
+
+    function resizeImage(file: File, size: number): Promise<string> {
+      return new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const context = canvas.getContext('2d');
+            if (!context) throw new Error('Canvas no disponible.');
+            const scale = Math.max(size / image.width, size / image.height);
+            const width = image.width * scale;
+            const height = image.height * scale;
+            context.drawImage(
+              image,
+              (size - width) / 2,
+              (size - height) / 2,
+              width,
+              height,
+            );
+            resolve(canvas.toDataURL('image/jpeg', 0.85));
+          } catch (error) {
+            reject(error);
+          } finally {
+            URL.revokeObjectURL(objectUrl);
+          }
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('No se pudo leer la imagen.'));
+        };
+        image.src = objectUrl;
       });
     }
+
+    profileSaveBtn?.addEventListener('click', async () => {
+      const name = profileNameInput?.value.trim() || '';
+      if (name.length < 2) {
+        getSileo()?.error({ title: 'El nombre debe tener al menos 2 caracteres.' });
+        return;
+      }
+      profileSaveBtn.disabled = true;
+      try {
+        const response = await fetch('/api/users/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(data?.message || 'No se pudo actualizar el perfil.');
+        }
+        const display = document.getElementById('profile-display-name');
+        if (display) display.textContent = data?.user?.name || name;
+        getSileo()?.success({ title: 'Perfil actualizado correctamente.' });
+        setTimeout(() => window.location.reload(), 800);
+      } catch (error: any) {
+        getSileo()?.error({ title: error.message || 'No se pudo actualizar el perfil.' });
+      } finally {
+        profileSaveBtn.disabled = false;
+      }
+    });
+
+    avatarEditBtn?.addEventListener('click', () => avatarInput?.click());
+    avatarInput?.addEventListener('change', async () => {
+      const file = avatarInput.files?.[0];
+      if (!file) return;
+      if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) {
+        getSileo()?.error({ title: 'Usa una imagen PNG, JPG o WEBP.' });
+        return;
+      }
+      try {
+        const image = await resizeImage(file, 160);
+        const response = await fetch('/api/users/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image }),
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(data?.message || 'No se pudo guardar la imagen.');
+        }
+        const container = document.getElementById('profile-avatar');
+        if (container) {
+          container.innerHTML = `<img src="${image}" alt="Avatar" class="w-full h-full object-cover" />`;
+        }
+        getSileo()?.success({ title: 'Foto de perfil actualizada.' });
+        setTimeout(() => window.location.reload(), 800);
+      } catch (error: any) {
+        getSileo()?.error({ title: error.message || 'No se pudo guardar la imagen.' });
+      } finally {
+        if (avatarInput) avatarInput.value = '';
+      }
+    });
+
+    const notifyCritical = document.getElementById('notify-critical') as HTMLInputElement | null;
+    const notifyWeekly = document.getElementById('notify-weekly') as HTMLInputElement | null;
+    const notifyMaintenance = document.getElementById('notify-maintenance') as HTMLInputElement | null;
+
+    const sendWeeklySummaryNow = async () => {
+      try {
+        const response = await fetch('/api/notifications/weekly-summary', {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+        });
+        const data = await response.json().catch(() => null);
+        if (response.ok && data?.sent) {
+          markWeeklySummarySent();
+          getSileo()?.success({ title: data.message || 'Resumen semanal enviado.' });
+        } else {
+          getSileo()?.error({
+            title: data?.message || 'No se pudo enviar el resumen semanal.',
+          });
+        }
+      } catch {
+        getSileo()?.error({ title: 'No se pudo enviar el resumen semanal.' });
+      }
+    };
+
+    if (notifyCritical) {
+      notifyCritical.checked = getNotifyCritical();
+      notifyCritical.addEventListener('change', () => {
+        setNotifyPreference('critical', notifyCritical.checked);
+        getSileo()?.info({
+          title: notifyCritical.checked
+            ? 'Alertas críticas activadas.'
+            : 'Alertas críticas desactivadas.',
+        });
+      });
+    }
+    if (notifyWeekly) {
+      notifyWeekly.checked = getNotifyWeekly();
+      notifyWeekly.addEventListener('change', async () => {
+        setNotifyPreference('weekly', notifyWeekly.checked);
+        if (!notifyWeekly.checked) return;
+        const confirmed = confirm(
+          '¿Quieres enviar ahora un resumen de prueba a tu correo?',
+        );
+        if (confirmed) {
+          await sendWeeklySummaryNow();
+        } else {
+          getSileo()?.info({ title: 'Preferencia guardada sin enviar correo.' });
+        }
+      });
+    }
+    if (notifyMaintenance) {
+      notifyMaintenance.checked = getNotifyMaintenance();
+      notifyMaintenance.addEventListener('change', () => {
+        setNotifyPreference('maintenance', notifyMaintenance.checked);
+        getSileo()?.info({
+          title: notifyMaintenance.checked
+            ? 'Avisos de mantenimiento activados.'
+            : 'Avisos de mantenimiento desactivados.',
+        });
+      });
+    }
+
+    document.getElementById('settings-export-csv')?.addEventListener('click', () => {
+      getSileo()?.info({ title: 'Generando archivo CSV...' });
+      window.location.assign('/api/export-csv');
+    });
+
+    const resetDataBtn = document.getElementById('settings-reset-data') as HTMLButtonElement | null;
+    resetDataBtn?.addEventListener('click', async () => {
+      if (!/^\d+$/.test(fincaScope)) {
+        getSileo()?.error({ title: 'Selecciona una finca activa primero.' });
+        return;
+      }
+      const confirmed = confirm(
+        `¿Restablecer "${fincaNombre}"?\n\nSe eliminarán TODAS las lecturas e historial de esta finca. Esta acción no se puede deshacer.`,
+      );
+      if (!confirmed) return;
+
+      resetDataBtn.disabled = true;
+      try {
+        const response = await fetch(`/api/fincas/${fincaScope}/lecturas`, {
+          method: 'DELETE',
+          headers: { Accept: 'application/json' },
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(data?.message || 'No se pudieron restablecer los datos.');
+        }
+        writeStoredRecords(fincaScope, []);
+        getSileo()?.success({ title: data.message || 'Datos restablecidos.' });
+        setTimeout(() => window.location.reload(), 900);
+      } catch (error: any) {
+        getSileo()?.error({ title: error.message || 'No se pudieron restablecer los datos.' });
+        resetDataBtn.disabled = false;
+      }
+    });
 
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
@@ -396,7 +666,6 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
       });
     }
 
-    // --- Unirse / salir de fincas ---
   document.getElementById('settings-join-btn')?.addEventListener('click', async () => {
     const input = document.getElementById('settings-join-code') as HTMLInputElement;
     const codigo = input.value.trim();

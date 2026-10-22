@@ -47,11 +47,11 @@ curl -s -o /dev/null -w '%{http_code} %{content_type}\n' $BASE/api/export-excel
 
 1. `pnpm add -D vitest` + script `"test": "vitest run"`.
 2. Requisito previo de código: exportar `parseCSV`, `normalizeGoogleSheetUrl` y `extractDateAndHour` desde `sync-sheets.ts` (hoy privadas) y los validadores de `register.ts`.
-3. Ejemplo inicial (`src/backend/services/metricsData.test.ts`):
+3. Ejemplo inicial (`src/shared/plantMatrix.test.ts`):
 
 ```ts
 import { describe, expect, it } from "vitest";
-import { resolvePlantCoordinates, isValleDeAburra } from "./metricsData";
+import { resolvePlantCoordinates } from "./plantMatrix";
 import { getWeatherEmoji } from "./weather";
 
 describe("resolvePlantCoordinates", () => {

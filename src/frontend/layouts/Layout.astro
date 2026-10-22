@@ -9,6 +9,31 @@ import SileoProvider from "../components/SileoProvider.tsx";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      (function () {
+        try {
+          var root = document.documentElement;
+          var media = window.matchMedia("(prefers-color-scheme: dark)");
+          function preference() {
+            return localStorage.getItem("macollo-theme") || "system";
+          }
+          function apply() {
+            var pref = preference();
+            var dark = pref === "dark" || (pref === "system" && media.matches);
+            root.classList.toggle("dark", dark);
+            root.style.colorScheme = dark ? "dark" : "light";
+          }
+          apply();
+          media.addEventListener("change", function () {
+            if (preference() === "system") apply();
+          });
+          window.addEventListener("storage", function (event) {
+            if (event.key === "macollo-theme") apply();
+          });
+        } catch (error) {
+        }
+      })();
+    </script>
     <link rel="icon" type="image/png" href="/gulupa.png" />
     <meta name="generator" content={Astro.generator} />
     <title>Macollo</title>
@@ -16,6 +41,23 @@ import SileoProvider from "../components/SileoProvider.tsx";
   <body>
     <slot />
     <SileoProvider client:load />
+    <script>
+      import {
+        applyTempUnitToDocument,
+        applyTheme,
+        onPreferencesChanged,
+      } from "../../shared/preferences";
+
+      applyTheme();
+
+      const refresh = () => applyTempUnitToDocument();
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", refresh, { once: true });
+      } else {
+        refresh();
+      }
+      onPreferencesChanged(() => refresh());
+    </script>
   </body>
 </html>
 

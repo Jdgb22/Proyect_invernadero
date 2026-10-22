@@ -58,7 +58,8 @@ Construido con SSR moderno. Detalle en [ARCHITECTURE.md](./ARCHITECTURE.md) y [d
 ├── pages/                # /index (portada + login), /signin (alias→/), /metrics, /historial, /settings, /fincas, /admin, /invitar/[codigo]
 ├── pages/api/            # auth/* (register, check-availability, forgot/reset), fincas/*, invitaciones/*,
 │                         # admin/*, export-excel, sync-sheets, siata
-├── backend/services/     # metricsData, weather, siata, authz, fincas, lecturas, rateLimit
+├── shared/               # plantMatrix, badges, roles, avatar, clientStorage (SSR + cliente)
+├── backend/services/     # sheetsSync, excelExport, weather, siata, authz, fincas, lecturas, rateLimit
 ├── services/             # notifications.ts (email/SMS recuperación)
 ├── db/                   # auth-schema.sql, invernadero.sql (+ migrations/), client.ts (pool pg)
 ├── middleware.ts         # Guarda rutas privadas + security headers + rate-limit + fix proxy

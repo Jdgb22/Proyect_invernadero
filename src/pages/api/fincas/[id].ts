@@ -13,6 +13,7 @@ import {
   forbidden,
   notFound,
   parseId,
+  parseJsonBody,
 } from "../../../backend/services/authz";
 import {
   getFincaById,
@@ -53,18 +54,14 @@ export const PATCH: APIRoute = async ({ request, params }) => {
   if (!fincaId) return notFound("Finca no encontrada.");
 
   const access = await getFincaAccess(fincaId, user);
-  if (!canManageFinca(user.role, access)) {
+  if (!canManageFinca(access)) {
     return forbidden(
       "Solo el dueño, Admins o Superadmins pueden editar la finca.",
     );
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return json({ message: "Cuerpo JSON inválido." }, 400);
-  }
+  const body = await parseJsonBody(request);
+  if (body === null) return json({ message: "Cuerpo JSON inválido." }, 400);
   const parsed = PatchSchema.safeParse(body);
   if (!parsed.success) {
     return json(

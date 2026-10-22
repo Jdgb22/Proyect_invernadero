@@ -14,15 +14,13 @@ const session = await getSession(Astro.request);
 const codigo = Astro.url.searchParams.get('codigo')?.trim() || '';
 const desde = Astro.url.searchParams.get('desde') || '';
 
-// Ya autenticado: ir directo al destino (p. ej. completar la invitación).
-if (session) {
-  return Astro.redirect(desde || '/');
-}
-
-// Sin sesión: llevar al login normal (landing) conservando los parámetros.
 const params = new URLSearchParams();
 if (desde) params.set('desde', desde);
 if (codigo) params.set('codigo', codigo);
-const query = params.toString();
-return Astro.redirect(`/${query ? `?${query}` : ''}`);
+
+if (!session) {
+  return Astro.redirect(`/${params.toString() ? `?${params.toString()}` : ''}`);
+}
+
+return Astro.redirect(desde || '/');
 ---

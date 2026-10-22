@@ -75,7 +75,7 @@ const invitacion = codigo ? await peekInvitacion(codigo) : null;
   </main>
 </Layout>
 
-<script define:vars={{ codigo }}>
+<script is:inline define:vars={{ codigo }}>
   document.getElementById("join-confirm")?.addEventListener("click", async (e) => {
     const btn = e.currentTarget;
     const msg = document.getElementById("join-msg");

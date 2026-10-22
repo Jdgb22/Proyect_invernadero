@@ -1,18 +1,15 @@
 ---
-// src/frontend/components/Historial.astro
 // Panel de Historial Agronómico Cronológico para Invernadero Macollo.
 // Permite consultar mediciones por fecha específica, importar archivos (Excel/CSV)
 // o sincronizar directamente con Google Sheets / Google Docs.
 
 import {
-  getAllMetrics,
-  getAllPlantsGrid,
+  buildEmptyPlantsGrid,
   buildPlantsGridFromRecords,
   type MetricRecord,
   type PlantMatrixItem,
-  FILAS,
-  COLUMNAS,
-} from "../../backend/services/metricsData";
+} from "../../shared/plantMatrix";
+import { toScriptJson } from "../../shared/serialize";
 import { resolveActiveFinca } from "../../backend/services/fincas";
 import { getLecturasByFinca } from "../../backend/services/lecturas";
 
@@ -31,10 +28,10 @@ const ctx = await resolveActiveFinca(Astro.request);
 const fincaId = ctx?.finca?.id ?? "global";
 const allRecords: MetricRecord[] = ctx?.finca
   ? await getLecturasByFinca(ctx.finca.id)
-  : getAllMetrics();
+  : [];
 const allPlants: PlantMatrixItem[] = ctx?.finca
   ? buildPlantsGridFromRecords(allRecords)
-  : getAllPlantsGrid();
+  : buildEmptyPlantsGrid();
 
 // Extraer fechas únicas ordenadas de más reciente a más antigua
 const uniqueDates = Array.from(new Set(allRecords.map((r) => r.fecha))).sort(
@@ -49,14 +46,10 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
 
 <!-- Serialización segura de datos base para el cliente -->
 <script
+  is:inline
   id="history-initial-records"
   type="application/json"
-  set:html={JSON.stringify(allRecords)}
-/>
-<script
-  id="history-plants-grid"
-  type="application/json"
-  set:html={JSON.stringify(allPlants)}
+  set:html={toScriptJson(allRecords)}
 />
 <script is:inline define:vars={{ fincaId, isOwner }}>window.__MACOLLO_FINCA_ID__ = fincaId; window.__MACOLLO_IS_OWNER__ = isOwner;</script>
 
@@ -725,7 +718,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
   class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
 >
   <div
-    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-4xl rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-4xl my-auto rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
   >
     <!-- Encabezado del Modal -->
     <div
@@ -748,7 +741,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
             >
           </div>
           <p id="modal-plant-date" class="text-xs text-green-200 mt-0.5">
-            Medición del 2026-09-14, 09:30 AM
+            Selecciona una planta para ver su última medición
           </p>
         </div>
       </div>
@@ -776,6 +769,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
         </span>
         <div
           id="modal-delta-content"
+          data-no-temp-convert
           class="grid grid-cols-3 gap-2 text-center text-xs"
         >
           <!-- Inyectado dinámicamente -->
@@ -969,7 +963,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
   class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
 >
   <div
-    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-2xl rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-2xl my-auto rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
   >
     <div
       class="p-6 bg-gradient-to-r from-green-700 to-green-900 text-white flex items-center justify-between"
@@ -1052,9 +1046,9 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           >
         </div>
         <div
-          class="max-h-44 overflow-y-auto border border-green-200 dark:border-[#166534] rounded-xl"
+          class="max-h-44 overflow-y-auto overflow-x-auto border border-green-200 dark:border-[#166534] rounded-xl"
         >
-          <table class="w-full text-[11px] text-left">
+          <table class="w-full min-w-[420px] text-[11px] text-left">
             <thead
               class="bg-green-100 dark:bg-stone-700 sticky top-0 font-bold"
             >
@@ -1105,7 +1099,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
   class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
 >
   <div
-    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-xl rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+    class="bg-[#f4fce3] dark:bg-stone-800 w-full max-w-xl my-auto rounded-3xl border border-green-200 dark:border-[#166534] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
   >
     <div
       class="p-6 bg-gradient-to-r from-lime-700 to-teal-800 text-white flex items-center justify-between"
@@ -1220,188 +1214,97 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
 <!-- SCRIPT DE CLIENTE CON TODA LA LÓGICA      -->
 <!-- ========================================== -->
 <script>
-  // @ts-nocheck
+  import {
+    resolvePlantCoordinates,
+    type MetricRecord,
+  } from "../../shared/plantMatrix";
+  import { avatarColorFor } from "../../shared/avatar";
+  import { escapeHtml } from "../../shared/serialize";
+  import {
+    deriveSanidad,
+    extractDateAndHour,
+    isNullCell,
+    parseCSV,
+    parseCsvNumber,
+  } from "../../shared/csv";
+  import {
+    mergeRecords,
+    purgeMockStorage,
+    readStoredRecords,
+    recordKey,
+    sheetsUrlStorageKey,
+    lastSyncStorageKey,
+    writeStoredRecords,
+  } from "../../shared/clientStorage";
+  import {
+    applyTempUnitToDocument,
+    convertTempDelta,
+    getSyncIntervalMs,
+    getTempUnit,
+    onPreferencesChanged,
+  } from "../../shared/preferences";
+  import { showReadingAlerts } from "../../shared/alerts";
+
+  const byId = <T extends HTMLElement>(id: string): T | null =>
+    document.getElementById(id) as T | null;
+
   document.addEventListener("DOMContentLoaded", () => {
     // 1. CARGA DE DATOS BASE SERIALIZADOS
     const initialRecordsEl = document.getElementById("history-initial-records");
-    const plantsGridEl = document.getElementById("history-plants-grid");
 
-    let baseRecords = [];
-    let plantsList = [];
+    let baseRecords: MetricRecord[] = [];
 
     try {
       baseRecords = JSON.parse(initialRecordsEl?.textContent || "[]");
-      plantsList = JSON.parse(plantsGridEl?.textContent || "[]");
     } catch (e) {
       console.error("Error parseando datos iniciales:", e);
     }
 
     // 2. COMBINAR CON LOCALSTORAGE (Registros importados o sincronizados previamente)
-    const FINCA_SCOPE = window.__MACOLLO_FINCA_ID__ ?? "global";
-    const STORAGE_KEY_RECORDS = `macollo_custom_history_records_${FINCA_SCOPE}`;
-    const STORAGE_KEY_RECORDS_ALT = `aquasens_custom_history_records_${FINCA_SCOPE}`;
-    const STORAGE_KEY_SHEETS_URL = `macollo_google_sheet_url_${FINCA_SCOPE}`;
-    const STORAGE_KEY_LAST_SYNC = `macollo_last_sync_time_${FINCA_SCOPE}`;
-
-    function resolveCoordsHistorial(rawId, rawFila, rawCol) {
-      const pRaw = String(rawId || "").trim();
-      const fRaw = String(rawFila || "").trim();
-      const cRaw = String(rawCol || "").trim();
-
-      let filaIdx = -1;
-      let colIdx = -1;
-
-      // 1. Buscar código compuesto T[0-3O]-P[1-5]
-      const candidateTexts = [pRaw, fRaw, cRaw].filter(Boolean);
-      for (const text of candidateTexts) {
-        const compMatch = text.match(
-          /(?:^|[^a-zA-Z])T([0-3O])[\s\-_/.]*(?:P|F|COL|PLANTA)?[\s\-_/.]*([1-5])\b/i,
-        );
-        if (compMatch) {
-          const fChar = compMatch[1].toUpperCase() === "O" ? "0" : compMatch[1];
-          filaIdx = parseInt(fChar, 10);
-          colIdx = parseInt(compMatch[2], 10) - 1;
-          break;
-        }
-      }
-
-      // 2. Extraer tratamiento (fila) si aún no está determinado
-      if (filaIdx === -1 && fRaw) {
-        const tratMatch = fRaw.match(
-          /(?:TRATAMIENTO|FILA|CAMA|BLOQUE|SECCION)[\s\-_:]*T?([0-3O])\b/i,
-        );
-        if (tratMatch) {
-          const fChar = tratMatch[1].toUpperCase() === "O" ? "0" : tratMatch[1];
-          filaIdx = parseInt(fChar, 10);
-        } else {
-          const tMatch = fRaw.match(
-            /(?:^|[^a-zA-Z])T([0-3O])(?:[^a-zA-Z0-9]|$)/i,
-          );
-          if (tMatch) {
-            const fChar = tMatch[1].toUpperCase() === "O" ? "0" : tMatch[1];
-            filaIdx = parseInt(fChar, 10);
-          } else {
-            const dMatch = fRaw.match(/^([0-3])$/);
-            if (dMatch) {
-              filaIdx = parseInt(dMatch[1], 10);
-            }
-          }
-        }
-      }
-
-      // 3. Extraer columna/planta (1..5) si aún no está determinada
-      const colCandidates = [cRaw, pRaw].filter(Boolean);
-      if (colIdx === -1) {
-        for (const text of colCandidates) {
-          const pMatch = text.match(
-            /(?:^|[^a-zA-Z])P[\s\-_:]*0?([1-5])(?:[^a-zA-Z0-9]|$)/i,
-          );
-          if (pMatch) {
-            colIdx = parseInt(pMatch[1], 10) - 1;
-            break;
-          }
-          const namedColMatch = text.match(
-            /(?:PLANTA|COL|COLUMNA|SITIO)[\s\-_:]*0?([1-5])\b/i,
-          );
-          if (namedColMatch) {
-            colIdx = parseInt(namedColMatch[1], 10) - 1;
-            break;
-          }
-          const numMatch = text.match(/^0?([1-5])$/);
-          if (numMatch) {
-            colIdx = parseInt(numMatch[1], 10) - 1;
-            break;
-          }
-        }
-      }
-
-      // 4. Si filaIdx aún no se resolvió pero se dispone de número global 1..20
-      if (filaIdx === -1) {
-        const globalMatch =
-          pRaw.match(/^P[-_\s]?0?([1-9]|1[0-9]|20)$/i) ||
-          pRaw.match(/^0?([1-9]|1[0-9]|20)$/);
-        if (globalMatch) {
-          const num = parseInt(globalMatch[1], 10);
-          filaIdx = Math.floor((num - 1) / 5);
-          if (colIdx === -1) {
-            colIdx = (num - 1) % 5;
-          }
-        }
-      }
-
-      if (filaIdx < 0 || filaIdx > 3) filaIdx = 0;
-      if (colIdx < 0 || colIdx > 4) colIdx = 0;
-
-      const FILAS = ["t0", "t1", "t2", "t3"];
-      const COLUMNAS = ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"];
-      const plantNum = filaIdx * 5 + colIdx + 1;
-      const plantId = `P-${String(plantNum).padStart(2, "0")}`;
-      return {
-        fila: FILAS[filaIdx],
-        columna: COLUMNAS[colIdx],
-        code: `T${filaIdx}-P${colIdx + 1}`,
-        plantNumber: plantNum,
-        plantId,
-      };
-    }
+    const FINCA_SCOPE = (window as any).__MACOLLO_FINCA_ID__ ?? "global";
 
     function getStoredRecords() {
-      try {
-        const stored =
-          localStorage.getItem(STORAGE_KEY_RECORDS) ||
-          localStorage.getItem(STORAGE_KEY_RECORDS_ALT);
-        if (!stored) return [];
-        const parsed = JSON.parse(stored);
-        if (!Array.isArray(parsed)) return [];
-        // Purgar de forma estricta y definitiva CUALQUIER registro previo inventado.
-        // Únicamente conservar registros que provengan de sincronización real (MET-GS- o MET-UPLOAD-)
-        const realOnly = parsed.filter(
-          (r) =>
-            r &&
-            typeof r.id === "string" &&
-            (r.id.startsWith("MET-GS-") || r.id.startsWith("MET-UPLOAD-")),
-        );
-        if (realOnly.length !== parsed.length) {
-          if (realOnly.length > 0) {
-            const serialized = JSON.stringify(realOnly);
-            localStorage.setItem(STORAGE_KEY_RECORDS, serialized);
-            localStorage.setItem(STORAGE_KEY_RECORDS_ALT, serialized);
-          } else {
-            localStorage.removeItem(STORAGE_KEY_RECORDS);
-            localStorage.removeItem(STORAGE_KEY_RECORDS_ALT);
-          }
-        }
-        return realOnly;
-      } catch {
-        return [];
-      }
+      purgeMockStorage(FINCA_SCOPE);
+      return readStoredRecords(FINCA_SCOPE);
     }
 
-    function saveCustomRecords(newRecords) {
+    function saveCustomRecords(newRecords: MetricRecord[]) {
       try {
-        // Al sincronizar con Google Sheets, guardar exclusivamente los registros reales descargados
-        const serialized = JSON.stringify(newRecords);
-        localStorage.setItem(STORAGE_KEY_RECORDS, serialized);
-        localStorage.setItem(STORAGE_KEY_RECORDS_ALT, serialized);
+        const merged = new Map<string, MetricRecord>();
+        for (const record of [
+          ...readStoredRecords(FINCA_SCOPE),
+          ...newRecords,
+        ]) {
+          merged.set(recordKey(record), record);
+        }
+        writeStoredRecords(FINCA_SCOPE, Array.from(merged.values()));
       } catch (e) {
         console.error("Error guardando en localStorage:", e);
       }
     }
 
-    // Únicamente devolver registros reales almacenados (sin datos inventados)
-    function getAllCombinedRecords() {
-      return getStoredRecords();
+    function getAllCombinedRecords(): MetricRecord[] {
+      return mergeRecords(baseRecords, getStoredRecords());
     }
 
     // 3. ESTADO GLOBAL DE LA VISTA
-    const state = {
+    const state: {
+      allRecords: MetricRecord[];
+      selectedDate: string;
+      selectedFila: string;
+      selectedPlanta: string;
+      selectedSanidad: string;
+      searchQuery: string;
+      activeChartMetric: string;
+      pendingUploadRows: MetricRecord[];
+    } = {
       allRecords: getAllCombinedRecords(),
       selectedDate: "",
       selectedFila: "all",
       selectedPlanta: "all",
       selectedSanidad: "all",
       searchQuery: "",
-      activeChartMetric: "ph", // 'ph' | 'temp' | 'growth'
+      activeChartMetric: "ph",
       pendingUploadRows: [],
     };
 
@@ -1418,13 +1321,13 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     state.selectedDate = availableDates[0] || "";
 
     // 4. ELEMENTOS DEL DOM
-    const datePicker = document.getElementById("history-date-picker");
-    const quickChipsContainer = document.getElementById("date-quick-chips");
-    const filterFila = document.getElementById("filter-fila");
-    const filterPlanta = document.getElementById("filter-planta");
-    const filterSanidad = document.getElementById("filter-sanidad");
-    const searchInput = document.getElementById("search-query");
-    const btnResetFilters = document.getElementById("btn-reset-filters");
+    const datePicker = byId<HTMLInputElement>("history-date-picker");
+    const quickChipsContainer = byId("date-quick-chips");
+    const filterFila = byId<HTMLSelectElement>("filter-fila");
+    const filterPlanta = byId<HTMLSelectElement>("filter-planta");
+    const filterSanidad = byId<HTMLSelectElement>("filter-sanidad");
+    const searchInput = byId<HTMLInputElement>("search-query");
+    const btnResetFilters = byId<HTMLButtonElement>("btn-reset-filters");
 
     // KPIs y Resumen
     const summaryDateTitle = document.getElementById("summary-date-title");
@@ -1453,9 +1356,9 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     const evolutionSvg = document.getElementById("history-evolution-svg");
 
     // Botones de métricas de gráfico
-    const btnChartPh = document.getElementById("btn-metric-chart-ph");
-    const btnChartTemp = document.getElementById("btn-metric-chart-temp");
-    const btnChartGrowth = document.getElementById("btn-metric-chart-growth");
+    const btnChartPh = byId<HTMLButtonElement>("btn-metric-chart-ph");
+    const btnChartTemp = byId<HTMLButtonElement>("btn-metric-chart-temp");
+    const btnChartGrowth = byId<HTMLButtonElement>("btn-metric-chart-growth");
 
     // Modal Detalle Planta
     const modalPlant = document.getElementById("modal-plant-detail");
@@ -1471,11 +1374,11 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     const modalUploadCancelBtn = document.getElementById(
       "modal-upload-btn-cancel",
     );
-    const modalUploadConfirmBtn = document.getElementById(
+    const modalUploadConfirmBtn = byId<HTMLButtonElement>(
       "modal-upload-btn-confirm",
     );
     const dropZone = document.getElementById("drop-zone");
-    const fileInput = document.getElementById("file-input");
+    const fileInput = byId<HTMLInputElement>("file-input");
     const uploadPreviewContainer = document.getElementById(
       "upload-preview-container",
     );
@@ -1494,15 +1397,14 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     const modalSheetsCancelBtn = document.getElementById(
       "modal-sheets-btn-cancel",
     );
-    const modalSheetsSyncBtn = document.getElementById("modal-sheets-btn-sync");
-    const inputSheetsUrl = document.getElementById("input-google-sheets-url");
+    const modalSheetsSyncBtn = byId<HTMLButtonElement>("modal-sheets-btn-sync");
+    const inputSheetsUrl = byId<HTMLInputElement>("input-google-sheets-url");
     const sheetsSyncStatus = document.getElementById("sheets-sync-status");
     const sheetsSyncSpinner = document.getElementById("sheets-sync-spinner");
     const sheetsSyncBtnText = document.getElementById("sheets-sync-btn-text");
 
     // Banner de Sync
     const syncBanner = document.getElementById("sync-banner");
-    const syncBannerText = document.getElementById("sync-banner-text");
     const syncLastUpdate = document.getElementById("sync-last-update");
     const btnSyncNowBanner = document.getElementById("btn-sync-now-banner");
 
@@ -1511,10 +1413,10 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     const toastIcon = document.getElementById("toast-icon");
     const toastMsg = document.getElementById("toast-message");
 
-    function showToast(message, icon = "✅") {
+    function showToast(message: string, icon = "✅") {
       if (!toastEl) return;
-      toastIcon.textContent = icon;
-      toastMsg.textContent = message;
+      if (toastIcon) toastIcon.textContent = icon;
+      if (toastMsg) toastMsg.textContent = message;
       toastEl.classList.remove("hidden");
       setTimeout(() => {
         toastEl.classList.add("hidden");
@@ -1720,7 +1622,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
             ).toFixed(1)
           : null;
       const avgTsoil = +(
-        recordsForDate.reduce((acc, r) => acc + r.tempSuelo, 0) / total
+        recordsForDate.reduce((acc, r) => acc + (r.tempSuelo ?? 0), 0) / total
       ).toFixed(1);
       const avgGrowth = Math.round(
         recordsForDate.reduce((acc, r) => acc + r.crecimiento, 0) / total,
@@ -1780,7 +1682,13 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       );
 
       // Generar 20 posiciones esperadas (4 filas x 5 columnas)
-      const expectedPlants = [];
+      const expectedPlants: {
+        fila: string;
+        columna: string;
+        plantId: string;
+        code: string;
+        treatmentLabel: string;
+      }[] = [];
       const filas = ["t0", "t1", "t2", "t3"];
       const cols = ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"];
 
@@ -1815,7 +1723,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
               normCode(r.plantId) === normCode(expected.code))
           )
             return true;
-          const resolved = resolveCoordsHistorial(
+          const resolved = resolvePlantCoordinates(
             r.code || r.plantId,
             r.fila,
             r.columna,
@@ -2205,15 +2113,15 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
 
         tr.innerHTML = `
           <td class="px-4 py-3 whitespace-nowrap font-mono">
-            <span class="font-bold text-green-950 dark:text-white block">${record.fecha}</span>
-            <span class="text-[10px] text-green-400">${record.hora}</span>
+            <span class="font-bold text-green-950 dark:text-white block">${escapeHtml(record.fecha)}</span>
+            <span class="text-[10px] text-green-400">${escapeHtml(record.hora)}</span>
           </td>
           <td class="px-4 py-3 whitespace-nowrap">
             <span class="font-black text-green-600 dark:text-stone-400 block">${record.plantId}</span>
             <span class="text-[10px] text-green-600 dark:text-stone-400">${record.fila} • ${record.columna}</span>
           </td>
           <td class="px-4 py-3 whitespace-nowrap text-green-800 dark:text-stone-300">
-            ${record.faseCrecimiento}
+            ${escapeHtml(record.faseCrecimiento)}
           </td>
           <td class="px-4 py-3 whitespace-nowrap font-mono">
             <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border ${phBadgeColor}">
@@ -2221,10 +2129,10 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
             </span>
           </td>
           <td class="px-4 py-3 whitespace-nowrap font-mono font-bold text-green-900 dark:text-stone-300">
-            ${record.tempInterna !== null && record.tempInterna !== undefined ? `${Number(record.tempInterna).toFixed(1)}°C` : '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300" title="Temperatura de planta no tomada el 2026-09-29 y 2026-09-30">N/D</span>'}
+            ${record.tempInterna !== null && record.tempInterna !== undefined ? `${Number(record.tempInterna).toFixed(1)}°C` : '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300" title="Temperatura de planta no registrada en esta toma">N/D</span>'}
           </td>
           <td class="px-4 py-3 whitespace-nowrap font-mono text-green-700 dark:text-stone-400">
-            ${record.tempSuelo.toFixed(1)}°C
+            ${record.tempSuelo !== null && record.tempSuelo !== undefined ? `${Number(record.tempSuelo).toFixed(1)}°C` : '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300">N/D</span>'}
           </td>
           <td class="px-4 py-3 whitespace-nowrap">
             <div class="flex items-center gap-1.5">
@@ -2242,9 +2150,9 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           <td class="px-4 py-3 whitespace-nowrap text-green-800 dark:text-stone-300">
             <div class="flex items-center gap-1.5">
               <span class="w-5 h-5 rounded-full ${record.avatarColor || "bg-green-600"} text-white text-[9px] font-bold flex items-center justify-center">
-                ${record.responsable.charAt(0)}
+                ${escapeHtml(record.responsable.charAt(0))}
               </span>
-              <span class="text-xs truncate max-w-[120px]" title="${record.responsable}">${record.responsable}</span>
+              <span class="text-xs truncate max-w-[120px]" title="${escapeHtml(record.responsable)}">${escapeHtml(record.responsable)}</span>
             </div>
           </td>
           <td class="px-4 py-3 whitespace-nowrap text-right">
@@ -2267,10 +2175,9 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     }
 
     // 11. MODAL DETALLE DE PLANTA
-    function openPlantDetailModal(metric) {
+    function openPlantDetailModal(metric: any) {
       if (!modalPlant) return;
 
-      const modalIcon = document.getElementById("modal-plant-icon");
       const modalId = document.getElementById("modal-plant-id");
       const modalLocation = document.getElementById("modal-plant-location");
       const modalDate = document.getElementById("modal-plant-date");
@@ -2281,7 +2188,6 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       const modalValTint = document.getElementById("modal-val-tint");
       const modalValText = document.getElementById("modal-val-text");
       const modalValHum = document.getElementById("modal-val-hum");
-      const modalValTsoil = document.getElementById("modal-val-tsoil");
       const modalValGrowth = document.getElementById("modal-val-growth");
       const modalValAltura = document.getElementById("modal-val-altura");
       const modalBadgeSanidad = document.getElementById("modal-badge-sanidad");
@@ -2300,7 +2206,6 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       if (modalValPh)
         modalValPh.textContent = `${Number(metric.phSuelo).toFixed(2)} pH`;
 
-      // 2. T_Planta_C (Temperatura del piso donde está la planta, null el 2026-09-29 y 2026-09-30)
       if (modalValTin) {
         modalValTin.textContent =
           metric.tempSuelo !== null &&
@@ -2416,7 +2321,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
             </div>
             <div>
               <span class="text-green-600 dark:text-stone-400 block">Temp Invernadero</span>
-              <span class="font-bold ${deltaTin !== null ? (deltaTin > 0 ? "text-green-600" : "text-blue-600") : "text-amber-500"}">${deltaTin !== null ? `${deltaTin > 0 ? "+" : ""}${deltaTin}°C` : "N/D"}</span>
+              <span class="font-bold ${deltaTin !== null ? (deltaTin > 0 ? "text-green-600" : "text-blue-600") : "text-amber-500"}">${deltaTin !== null ? `${deltaTin > 0 ? "+" : ""}${convertTempDelta(deltaTin)}°${getTempUnit()}` : "N/D"}</span>
             </div>
             <div>
               <span class="text-green-600 dark:text-stone-400 block">Altura / Crec.</span>
@@ -2432,6 +2337,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
         }
       }
 
+      applyTempUnitToDocument();
       modalPlant.classList.remove("hidden");
     }
 
@@ -2457,6 +2363,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       renderPlantGrid();
       renderEvolutionChart();
       renderTable();
+      applyTempUnitToDocument();
     }
 
     // Eventos de Filtro
@@ -2475,22 +2382,22 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     });
 
     filterFila?.addEventListener("change", (e) => {
-      state.selectedFila = e.target.value;
+      state.selectedFila = (e.target as HTMLSelectElement).value;
       renderTable();
     });
 
     filterPlanta?.addEventListener("change", (e) => {
-      state.selectedPlanta = e.target.value;
+      state.selectedPlanta = (e.target as HTMLSelectElement).value;
       renderTable();
     });
 
     filterSanidad?.addEventListener("change", (e) => {
-      state.selectedSanidad = e.target.value;
+      state.selectedSanidad = (e.target as HTMLSelectElement).value;
       renderTable();
     });
 
     searchInput?.addEventListener("input", (e) => {
-      state.searchQuery = e.target.value;
+      state.searchQuery = (e.target as HTMLInputElement).value;
       renderTable();
     });
 
@@ -2509,33 +2416,33 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     // Cambiar métrica de la gráfica
     btnChartPh?.addEventListener("click", () => {
       state.activeChartMetric = "ph";
-      btnChartPh.className =
+      if (btnChartPh) btnChartPh.className =
         "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-600 text-white cursor-pointer transition-all shadow-xs";
-      btnChartTemp.className =
+      if (btnChartTemp) btnChartTemp.className =
         "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
-      btnChartGrowth.className =
+      if (btnChartGrowth) btnChartGrowth.className =
         "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
       renderEvolutionChart();
     });
 
     btnChartTemp?.addEventListener("click", () => {
       state.activeChartMetric = "temp";
-      btnChartTemp.className =
+      if (btnChartTemp) btnChartTemp.className =
         "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-600 text-white cursor-pointer transition-all shadow-xs";
-      btnChartPh.className =
+      if (btnChartPh) btnChartPh.className =
         "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
-      btnChartGrowth.className =
+      if (btnChartGrowth) btnChartGrowth.className =
         "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
       renderEvolutionChart();
     });
 
     btnChartGrowth?.addEventListener("click", () => {
       state.activeChartMetric = "growth";
-      btnChartGrowth.className =
+      if (btnChartGrowth) btnChartGrowth.className =
         "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-600 text-white cursor-pointer transition-all shadow-xs";
-      btnChartPh.className =
+      if (btnChartPh) btnChartPh.className =
         "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
-      btnChartTemp.className =
+      if (btnChartTemp) btnChartTemp.className =
         "px-3 py-1.5 rounded-xl font-bold text-xs bg-green-100 dark:bg-stone-700 text-green-800 dark:text-stone-300 hover:bg-green-200 cursor-pointer transition-all";
       renderEvolutionChart();
     });
@@ -2547,7 +2454,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       if (uploadPreviewContainer)
         uploadPreviewContainer.classList.add("hidden");
       if (modalUploadConfirmBtn) {
-        modalUploadConfirmBtn.disabled = true;
+        modalUploadConfirmBtn && (modalUploadConfirmBtn.disabled = true);
         modalUploadConfirmBtn.classList.add("opacity-50", "cursor-not-allowed");
       }
     });
@@ -2579,89 +2486,72 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     });
 
     fileInput?.addEventListener("change", (e) => {
-      if (e.target.files?.length) {
-        processUploadedFile(e.target.files[0]);
+      const input = e.target as HTMLInputElement;
+      if (input.files?.length) {
+        processUploadedFile(input.files[0]);
       }
     });
 
     // Parser local para archivos subidos por el usuario
-    function processUploadedFile(file) {
+    function processUploadedFile(file: File) {
       const reader = new FileReader();
       reader.onload = (evt) => {
         const text = evt.target?.result;
         if (typeof text !== "string") return;
 
-        const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-        if (lines.length < 2) {
+        const rows = parseCSV(text);
+        if (rows.length < 2) {
           showToast("El archivo no contiene filas de datos válidas", "⚠️");
           return;
         }
 
-        const delimiter = lines[0].includes(";") ? ";" : ",";
-        const headers = lines[0]
-          .split(delimiter)
-          .map((h) => h.trim().toLowerCase());
-
-        const parsed = [];
+        const parsed: MetricRecord[] = [];
         const todayStr = new Date().toISOString().slice(0, 10);
 
-        for (let i = 1; i < lines.length; i++) {
-          const cols = lines[i]
-            .split(delimiter)
-            .map((c) => c.trim().replace(/^"|"$/g, ""));
+        for (let i = 1; i < rows.length; i++) {
+          const cols = rows[i];
           if (cols.length < 3) continue;
 
-          // Mapeo flexible con soporte T0-P1, TO-P2, T1-P1, T2-P3, T3-P5
-          const rawPlantId = cols[0] || `P-01`;
-          let rawFila = cols.length > 6 ? cols[6] : "";
-          let rawCol = cols.length > 7 ? cols[7] : "";
+          const rawPlantId = cols[0];
+          if (!rawPlantId) continue;
+          const coords = resolvePlantCoordinates(rawPlantId);
 
-          const coords = resolveCoordsHistorial(rawPlantId, rawFila, rawCol);
-          const fila = coords.fila;
-          const col = coords.columna;
-          const plantNumber = coords.plantNumber;
-          const plantId = coords.plantId;
-          const code = coords.code;
+          const dateCell = extractDateAndHour(cols[1]);
+          const fecha = /^\d{4}-\d{2}-\d{2}$/.test(dateCell.fecha)
+            ? dateCell.fecha
+            : todayStr;
+          const hora = dateCell.hora;
 
-          const fecha =
-            cols[1] && /^\d{4}-\d{2}-\d{2}$/.test(cols[1]) ? cols[1] : todayStr;
-          const ph = parseFloat(cols[2]?.replace(",", ".")) || 6.4;
-
-          const isTempMissing =
-            fecha === "2026-09-29" || fecha === "2026-09-30";
-          const rawTin = cols[3]?.trim().toLowerCase();
-          const tin =
-            isTempMissing || ["nd", "n/d", "na", "-", ""].includes(rawTin)
-              ? null
-              : parseFloat(cols[3]?.replace(",", ".")) || null;
-
+          const ph = parseCsvNumber(cols[2]) ?? 6.4;
+          const tin = isNullCell(cols[3]) ? null : parseCsvNumber(cols[3]);
           const growth = parseInt(cols[4], 10) || 80;
-          const sanidad = cols[5] || "Saludable";
+          const sanidad = deriveSanidad(cols[5] || "", ph);
+          const responsable = (cols[6] || "").trim() || "Operario de Archivo";
+          const observaciones =
+            (cols[7] || "").trim() || "Registro importado desde archivo local.";
 
           parsed.push({
-            id: `MET-UPLOAD-${code}-${fecha}-${i}`,
+            id: `MET-UPLOAD-${coords.code}-${fecha}-${i}`,
             invernadero: "Invernadero Macollo",
-            fila,
-            columna: col,
-            plantId,
-            code,
+            fila: coords.fila,
+            columna: coords.columna,
+            plantId: coords.plantId,
+            code: coords.code,
             fecha,
-            hora: "09:00 AM",
-            timestampTexto: `${fecha}, 09:00 AM`,
+            hora,
+            timestampTexto: hora ? `${fecha}, ${hora}` : fecha,
             phSuelo: ph,
             tempInterna: tin,
-            tempExterna: 20.0,
-            tempSuelo: 20.2,
+            tempExterna: null,
+            tempSuelo: null,
             crecimiento: growth,
             faseCrecimiento: "Desarrollo Vegetativo",
             productividad: "Alta",
-            sanidad: sanidad,
-            responsable: "Operario de Archivo",
+            sanidad,
+            responsable,
             responsableRol: "Carga Manual",
-            avatarColor: "bg-green-600",
-            observaciones: isTempMissing
-              ? "Temperatura foliar de planta no tomada el 2026-09-29 y 2026-09-30 por falta de sensor."
-              : "Registro importado desde archivo local.",
+            avatarColor: avatarColorFor(responsable),
+            observaciones,
           });
         }
 
@@ -2670,7 +2560,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           return;
         }
 
-        state.pendingUploadRows = parsed;
+        state.pendingUploadRows = parsed as MetricRecord[];
 
         // Mostrar vista previa
         if (uploadPreviewContainer && uploadPreviewBody && uploadPreviewCount) {
@@ -2679,8 +2569,8 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           parsed.slice(0, 10).forEach((r) => {
             const row = document.createElement("tr");
             row.innerHTML = `
-              <td class="p-2 font-bold">${r.plantId}</td>
-              <td class="p-2">${r.fecha}</td>
+              <td class="p-2 font-bold">${escapeHtml(r.plantId)}</td>
+              <td class="p-2">${escapeHtml(r.fecha)}</td>
               <td class="p-2">${r.phSuelo}</td>
               <td class="p-2">${r.tempInterna}°C</td>
               <td class="p-2">${r.crecimiento}%</td>
@@ -2692,7 +2582,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
         }
 
         if (modalUploadConfirmBtn) {
-          modalUploadConfirmBtn.disabled = false;
+          if (modalUploadConfirmBtn) modalUploadConfirmBtn.disabled = false;
           modalUploadConfirmBtn.classList.remove(
             "opacity-50",
             "cursor-not-allowed",
@@ -2702,15 +2592,48 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       reader.readAsText(file);
     }
 
-    modalUploadConfirmBtn?.addEventListener("click", () => {
+    modalUploadConfirmBtn?.addEventListener("click", async () => {
       if (state.pendingUploadRows.length === 0) return;
 
-      saveCustomRecords(state.pendingUploadRows);
+      const rows = state.pendingUploadRows;
+      const fincaId = (window as any).__MACOLLO_FINCA_ID__ ?? "global";
+      let persistidos = 0;
+
+      if (fincaId !== "global") {
+        if (modalUploadConfirmBtn) {
+          modalUploadConfirmBtn.disabled = true;
+          modalUploadConfirmBtn.textContent = "Guardando...";
+        }
+        try {
+          const response = await fetch(`/api/fincas/${fincaId}/lecturas`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ records: rows }),
+          });
+          const data = await response.json().catch(() => null);
+          if (response.ok) {
+            persistidos = Number(data?.count) || 0;
+          } else {
+            console.warn(
+              "[Historial] No se pudieron persistir las lecturas:",
+              data?.message || response.status,
+            );
+          }
+        } catch (err) {
+          console.warn("[Historial] Error de red al guardar lecturas:", err);
+        } finally {
+          if (modalUploadConfirmBtn) {
+            modalUploadConfirmBtn.disabled = false;
+            modalUploadConfirmBtn.textContent = "Guardar en Historial";
+          }
+        }
+      }
+
+      saveCustomRecords(rows);
       state.allRecords = getAllCombinedRecords();
 
       // Cambiar a la fecha de las filas subidas
-      const importedDate =
-        state.pendingUploadRows[0]?.fecha || state.selectedDate;
+      const importedDate = rows[0]?.fecha || state.selectedDate;
       state.selectedDate = importedDate;
       if (datePicker) datePicker.value = importedDate;
 
@@ -2725,7 +2648,9 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       window.dispatchEvent(new Event("storage"));
 
       showToast(
-        `¡Se guardaron ${state.pendingUploadRows.length} registros exitosamente!`,
+        persistidos > 0
+          ? `¡Se guardaron ${persistidos} de ${rows.length} registros en la base de datos!`
+          : `${rows.length} registros importados solo en este navegador (sin persistir en el servidor).`,
       );
     });
 
@@ -2760,7 +2685,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     // 14. LOGICA DEL MODAL GOOGLE SHEETS
     btnOpenSheets?.addEventListener("click", () => {
       modalSheets?.classList.remove("hidden");
-      const savedUrl = localStorage.getItem(STORAGE_KEY_SHEETS_URL);
+      const savedUrl = localStorage.getItem(sheetsUrlStorageKey(FINCA_SCOPE));
       if (savedUrl && inputSheetsUrl) {
         inputSheetsUrl.value = savedUrl;
       }
@@ -2774,7 +2699,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       modalSheets?.classList.add("hidden"),
     );
 
-    async function syncGoogleSheets(urlToSync) {
+    async function syncGoogleSheets(urlToSync: string) {
       if (!urlToSync) return;
 
       if (sheetsSyncSpinner) sheetsSyncSpinner.classList.remove("hidden");
@@ -2794,12 +2719,12 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           saveCustomRecords(data.records);
           state.allRecords = getAllCombinedRecords();
 
-          localStorage.setItem(STORAGE_KEY_SHEETS_URL, urlToSync);
+          localStorage.setItem(sheetsUrlStorageKey(FINCA_SCOPE), urlToSync);
           const nowStr = new Date().toLocaleTimeString("es-CO", {
             hour: "2-digit",
             minute: "2-digit",
           });
-          localStorage.setItem(STORAGE_KEY_LAST_SYNC, nowStr);
+          localStorage.setItem(lastSyncStorageKey(FINCA_SCOPE), nowStr);
 
           // Actualizar banner
           checkSyncBanner();
@@ -2847,7 +2772,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
         if (sheetsSyncStatus) {
           sheetsSyncStatus.className =
             "p-3 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
-          sheetsSyncStatus.textContent = `❌ Error de red: ${err.message}`;
+          sheetsSyncStatus.textContent = `❌ Error de red: ${err instanceof Error ? err.message : String(err)}`;
           sheetsSyncStatus.classList.remove("hidden");
         }
       } finally {
@@ -2875,8 +2800,8 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
 
     // Banner Sync
     function checkSyncBanner() {
-      const savedUrl = localStorage.getItem(STORAGE_KEY_SHEETS_URL);
-      const lastSync = localStorage.getItem(STORAGE_KEY_LAST_SYNC);
+      const savedUrl = localStorage.getItem(sheetsUrlStorageKey(FINCA_SCOPE));
+      const lastSync = localStorage.getItem(lastSyncStorageKey(FINCA_SCOPE));
       if (savedUrl && state.allRecords.length > 0 && syncBanner) {
         syncBanner.classList.remove("hidden");
         syncBanner.classList.add("flex");
@@ -2890,7 +2815,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     }
 
     btnSyncNowBanner?.addEventListener("click", () => {
-      const savedUrl = localStorage.getItem(STORAGE_KEY_SHEETS_URL);
+      const savedUrl = localStorage.getItem(sheetsUrlStorageKey(FINCA_SCOPE));
       if (savedUrl) {
         syncGoogleSheets(savedUrl);
       }
@@ -2903,8 +2828,40 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       window.location.href = "/api/export-excel";
     });
 
+    let historySyncTimer: ReturnType<typeof setInterval> | null = null;
+
+    async function refreshHistoryFromServer() {
+      if (!/^\d+$/.test(String(FINCA_SCOPE))) return;
+      try {
+        const response = await fetch(`/api/fincas/${FINCA_SCOPE}/lecturas`, {
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (Array.isArray(data?.records)) {
+          baseRecords = data.records;
+          state.allRecords = getAllCombinedRecords();
+          updateAllViews();
+          showReadingAlerts(state.allRecords);
+        }
+      } catch (err) {
+        console.warn("[Historial] No se pudieron actualizar las lecturas:", err);
+      }
+    }
+
+    function scheduleHistorySync() {
+      if (historySyncTimer) clearInterval(historySyncTimer);
+      historySyncTimer = setInterval(refreshHistoryFromServer, getSyncIntervalMs());
+    }
+
     // INICIALIZACIÓN INMEDIATA
     checkSyncBanner();
     updateAllViews();
+    void refreshHistoryFromServer();
+    scheduleHistorySync();
+    onPreferencesChanged(() => {
+      scheduleHistorySync();
+      void refreshHistoryFromServer();
+    });
   });
 </script>

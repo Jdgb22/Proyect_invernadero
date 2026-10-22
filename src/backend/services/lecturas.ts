@@ -1,28 +1,10 @@
-// src/backend/services/lecturas.ts
 // Persistencia y lectura de mediciones agronómicas por finca.
 // Traduce entre las filas de `lecturas` (PostgreSQL) y el formato MetricRecord
 // que consumen los componentes de tablero/historial.
 
 import { pool } from "../../db/client";
-import type { MetricRecord } from "./metricsData";
-
-const AVATAR_PALETTE = [
-  "bg-emerald-500",
-  "bg-lime-500",
-  "bg-green-600",
-  "bg-teal-500",
-  "bg-amber-500",
-  "bg-orange-500",
-  "bg-sky-500",
-  "bg-indigo-500",
-];
-
-function avatarColorFor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++)
-    hash = (hash * 31 + name.charCodeAt(i)) | 0;
-  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
-}
+import type { MetricRecord } from "../../shared/plantMatrix";
+import { avatarColorFor } from "../../shared/avatar";
 
 interface LecturaRow {
   id: string | number;
@@ -69,7 +51,7 @@ function rowToRecord(row: LecturaRow): MetricRecord {
     phSuelo: row.ph_suelo ?? 0,
     tempInterna: row.temp_interna,
     tempInvernadero: row.temp_interna ?? undefined,
-    tempExterna: row.temp_externa ?? 0,
+    tempExterna: row.temp_externa ?? null,
     tempSuelo: row.temp_suelo,
     humedad: row.humedad ?? undefined,
     alturaCm: row.altura_cm,
@@ -184,4 +166,11 @@ export async function insertLecturas(
   } finally {
     client.release();
   }
+}
+
+export async function deleteLecturasByFinca(fincaId: number): Promise<number> {
+  const res = await pool.query("DELETE FROM lecturas WHERE finca_id = $1", [
+    fincaId,
+  ]);
+  return res.rowCount ?? 0;
 }

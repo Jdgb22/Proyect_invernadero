@@ -79,7 +79,7 @@
 
 - **Usuario:** Usuario autenticado
 - **Descripción:** El usuario consulta el historial de lecturas pasadas.
-- **Filtros:** Fecha específica (rango 2026-09-14 a 2026-09-30 según datos cargados).
+- **Filtros:** Fecha específica (según las mediciones cargadas en la finca).
 - **Resultado esperado:** Lista de lecturas con marca de tiempo y valores.
 
 ### US-009: Recuperar contraseña

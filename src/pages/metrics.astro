@@ -6,6 +6,7 @@ import Layout from "../frontend/layouts/Layout.astro";
 import Navbar from "../frontend/components/navbar.astro";
 import { getAuthUser } from "../backend/services/authz";
 import { listFincasForUser } from "../backend/services/fincas";
+import { roleLabel } from "../shared/roles";
 
 const session = await getSession(Astro.request);
 const isAuthenticated = !!session;
@@ -22,14 +23,7 @@ if (isAuthenticated) {
   }
 }
 
-const roleLabel: Record<string, string> = {
-  Superadmin: "Superadmin",
-  Admin: "Administrador de Cultivo",
-  Agropecuario: "Dueño de Finca",
-  Campesino: "Operario de Campo",
-};
-const userRole =
-  roleLabel[(session?.user as any)?.role as string] || "Operario de Campo";
+const userRole = roleLabel((session?.user as any)?.role);
 ---
 
 <Layout>

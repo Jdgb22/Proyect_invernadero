@@ -1,4 +1,3 @@
-// src/backend/services/fincas.ts
 // Lógica de negocio de fincas, membresías, invitaciones y plantas.
 
 import { customAlphabet } from "nanoid";
@@ -203,9 +202,7 @@ export async function hardDeleteFinca(fincaId: number): Promise<void> {
 
 // ------------------------- Miembros -------------------------
 
-export async function listMembers(
-  fincaId: number,
-): Promise<
+export async function listMembers(fincaId: number): Promise<
   {
     id: number;
     user_id: number;

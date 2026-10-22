@@ -1,4 +1,3 @@
-// src/backend/services/rateLimit.ts
 // Límite de tasa en memoria (sliding window) para endpoints sensibles.
 // Nota: en serverless (Vercel) cada instancia tiene su propio mapa; es una
 // línea base anti-abuso, no un límite global distribuido.

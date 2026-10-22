@@ -55,7 +55,7 @@ No hay landing separada del dashboard: la misma URL cambia según autenticación
 **Descripción:** Historial cronológico multidía + importación/exportación.
 **Elementos:**
 
-- Selector de fecha (por defecto la más reciente de `REAL_DATES`: 2026-09-14 a 2026-09-30).
+- Selector de fecha (por defecto la más reciente con mediciones de la finca activa).
 - Tabla de tomas del día para las 20 plantas.
 - **Importar** Excel/CSV (parseo en cliente).
 - **Conectar Google Sheets** (solo el **dueño** de la finca): modal que pide URL pública → `POST /api/sync-sheets` (convierte a `export?format=csv`, parsea columnas `ID_planta, fecha, T_Ext_C, T_Int_C, humedad_Pct, T_Planta_C, Ph, ALtura_cm…`, persiste en `lecturas` de la finca y devuelve `records` al cliente). Los miembros no ven el botón y reciben `403`.

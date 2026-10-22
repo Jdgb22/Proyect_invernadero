@@ -136,9 +136,9 @@ const badge = roleBadge[role] || roleBadge.Campesino;
         {session && (
           <div class="flex items-center gap-2">
             <span class={`px-2.5 py-1 rounded-full text-[11px] font-bold ${badge.cls}`}>{badge.label}</span>
-            <div class="w-10 h-10 rounded-full border-2 border-green-200 dark:border-[#104d28] shadow-sm bg-white dark:bg-stone-800 overflow-hidden flex items-center justify-center cursor-pointer" title={session.user?.name || userEmail}>
-              {session.user?.image ? (
-                <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
+            <div class="w-10 h-10 rounded-full border-2 border-green-200 dark:border-[#104d28] shadow-sm bg-white dark:bg-stone-800 overflow-hidden flex items-center justify-center cursor-pointer" title={user?.name || session.user?.name || userEmail}>
+              {user?.image || session.user?.image ? (
+                <img src={user?.image || session.user?.image} alt="Avatar" class="w-full h-full object-cover" />
               ) : (
                 <BlobatarAvatar client:load name={userEmail} size={40} />
               )}
@@ -228,14 +228,14 @@ const badge = roleBadge[role] || roleBadge.Campesino;
         {session && (
           <div class="flex items-center gap-3 px-4 mb-3">
             <div class="w-10 h-10 rounded-full border-2 border-green-200 dark:border-[#104d28] shadow-sm bg-white dark:bg-stone-800 overflow-hidden flex items-center justify-center">
-              {session.user?.image ? (
-                <img src={session.user.image} alt="Avatar" class="w-full h-full object-cover" />
+              {user?.image || session.user?.image ? (
+                <img src={user?.image || session.user?.image} alt="Avatar" class="w-full h-full object-cover" />
               ) : (
                 <BlobatarAvatar client:load name={userEmail} size={40} />
               )}
             </div>
             <div class="min-w-0 flex-1 text-sm">
-              <div class="font-semibold text-green-900 dark:text-stone-200 truncate">{session.user?.name || userEmail}</div>
+              <div class="font-semibold text-green-900 dark:text-stone-200 truncate">{user?.name || session.user?.name || userEmail}</div>
               <span class={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${badge.cls}`}>{badge.label}</span>
             </div>
           </div>

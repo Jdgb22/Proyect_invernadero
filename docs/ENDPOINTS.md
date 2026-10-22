@@ -171,7 +171,7 @@ El servidor normaliza la URL a `export?format=csv` (soporta `/d/e/` publicados, 
 
 **Columnas reconocidas** (búsqueda flexible, sin tildes): `ID_planta` (`T0-P1`, `TO-P2`… con `resolvePlantCoordinates`), `fecha` (YYYY-MM-DD, DD/MM/YYYY o serial Excel), `responsable`, `T_Ext_C`, `T_Int_C`, `humedad_Pct`, `T_Planta_C` (= temp suelo), `Ph`, `ALtura_cm`, + opcionales `fase`, `productividad`, `sanidad`, `observacion`.
 
-**Defaults y reglas:** pH clamp 0–14 (def. 6.4); `tempInterna` = `T_Int_C`; humedad clamp 0–100 (def. 65); crecimiento derivado de altura; sanidad derivada de pH si no viene (`<5.2|>7.8` Crítica, `<5.8|>7.2` Vulnerable, `6.2–6.7` Excelente); **2026-09-29/30 → `tempSuelo: null`** (sensor no tomado); responsable def. `Equipo de Campo`.
+**Defaults y reglas:** pH clamp 0–14 (def. 6.4); `tempInterna` = `T_Int_C`; humedad clamp 0–100 (def. 65); crecimiento derivado de altura; sanidad derivada de pH si no viene (`<5.2|>7.8` Crítica, `<5.8|>7.2` Vulnerable, `6.2–6.7` Excelente); `tempSuelo: null` cuando no se tomó la medida; responsable def. `Equipo de Campo`.
 
 **Respuestas:**
 

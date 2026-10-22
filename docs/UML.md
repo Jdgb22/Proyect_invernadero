@@ -79,7 +79,7 @@ flowchart TB
         APIXLS[API export-excel: ExcelJS 3 hojas]
         APISync[API sync-sheets: CSV → records]
         APIProxy[API siata: proxy timeout 3s]
-        Svc[Servicios: metricsData, weather, siata, notifications]
+        Svc[Servicios: plantMatrix, sheetsSync, excelExport, weather, siata, notifications]
         MW[middleware: fix proxy + guarda /dashboard]
     end
     subgraph Ext[Externos]

@@ -5,7 +5,7 @@ import { z } from "zod";
 import {
   getAuthUser,
   getFincaAccess,
-  canArchiveFinca,
+  canManageFinca,
   json,
   unauthorized,
   forbidden,
@@ -27,7 +27,7 @@ export const POST: APIRoute = async ({ request, params }) => {
   if (!fincaId) return notFound("Finca no encontrada.");
 
   const access = await getFincaAccess(fincaId, user);
-  if (!canArchiveFinca(user.role, access)) {
+  if (!canManageFinca(access)) {
     return forbidden(
       "Solo el dueño, Admins o Superadmins pueden archivar/restaurar la finca.",
     );

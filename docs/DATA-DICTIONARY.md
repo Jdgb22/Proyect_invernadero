@@ -1,6 +1,6 @@
 # Diccionario de Datos — Proyecto Invernadero (Macollo)
 
-> Fuente: `src/backend/services/metricsData.ts` (tipos), `src/pages/api/sync-sheets.ts` (columnas CSV), `src/pages/api/export-excel.ts` (hojas), `src/db/*.sql` (tablas). Para llenar hojas ver [FIELD-PROTOCOL](./FIELD-PROTOCOL.md).
+> Fuente: `src/shared/plantMatrix.ts` (tipos y resolución de coordenadas), `src/backend/services/sheetsSync.ts` (columnas CSV), `src/backend/services/excelExport.ts` (hojas), `src/db/*.sql` (tablas). Para llenar hojas ver [FIELD-PROTOCOL](./FIELD-PROTOCOL.md).
 
 ## 1. `MetricRecord` (registro canónico, type TS)
 
@@ -18,7 +18,7 @@
 | `tempInterna`                                    | number\|null                           | `24.5`                              | = `T_Int_C`; def. `24.5`                                                                  |
 | `tempInvernadero`                                | number                                 | `24.5`                              | Alias interno de `T_Int_C`                                                                |
 | `tempExterna`                                    | number                                 | `20.2`                              | `T_Ext_C`; def. `20.2`                                                                    |
-| `tempSuelo`                                      | number\|null                           | `20.1`                              | `T_Planta_C`; **null el 2026-09-29/30** (no tomada)                                       |
+| `tempSuelo`                                      | number\|null                           | `20.1`                              | `T_Planta_C`; `null` cuando no se tomó la medida                                          |
 | `humedad`                                        | number 0–100                           | `65`                                | Clamp 0–100; def. `65`                                                                    |
 | `alturaCm`                                       | number\|null                           | `42.0`                              | `ALtura_cm`; null si `N/D`                                                                |
 | `crecimiento`                                    | number 0–100                           | `75`                                | De altura (≤100 directo) o def. `75`                                                      |

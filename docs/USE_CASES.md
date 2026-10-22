@@ -35,7 +35,7 @@
 **Flujo básico (real):**
 
 1. Usuario accede a `/` (Dashboard)
-2. La matriz se renderiza en servidor desde el dataset (`metricsData.ts`, hoy vacío hasta importar/sincronizar Sheets)
+2. La matriz se renderiza en servidor desde las lecturas de la finca activa (`getLecturasByFinca`) y se completa con datos importados/sincronizados
 3. El navegador pide geolocalización y consulta clima (Open-Meteo directo; SIATA pausado, ADR-007) y AQI, con **refresco cada 10 minutos**
 4. El usuario importa datos desde `/historial` cuando hay nuevas tomas de campo
 

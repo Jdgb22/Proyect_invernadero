@@ -12,6 +12,7 @@ import {
   forbidden,
   notFound,
   parseId,
+  parseJsonBody,
 } from "../../../backend/services/authz";
 import {
   getFincaById,
@@ -54,12 +55,8 @@ export const POST: APIRoute = async ({ request }) => {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return json({ message: "Cuerpo JSON inválido." }, 400);
-  }
+  const body = await parseJsonBody(request);
+  if (body === null) return json({ message: "Cuerpo JSON inválido." }, 400);
   const parsed = PostSchema.safeParse(body);
   if (!parsed.success) return json({ message: "Datos no válidos." }, 400);
 

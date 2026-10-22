@@ -7,6 +7,7 @@ import {
   json,
   unauthorized,
   forbidden,
+  parseJsonBody,
 } from "../../../backend/services/authz";
 import {
   createFinca,
@@ -42,12 +43,8 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return json({ message: "Cuerpo JSON inválido." }, 400);
-  }
+  const body = await parseJsonBody(request);
+  if (body === null) return json({ message: "Cuerpo JSON inválido." }, 400);
 
   const parsed = CreateFincaSchema.safeParse(body);
   if (!parsed.success) {

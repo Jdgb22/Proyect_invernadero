@@ -29,7 +29,7 @@ App **Astro 7.2.8 en SSR** (`output: 'server'`, adaptador Vercel) que combina p�
 │   ├── export-excel.ts  # GET|POST → .xlsx 3 hojas (ExcelJS), por finca
 │   ├── sync-sheets.ts   # POST {url} → parse CSV → INSERT lecturas (finca activa)
 │   └── siata.ts         # GET proxy siata.gov.co:8089 (timeout 3 s, sin consumidores)
-├── backend/services/ # metricsData.ts (MetricRecord, PlantMatrixItem, resolvePlantCoordinates, REAL_DATES 2026-09-14→30)
+├── shared/           # plantMatrix.ts (MetricRecord, PlantMatrixItem, resolvePlantCoordinates), badges, roles, avatar, clientStorage
 │                     # weather.ts (fetchWeatherData, isValleDeAburra, getWeatherEmoji)
 │                     # siata.ts (fetchSiataPredictions vía proxy)
 │                     # authz.ts (getAuthUser, permisos) · fincas.ts (CRUD, invitaciones, seedPlantas)
@@ -74,7 +74,7 @@ astro.config.mjs      # output server + @astrojs/vercel + auth() + react()
 ## 5. Modelo de datos (resumen)
 
 Auth: `users (role enum: Superadmin, Admin, Agropecuario, Campesino def.)`, `accounts`, `sessions`, `verification_token` — [DATABASE](./DATABASE.md) §2, [AUTH](./AUTH.md).
-Agronómico: `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas` (por finca) y `lecturas` (una visita a una planta) + tipos TS `MetricRecord`/`PlantMatrixItem` (matriz `FILAS t0–t3`, `COLUMNAS Col 1–5`, códigos `T{f}-P{c}` / `P-01–P-20`, `REAL_DATES` 2026-09-14→30, `tempSuelo null` 29–30-sep).
+Agronómico: `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas` (por finca) y `lecturas` (una visita a una planta) + tipos TS `MetricRecord`/`PlantMatrixItem` en `src/shared/plantMatrix.ts` (matriz `FILAS t0–t3`, `COLUMNAS Col 1–5`, códigos `T{f}-P{c}` / `P-01–P-20`).
 
 ## 6. Evolución (IoT / tiempo real / escala)
 

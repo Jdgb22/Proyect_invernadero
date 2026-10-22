@@ -21,7 +21,7 @@ export const DELETE: APIRoute = async ({ request, params }) => {
   if (!fincaId || !invId) return notFound("Invitación no encontrada.");
 
   const access = await getFincaAccess(fincaId, user);
-  if (!canManageFinca(user.role, access)) {
+  if (!canManageFinca(access)) {
     return forbidden(
       "Solo el dueño, Admins o Superadmins pueden revocar invitaciones.",
     );

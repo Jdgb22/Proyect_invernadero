@@ -6,6 +6,7 @@ import {
   json,
   unauthorized,
   setFincaCookie,
+  parseJsonBody,
 } from "../../../backend/services/authz";
 import { redeemInvitacion, FincaError } from "../../../backend/services/fincas";
 
@@ -17,12 +18,8 @@ export const POST: APIRoute = async ({ request }) => {
   const user = await getAuthUser(request);
   if (!user) return unauthorized();
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return json({ message: "Cuerpo JSON inválido." }, 400);
-  }
+  const body = await parseJsonBody(request);
+  if (body === null) return json({ message: "Cuerpo JSON inválido." }, 400);
   const parsed = Schema.safeParse(body);
   if (!parsed.success) {
     return json(

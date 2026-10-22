@@ -1,5 +1,5 @@
-import nodemailer from 'nodemailer';
-import 'dotenv/config';
+import nodemailer from "nodemailer";
+import "dotenv/config";
 
 interface EmailParams {
   to: string;
@@ -18,21 +18,34 @@ interface SmsParams {
 /**
  * Servicio para enviar correos electrónicos de recuperación vía Gmail / SMTP.
  */
-export async function sendRecoveryEmail({ to, userName = 'Usuario', code, minutesValid = 15 }: EmailParams) {
+export async function sendRecoveryEmail({
+  to,
+  userName = "Usuario",
+  code,
+  minutesValid = 15,
+}: EmailParams) {
   const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
   const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
-  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
-  const fromAddress = process.env.SMTP_FROM || `"Macollo Invernadero" <${smtpUser || 'no-reply@macollo.com'}>`;
+  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+  const smtpPort = parseInt(process.env.SMTP_PORT || "465", 10);
+  const fromAddress =
+    process.env.SMTP_FROM ||
+    `"Macollo Invernadero" <${smtpUser || "no-reply@macollo.com"}>`;
 
   if (!smtpUser || !smtpPass) {
-    console.warn(`\n[Notificaciones - Correo] ⚠️ SMTP_USER o SMTP_PASS no están configurados en el archivo .env.`);
-    console.warn(`[Notificaciones - Correo] Código para ${to}: ${code} (Válido por ${minutesValid} minutos)`);
-    console.warn(`Para enviar correos reales por Gmail, añade SMTP_USER y SMTP_PASS (Contraseña de aplicación) a tu .env.\n`);
+    console.warn(
+      `\n[Notificaciones - Correo] ⚠️ SMTP_USER o SMTP_PASS no están configurados en el archivo .env.`,
+    );
+    console.warn(
+      `[Notificaciones - Correo] Código para ${to}: ${code} (Válido por ${minutesValid} minutos)`,
+    );
+    console.warn(
+      `Para enviar correos reales por Gmail, añade SMTP_USER y SMTP_PASS (Contraseña de aplicación) a tu .env.\n`,
+    );
     return {
       sent: false,
-      reason: 'MISSING_SMTP_CONFIG',
-      message: 'Servicio SMTP no configurado en el servidor (.env).',
+      reason: "MISSING_SMTP_CONFIG",
+      message: "Servicio SMTP no configurado en el servidor (.env).",
     };
   }
 
@@ -100,11 +113,15 @@ export async function sendRecoveryEmail({ to, userName = 'Usuario', code, minute
       html: htmlContent,
     });
 
-    console.log(`[Notificaciones - Correo] Correo enviado exitosamente a ${to}. ID: ${info.messageId}`);
+    console.log(
+      `[Notificaciones - Correo] Correo enviado exitosamente a ${to}. ID: ${info.messageId}`,
+    );
     return { sent: true, messageId: info.messageId };
-
   } catch (error: any) {
-    console.error(`[Notificaciones - Correo] Error enviando correo a ${to}:`, error);
+    console.error(
+      `[Notificaciones - Correo] Error enviando correo a ${to}:`,
+      error,
+    );
     return { sent: false, error: error.message };
   }
 }
@@ -112,19 +129,30 @@ export async function sendRecoveryEmail({ to, userName = 'Usuario', code, minute
 /**
  * Servicio para enviar mensajes SMS vía Twilio u otro proveedor REST.
  */
-export async function sendRecoverySms({ to, userName = 'Usuario', code, minutesValid = 15 }: SmsParams) {
+export async function sendRecoverySms({
+  to,
+  userName = "Usuario",
+  code,
+  minutesValid = 15,
+}: SmsParams) {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const fromPhone = process.env.TWILIO_PHONE_NUMBER;
 
   if (!accountSid || !authToken || !fromPhone) {
-    console.warn(`\n[Notificaciones - SMS] ⚠️ Credenciales de SMS (Twilio) no configuradas en el archivo .env.`);
-    console.warn(`[Notificaciones - SMS] Código para celular ${to}: ${code} (Válido por ${minutesValid} minutos)`);
-    console.warn(`Para enviar SMS reales, añade TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN y TWILIO_PHONE_NUMBER a tu .env.\n`);
+    console.warn(
+      `\n[Notificaciones - SMS] ⚠️ Credenciales de SMS (Twilio) no configuradas en el archivo .env.`,
+    );
+    console.warn(
+      `[Notificaciones - SMS] Código para celular ${to}: ${code} (Válido por ${minutesValid} minutos)`,
+    );
+    console.warn(
+      `Para enviar SMS reales, añade TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN y TWILIO_PHONE_NUMBER a tu .env.\n`,
+    );
     return {
       sent: false,
-      reason: 'MISSING_SMS_CONFIG',
-      message: 'Servicio SMS no configurado en el servidor (.env).',
+      reason: "MISSING_SMS_CONFIG",
+      message: "Servicio SMS no configurado en el servidor (.env).",
     };
   }
 
@@ -132,8 +160,8 @@ export async function sendRecoverySms({ to, userName = 'Usuario', code, minutesV
     const messageBody = `[Macollo Invernadero] Hola ${userName}, tu código de seguridad es: ${code}. Válido por ${minutesValid} min. No lo compartas.`;
 
     // Normalizar número telefónico (agregar prefijo si falta)
-    let formattedTo = to.replace(/[\s\-\(\)]/g, '');
-    if (!formattedTo.startsWith('+')) {
+    let formattedTo = to.replace(/[\s\-\(\)]/g, "");
+    if (!formattedTo.startsWith("+")) {
       // Si es número de 10 dígitos (Colombia), agregar +57
       if (formattedTo.length === 10) {
         formattedTo = `+57${formattedTo}`;
@@ -142,7 +170,8 @@ export async function sendRecoverySms({ to, userName = 'Usuario', code, minutesV
       }
     }
 
-    const authHeader = 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+    const authHeader =
+      "Basic " + Buffer.from(`${accountSid}:${authToken}`).toString("base64");
     const endpoint = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
 
     const bodyParams = new URLSearchParams({
@@ -152,26 +181,120 @@ export async function sendRecoverySms({ to, userName = 'Usuario', code, minutesV
     });
 
     const response = await fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: authHeader,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       body: bodyParams.toString(),
     });
 
-    const result = await response.json() as any;
+    const result = (await response.json()) as any;
 
     if (!response.ok) {
       console.error(`[Notificaciones - SMS] Error de Twilio:`, result);
-      return { sent: false, error: result.message || 'Error al enviar SMS' };
+      return { sent: false, error: result.message || "Error al enviar SMS" };
     }
 
-    console.log(`[Notificaciones - SMS] SMS enviado exitosamente a ${formattedTo}. SID: ${result.sid}`);
+    console.log(
+      `[Notificaciones - SMS] SMS enviado exitosamente a ${formattedTo}. SID: ${result.sid}`,
+    );
     return { sent: true, sid: result.sid };
-
   } catch (error: any) {
     console.error(`[Notificaciones - SMS] Error al enviar SMS a ${to}:`, error);
+    return { sent: false, error: error.message };
+  }
+}
+
+export interface WeeklySummaryData {
+  fincaNombre: string;
+  totalLecturas: number;
+  plantasConDatos: number;
+  phPromedio: number | null;
+  tempInteriorPromedio: number | null;
+  criticas: number;
+  vulnerables: number;
+  ultimaFecha: string;
+  detalles: string[];
+}
+
+export async function sendWeeklySummaryEmail({
+  to,
+  userName = "Usuario",
+  data,
+}: {
+  to: string;
+  userName?: string;
+  data: WeeklySummaryData;
+}) {
+  const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
+  const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
+  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+  const smtpPort = parseInt(process.env.SMTP_PORT || "465", 10);
+  const fromAddress =
+    process.env.SMTP_FROM ||
+    `"Macollo Invernadero" <${smtpUser || "no-reply@macollo.com"}>`;
+
+  if (!smtpUser || !smtpPass) {
+    return {
+      sent: false,
+      reason: "MISSING_SMTP_CONFIG",
+      message: "El servicio SMTP no está configurado en el servidor (.env).",
+    };
+  }
+
+  const fila = (label: string, value: string) =>
+    `<tr><td style="padding:8px 0;color:#64748b;">${label}</td><td style="padding:8px 0;font-weight:700;color:#064e3b;text-align:right;">${value}</td></tr>`;
+
+  const detalles =
+    data.detalles.length > 0
+      ? `<ul style="margin:12px 0 0;padding-left:20px;color:#475569;font-size:13px;line-height:1.6;">${data.detalles
+          .map((item) => `<li>${item}</li>`)
+          .join("")}</ul>`
+      : `<p style="font-size:13px;color:#16a34a;margin:12px 0 0;">Sin alertas críticas esta semana. 🌱</p>`;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: { user: smtpUser, pass: smtpPass },
+    });
+
+    const html = `
+    <!DOCTYPE html>
+    <html lang="es"><head><meta charset="UTF-8"></head>
+    <body style="font-family:'Segoe UI',Tahoma,sans-serif;background:#f8fafc;margin:0;padding:24px;color:#1e293b;">
+      <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;border:1px solid #e2e8f0;">
+        <h1 style="font-size:22px;color:#047857;margin:0 0 4px;">🌿 Macollo</h1>
+        <p style="font-size:13px;color:#64748b;margin:0 0 20px;">Resumen semanal del invernadero</p>
+        <p style="font-size:14px;line-height:1.6;color:#475569;">Hola <strong>${userName}</strong>, este es el estado de <strong>${data.fincaNombre}</strong>.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:12px;">
+          ${fila("Lecturas registradas", String(data.totalLecturas))}
+          ${fila("Plantas con datos", String(data.plantasConDatos))}
+          ${fila("pH promedio", data.phPromedio === null ? "Sin datos" : data.phPromedio.toFixed(2))}
+          ${fila("Temperatura interior promedio", data.tempInteriorPromedio === null ? "Sin datos" : `${data.tempInteriorPromedio.toFixed(1)} °C`)}
+          ${fila("Plantas críticas", String(data.criticas))}
+          ${fila("Plantas vulnerables", String(data.vulnerables))}
+          ${fila("Última medición", data.ultimaFecha || "Sin registros")}
+        </table>
+        <h2 style="font-size:15px;color:#065f46;margin:24px 0 0;">Alertas de la semana</h2>
+        ${detalles}
+        <p style="font-size:12px;color:#94a3b8;margin-top:28px;border-top:1px solid #f1f5f9;padding-top:16px;text-align:center;">Macollo &copy; ${new Date().getFullYear()} — Monitoreo inteligente de invernaderos</p>
+      </div>
+    </body></html>`;
+
+    const info = await transporter.sendMail({
+      from: fromAddress,
+      to,
+      subject: `🌿 Resumen semanal — ${data.fincaNombre}`,
+      text: `Hola ${userName},\n\nResumen de ${data.fincaNombre}:\n- Lecturas: ${data.totalLecturas}\n- Plantas con datos: ${data.plantasConDatos}\n- pH promedio: ${data.phPromedio ?? "Sin datos"}\n- Temperatura interior promedio: ${data.tempInteriorPromedio ?? "Sin datos"}\n- Plantas críticas: ${data.criticas}\n- Plantas vulnerables: ${data.vulnerables}\n- Última medición: ${data.ultimaFecha || "Sin registros"}\n\n${data.detalles.join("\n")}`,
+      html,
+    });
+
+    return { sent: true, messageId: info.messageId };
+  } catch (error: any) {
+    console.error("[Notificaciones] Error enviando resumen semanal:", error);
     return { sent: false, error: error.message };
   }
 }

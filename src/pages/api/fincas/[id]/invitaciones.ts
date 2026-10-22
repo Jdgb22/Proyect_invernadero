@@ -11,6 +11,7 @@ import {
   forbidden,
   notFound,
   parseId,
+  parseJsonBody,
 } from "../../../../backend/services/authz";
 import {
   createInvitacion,
@@ -31,7 +32,7 @@ export const GET: APIRoute = async ({ request, params }) => {
   if (!fincaId) return notFound("Finca no encontrada.");
 
   const access = await getFincaAccess(fincaId, user);
-  if (!canManageFinca(user.role, access)) {
+  if (!canManageFinca(access)) {
     return forbidden(
       "Solo el dueño, Admins o Superadmins pueden ver las invitaciones.",
     );
@@ -49,18 +50,13 @@ export const POST: APIRoute = async ({ request, params }) => {
   if (!fincaId) return notFound("Finca no encontrada.");
 
   const access = await getFincaAccess(fincaId, user);
-  if (!canManageFinca(user.role, access)) {
+  if (!canManageFinca(access)) {
     return forbidden(
       "Solo el dueño, Admins o Superadmins pueden generar invitaciones.",
     );
   }
 
-  let body: unknown = {};
-  try {
-    body = await request.json();
-  } catch {
-    body = {};
-  }
+  const body = (await parseJsonBody(request)) ?? {};
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) {
     return json(

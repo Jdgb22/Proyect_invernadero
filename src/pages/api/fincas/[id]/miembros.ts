@@ -25,7 +25,7 @@ export const GET: APIRoute = async ({ request, params }) => {
   if (!fincaId) return notFound("Finca no encontrada.");
 
   const access = await getFincaAccess(fincaId, user);
-  if (!canManageFinca(user.role, access)) {
+  if (!canManageFinca(access)) {
     return forbidden(
       "Solo el dueño, Admins o Superadmins pueden ver los miembros.",
     );
@@ -43,7 +43,7 @@ export const DELETE: APIRoute = async ({ request, params }) => {
   if (!fincaId) return notFound("Finca no encontrada.");
 
   const access = await getFincaAccess(fincaId, user);
-  if (!canManageFinca(user.role, access)) {
+  if (!canManageFinca(access)) {
     return forbidden(
       "Solo el dueño, Admins o Superadmins pueden expulsar miembros.",
     );

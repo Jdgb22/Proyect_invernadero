@@ -181,7 +181,7 @@ El modelo de datos agronómicos es por finca (una fila de `lecturas` = una visit
 
 - **Auth**: persiste en PG (dominio §2).
 - **Datos agronómicos**: ahora **sí persisten**. `POST /api/sync-sheets` (tras exigir sesión + acceso a la finca activa) hace `INSERT … ON CONFLICT` en `lecturas`. `Metrics.astro` e `Historial.astro` leen desde PG vía `getLecturasByFinca(fincaId)` y se scopean por `finca_activa`. `GET /api/fincas/:id/lecturas` expone las lecturas con control de membresía.
-- **Fallback**: `metricsData.ts` (`initialMetricsData = []`) solo se usa cuando no hay finca activa; ya no es la fuente del tablero.
+- **Fallback**: sin finca activa se usa `buildEmptyPlantsGrid()` (matriz de 20 plantas sin mediciones); la fuente del tablero son las lecturas de la BD.
 
 ---
 
