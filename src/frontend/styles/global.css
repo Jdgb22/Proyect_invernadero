@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+/*
+ * Tema oscuro:
+ *  - .dark  → el usuario eligió "oscuro" (o el sistema está en oscuro).
+ *  - .light → el usuario eligió "claro" y debe ignorar la preferencia del sistema.
+ *  - Sin clase → sigue la preferencia del dispositivo incluso sin JavaScript.
+ */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) {
+      @slot;
+    }
+  }
+}

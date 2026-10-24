@@ -46,7 +46,7 @@ flowchart TD
     G --> H[Mostrar notificación Descarga completada]
 ```
 
-> Solo `.xlsx` (CSV no implementado). Hojas: Mediciones de Hoy, Historial Completo, Rangos Agronómicos.
+> Soporta `.xlsx` (3 hojas: Mediciones de Hoy, Historial Completo, Rangos Agronómicos con ExcelJS) y `.csv` (`GET /api/export-csv`).
 
 ## AD-004: Flujo de Importación desde Google Sheets
 

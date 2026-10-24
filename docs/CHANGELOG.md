@@ -1,4 +1,4 @@
-# Changelog — Proyecto Invernadero (Macollo)
+# Changelog — Macollo
 
 > Reconstruido desde `git log` (oct-2026). En adelante: entrada por release según CONTRIBUTING.
 
@@ -10,10 +10,10 @@
 
 ### Added
 
-- **Multi-tenant con 4 roles** (`Superadmin`, `Admin`, `Agropecuario`, `Campesino`): migración `src/db/migrations/001-roles-fincas.sql` + tablas `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas`, `lecturas`.
-- Servicios `src/backend/services/authz.ts` (autorización Zero Trust, rol relee de BD, cookie `finca_activa`), `fincas.ts` (CRUD, invitaciones con código nanoid, canje atómico) y `lecturas.ts` (persistencia por finca).
-- APIs de fincas/invitaciones/miembros/admin + `GET|POST /api/fincas/:id/lecturas`; `POST /api/auth/check-availability` (email/celular) que el wizard consulta antes del paso 2. El registro **ya no acepta `fincaCode`**: las invitaciones se canjean solo en `/api/invitaciones/usar`.
-- Páginas `/fincas`, `/fincas/[id]`, `/invitar/[codigo]`, `/admin`; selector de finca en navbar; badge de rol real en Settings.
+- **Multi-tenant con 4 roles** (`Superadmin`, `Admin`, `Agropecuario`, `Campesino`): migración `src/db/migrations/001-roles-farms.sql` + tablas `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas`, `lecturas`.
+- Servicios `src/backend/services/authz.ts` (autorización Zero Trust, rol relee de BD, cookie `finca_activa`), `farms.ts` (CRUD, invitaciones con código nanoid, canje atómico) y `readings.ts` (persistencia por finca).
+- APIs de fincas/invitaciones/miembros/admin + `GET|POST /api/farms/:id/readings`; `POST /api/auth/check-availability` (email/celular) que el wizard consulta antes del paso 2. El registro **ya no acepta `fincaCode`**: las invitaciones se canjean solo en `/api/invitations/use`.
+- Páginas `/farms`, `/farms/[id]`, `/invite/[code]`, `/admin`; selector de finca en navbar; badge de rol real en Settings.
 - Datos agronómicos separados por finca: `sync-sheets` persiste en `lecturas` y `Metrics`/`Historial` leen desde PG scopeados por finca activa; export Excel por finca.
 - Scripts `scripts/seed-admin.mjs` (cuentas privilegiadas) y `scripts/seed-demo.mjs` (Finca demo + 20 plantas + lecturas).
 - **Rol elegible al registrarse**: `accountType` ∈ {`Campesino` (def.), `Agropecuario`} (nuevas dependencias `nanoid` + `nanoid-dictionary`).
@@ -27,12 +27,21 @@
 - `register`/`forgot`/`reset-password`: errores genéricos, contraseña mín. 8 en servidor y cliente.
 - `astro.config.mjs`: `security.checkOrigin: true`.
 - `siata`, `sync-sheets`, `export-excel`: ahora exigen sesión (y acceso a la finca activa).
-- Rol: enum de 4 valores; etiquetas de rol en `/metrics` e `/historial` usan el rol real.
-- `POST /api/sync-sheets`: restringido al **dueño** de la finca activa (`403` para miembros y staff); la UI de `/historial` oculta el botón a quien no sea dueño. Importar Excel/CSV (.csv/.xlsx) sigue abierto a cualquier miembro.
-- `/signin` pasa a ser **alias** de `/` (redirige conservando `?desde=`/`?codigo=`); el login/registro vive en la portada `Welcome`.
+- Rol: enum de 4 valores; etiquetas de rol en `/metrics` e `/history` usan el rol real.
+- `POST /api/sync-sheets`: restringido al **dueño** de la finca activa (`403` para miembros y staff); la UI de `/history` oculta el botón a quien no sea dueño. Importar Excel/CSV (.csv/.xlsx) sigue abierto a cualquier miembro.
+- `/signin` pasa a ser **alias** de `/` (redirige conservando `?desde=`/`?code=`); el login/registro vive en la portada `Welcome`.
 - `DELETE /api/admin/users/:id`: ahora **rechaza con `409`** borrar a un usuario dueño de finca (la FK `fincas.dueno_id` es `ON DELETE RESTRICT`), evitando un `500`; el texto de confirmación del panel se corrigió.
 
-### Security
+### Galería y diagnóstico
+
+- **Galería por finca**: nueva ruta `/gallery` y `/gallery/[id]` con grid `object-contain`, vista ampliable con zoom, descarga/compartir. Fotos compartidas entre todos los miembros de la finca activa.
+- **Subida automática**: al capturar o seleccionar imagen desde el modal "Escanear Trips" se guarda en `public/uploads/gallery/` vía `POST /api/gallery/upload` con `finca_id` y `user_id`.
+- **API galería**: `GET /api/gallery/[id]/file` sirve imágenes con control por finca activa.
+- **Diagnóstico Trips**: modal con acceso a cámara (soporta HTTP por IP abriendo cámara nativa) y reenvío a servicio ML. Se guarda foto en galería de la finca activa.
+- **Navbar**: añadido enlace "Galería" cuando hay finca activa.
+- **Red local**: script `scripts/run-lan.sh` y `pnpm run dev:lan` para probar desde celular en misma Wi-Fi (puerto 4321).
+
+## Security
 
 - Eliminados artefactos con datos (`test-db.js`, `cookies.txt`, `scratch.js`); `.gitignore` endurecido.
 - Autorización por handler (no solo middleware) en todas las rutas de datos.
@@ -51,6 +60,14 @@
 - `middleware.ts`: security headers (DENY, nosniff, HSTS, CSP) (`1ccbf24`).
 - Husky pre-commit: prettier + bloqueo de secretos (`1ccbf24`).
 - Widget clima: viento (km/h) en vez de irradiación.
+
+## 2026-10-23 — Galería, diagnóstico Trips y red local
+
+- Galería por finca con vista ampliable y subida automática desde escáner.
+- Soporte de cámara en HTTP por IP (usa selector/cámara nativa).
+- Integración con API externa [macollo-trips-api](https://github.com/VoctorMCL/macollo-trips-api) (BioCLIP 2.5) para detección de trips.
+- `pnpm run dev:lan` + script para pruebas en red local.
+- `.env.example` actualizado con variables ML/SMTP/Auth.
 
 ## 2026-10-08 — Tandem seguridad + docs
 

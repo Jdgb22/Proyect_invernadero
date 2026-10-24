@@ -10,41 +10,18 @@ interface WeatherData {
 
 // Bounding box aproximado del Valle de Aburrá (Área Metropolitana)
 // Latitudes: 6.00 a 6.50, Longitudes: -75.75 a -75.40
-/**
- * Verifica si unas coordenadas geográficas dadas pertenecen al Área Metropolitana
- * del Valle de Aburrá (Medellín y municipios aledaños).
- *
- * @param {number} lat - Latitud en grados decimales.
- * @param {number} lon - Longitud en grados decimales.
- * @returns {boolean} `true` si está dentro del perímetro, `false` en caso contrario.
- */
 export function isValleDeAburra(lat: number, lon: number): boolean {
   return lat >= 6.0 && lat <= 6.5 && lon >= -75.75 && lon <= -75.4;
 }
 
-/**
- * Obtiene los datos meteorológicos actuales para unas coordenadas dadas.
- *
- * Esta función es un agregador inteligente:
- * 1. Si las coordenadas están en Medellín, intenta usar primero el servicio local SIATA
- *    para obtener mediciones más precisas (como temperatura local).
- * 2. Utiliza Open-Meteo como base global, o como respaldo total si SIATA falla.
- *
- * @param {number} lat - Latitud a consultar.
- * @param {number} lon - Longitud a consultar.
- * @param {boolean} [isFallback=false] - Indica si esta petición es un reintento de respaldo.
- * @returns {Promise<WeatherData>} Objeto consolidado con todas las métricas climáticas.
- */
 export async function fetchWeatherData(
   lat: number,
   lon: number,
   isFallback = false,
+  fetcher: typeof fetch = fetch,
 ): Promise<WeatherData> {
-  // El servicio de SIATA está temporalmente fuera de línea o con timeout.
-  // Usamos Open-Meteo directamente para evitar el retraso de 3 segundos
-  // y asegurar que la interfaz responda instantáneamente.
   try {
-    const openMeteoData = await fetchOpenMeteo(lat, lon);
+    const openMeteoData = await fetchOpenMeteo(lat, lon, fetcher);
     return {
       ...openMeteoData,
       source: "Open-Meteo (Global)",
@@ -52,7 +29,6 @@ export async function fetchWeatherData(
     };
   } catch (error) {
     console.error("Error al obtener Open-Meteo:", error);
-    // Datos de emergencia si falla la red
     return {
       temperature: 22,
       humidity: 60,
@@ -65,9 +41,10 @@ export async function fetchWeatherData(
   }
 }
 
-async function fetchOpenMeteo(lat: number, lon: number) {
-  const res = await fetch(
+async function fetchOpenMeteo(lat: number, lon: number, fetcher: typeof fetch) {
+  const res = await fetcher(
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=precipitation_probability&timezone=auto`,
+    { signal: AbortSignal.timeout(10000) },
   );
 
   if (!res.ok)

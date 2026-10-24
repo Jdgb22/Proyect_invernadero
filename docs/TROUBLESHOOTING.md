@@ -1,4 +1,4 @@
-# Troubleshooting (Runbook) — Proyecto Invernadero
+# Troubleshooting (Runbook) — Macollo
 
 > Síntoma → causa probable → fix. Profundidad dev en [README](../README.md) y [DEPLOYMENT](./DEPLOYMENT.md).
 
@@ -32,7 +32,7 @@
 | `[PostgreSQL] Error…` / `connectionTimeout` | `psql $DATABASE_URL -c 'SELECT 1';` revisar host/puerto/firewall y SSL en prod.                                                                      |
 | No puedo eliminar un usuario (`409`)        | Si es **dueño de finca**, la FK `fincas.dueno_id` es `ON DELETE RESTRICT`: elimina/transfiere sus fincas antes (Fincas → Eliminar, solo Superadmin). |
 | `accounts`/`sessions` vacías                | Esperado sin OAuth (login por credenciales + JWT); no es un error.                                                                                   |
-| `relation users does not exist`             | Falta migrar: `psql $DATABASE_URL -f src/db/auth-schema.sql` (+ `invernadero.sql`).                                                                  |
+| `relation users does not exist`             | Falta migrar: `psql $DATABASE_URL -f src/db/auth-schema.sql` (+ `greenhouse-schema.sql`).                                                            |
 | `duplicate key email` en registro           | Esperado si el correo existe (400 guiado, no bug).                                                                                                   |
 | Códigos de recuperación huérfanos           | `DELETE FROM verification_token WHERE expires < NOW();`                                                                                              |
 

@@ -1,5 +1,4 @@
 ---
-// Welcome.astro
 const today = new Date().toISOString().slice(0, 10);
 ---
 
@@ -631,7 +630,6 @@ const today = new Date().toISOString().slice(0, 10);
       console.error("No se pudo cargar auth-astro/client", err);
     }
 
-  // Elementos de pestañas y contenedores
   const authTabsContainer = document.getElementById("auth-tabs-container")!;
   const tabLoginBtn = document.getElementById("tab-login-btn") as HTMLButtonElement;
   const tabRegisterBtn = document.getElementById("tab-register-btn") as HTMLButtonElement;
@@ -645,26 +643,22 @@ const today = new Date().toISOString().slice(0, 10);
   const authSubtitle = document.getElementById("auth-subtitle")!;
   const googleAuthContainer = document.getElementById("google-auth-container")!;
 
-    // Formularios
     const loginForm = document.getElementById("login-form") as HTMLFormElement;
     const registerForm = document.getElementById("register-form") as HTMLFormElement;
     const forgotContainer = document.getElementById("forgot-container") as HTMLDivElement;
     const forgotStep1Form = document.getElementById("forgot-step1-form") as HTMLFormElement;
     const forgotStep2Form = document.getElementById("forgot-step2-form") as HTMLFormElement;
 
-    // Botones y estados de login
     const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
     const btnText = document.getElementById("btn-text")!;
     const btnSpinner = document.getElementById("btn-spinner")!;
     const errorMsg = document.getElementById("error-message") as HTMLElement;
 
-    // Botones y estados de registro
     const registerBtn = document.getElementById("register-btn") as HTMLButtonElement;
     const regBtnText = document.getElementById("reg-btn-text")!;
     const regBtnSpinner = document.getElementById("reg-btn-spinner")!;
     const regFeedbackMsg = document.getElementById("reg-feedback-message") as HTMLElement;
 
-  // Pasos del registro
   const regStep1 = document.getElementById("reg-step-1") as HTMLElement | null;
   const regStep2 = document.getElementById("reg-step-2") as HTMLElement | null;
   const regNextBtn = document.getElementById("reg-next-btn");
@@ -693,7 +687,6 @@ const today = new Date().toISOString().slice(0, 10);
     currentRegStep = step;
   }
 
-  // Botones y estados de recuperación
   const btnForgotSend = document.getElementById("btn-forgot-send") as HTMLButtonElement;
   const btnForgotSendText = document.getElementById("btn-forgot-send-text")!;
   const btnForgotSendSpinner = document.getElementById("btn-forgot-send-spinner")!;
@@ -705,16 +698,13 @@ const today = new Date().toISOString().slice(0, 10);
 
     let activeForgotIdentifier = "";
 
-    // Botón Google
     const googleBtn = document.getElementById("google-btn") as HTMLButtonElement;
 
-  // Video y controles
   const welcomeVideo = document.getElementById("welcome-video") as HTMLVideoElement;
   const audioToggleBtn = document.getElementById("audio-toggle-btn");
   const iconMuted = document.getElementById("icon-muted");
   const iconUnmuted = document.getElementById("icon-unmuted");
 
-  // Mostrar / ocultar contraseña en Login
   const togglePasswordBtn = document.getElementById("toggle-password-btn");
   const passwordInput = document.getElementById("password") as HTMLInputElement;
   const eyeShow = document.getElementById("eye-show");
@@ -729,7 +719,6 @@ const today = new Date().toISOString().slice(0, 10);
     });
   }
 
-  // Mostrar / ocultar contraseña en Registro
   const toggleRegPasswordBtn = document.getElementById("toggle-reg-password-btn");
   const regPasswordInput = document.getElementById("reg-password") as HTMLInputElement;
   const eyeRegShow = document.getElementById("eye-reg-show");
@@ -744,7 +733,6 @@ const today = new Date().toISOString().slice(0, 10);
     });
   }
 
-  // Mostrar / ocultar contraseña en Recuperación
   const toggleForgotPasswordBtn = document.getElementById("toggle-forgot-password-btn");
   const forgotNewPasswordInput = document.getElementById("forgot-new-password") as HTMLInputElement;
   const eyeForgotShow = document.getElementById("eye-forgot-show");
@@ -759,7 +747,6 @@ const today = new Date().toISOString().slice(0, 10);
     });
   }
 
-  // Audio video toggle
   if (audioToggleBtn && welcomeVideo && iconMuted && iconUnmuted) {
     audioToggleBtn.addEventListener("click", () => {
       welcomeVideo.muted = !welcomeVideo.muted;
@@ -783,7 +770,6 @@ const today = new Date().toISOString().slice(0, 10);
   const MODE_RANK: Record<string, number> = { login: 0, register: 1, forgot: 2 };
   let currentMode = "login";
 
-  // Función para cambiar de vista (Login / Registro / Recuperar Contraseña)
   function setAuthMode(mode: 'login' | 'register' | 'forgot') {
     const dir: 1 | -1 = (MODE_RANK[mode] ?? 1) >= (MODE_RANK[currentMode] ?? 0) ? -1 : 1;
     currentMode = mode;
@@ -792,7 +778,6 @@ const today = new Date().toISOString().slice(0, 10);
     registerForm.classList.add("hidden");
     forgotContainer.classList.add("hidden");
 
-    // Limpiar alertas
     errorMsg.classList.add("hidden");
     regFeedbackMsg.classList.add("hidden");
     forgotFeedbackMsg.classList.add("hidden");
@@ -847,7 +832,7 @@ const today = new Date().toISOString().slice(0, 10);
   const urlParams = new URLSearchParams(window.location.search);
   const authError = urlParams.get('error');
 
-  // Destino tras iniciar sesión (?desde=/invitar/XXXX). Solo rutas internas, evita open-redirect.
+  // Destino tras iniciar sesión (?desde=/invite/XXXX). Solo rutas internas, evita open-redirect.
   const rawDesde = urlParams.get('desde') || '';
   const safeDesde = /^\/(?!\/)/.test(rawDesde) ? rawDesde : '/';
   if (authError && errorMsg) {
@@ -974,13 +959,21 @@ const today = new Date().toISOString().slice(0, 10);
       let hasError = false;
 
       if (typeof signIn === 'function') {
-        const result = await signIn("credentials", {
+        const result: any = await signIn("credentials", {
           email: username,
           password: password,
           redirect: false,
           callbackUrl: safeDesde,
         } as any);
-        if ((result as any)?.error) hasError = true;
+
+        if (result?.error) {
+          hasError = true;
+        } else if (result instanceof Response) {
+          // auth-astro devuelve la Response del callback cuando falla el login
+          // (con redirect:false), no un objeto con `.error`.
+          const data = await result.clone().json().catch(() => null);
+          hasError = String(data?.url || "").includes("error=");
+        }
       } else {
         const csrfRes = await fetch('/api/auth/csrf');
         const csrfData = await csrfRes.json();

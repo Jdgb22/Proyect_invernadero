@@ -3,11 +3,9 @@ import { pool } from "../../../db/client";
 import {
   sendRecoveryEmail,
   sendRecoverySms,
-} from "../../../services/notifications";
+} from "../../../backend/services/notifications";
+import { json, parseJsonBody } from "../../../backend/services/authz";
 
-/**
- * Función auxiliar para enmascarar correos o teléfonos por privacidad
- */
 function maskIdentifier(id: string, isEmail: boolean): string {
   if (isEmail) {
     const parts = id.split("@");
@@ -37,18 +35,22 @@ function maskIdentifier(id: string, isEmail: boolean): string {
  */
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const data = (await request.json()) as Record<string, unknown>;
+    const body = await parseJsonBody(request);
+    if (body === null) {
+      return json({ message: "Cuerpo JSON inválido." }, 400);
+    }
+    const data = body as Record<string, unknown>;
     const rawIdentifier =
       typeof data.identifier === "string" ? data.identifier : "";
     const identifier = rawIdentifier.trim();
 
     if (!identifier) {
-      return new Response(
-        JSON.stringify({
+      return json(
+        {
           message:
             "Por favor ingresa tu correo electrónico o número de celular.",
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        },
+        400,
       );
     }
 
@@ -62,12 +64,12 @@ export const POST: APIRoute = async ({ request }) => {
     );
 
     if (userResult.rows.length === 0) {
-      return new Response(
-        JSON.stringify({
+      return json(
+        {
           message:
             "No encontramos ninguna cuenta asociada a este correo o celular.",
-        }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
+        },
+        404,
       );
     }
 
@@ -119,8 +121,8 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    return new Response(
-      JSON.stringify({
+    return json(
+      {
         message: sendResult.sent
           ? `Se ha enviado un código de 6 dígitos a tu ${destinationType} (${maskedTarget}). Válido por 15 minutos.`
           : `No se pudo enviar el código a tu ${destinationType} (${maskedTarget}). Intenta nuevamente.`,
@@ -128,17 +130,17 @@ export const POST: APIRoute = async ({ request }) => {
         maskedTarget,
         identifier: canonicalId,
         sent: sendResult.sent,
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
+      },
+      200,
     );
   } catch (error: unknown) {
     console.error("[ForgotPassword] Error:", error);
-    return new Response(
-      JSON.stringify({
+    return json(
+      {
         message:
           "Error interno al procesar la solicitud. Intenta de nuevo más tarde.",
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+      },
+      500,
     );
   }
 };

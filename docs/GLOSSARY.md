@@ -1,4 +1,4 @@
-# Glosario — Proyecto Invernadero (Macollo)
+# Glosario — Macollo
 
 ## Agronómico
 
@@ -31,4 +31,4 @@
 - **CSV-first:** ingesta Sheets sin credenciales vía `export?format=csv`.
 - **Finca / lectura:** cada finca tiene 20 plantas; una `lecturas` guarda una visita a una planta (pH, temperaturas, humedad, altura, fase, sanidad…).
 - **AQI:** índice de calidad del aire (waqi.info) mostrado en el Dashboard.
-- **MACOLLO:** marca del producto (logo `gulupa.svg`); **Proyecto Invernadero** es el proyecto académico que lo contiene.
+- **MACOLLO:** marca y nombre del proyecto (logo `gulupa.svg`).

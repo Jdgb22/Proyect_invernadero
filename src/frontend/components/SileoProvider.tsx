@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { Toaster, sileo } from 'sileo';
-import 'sileo/styles.css';
+import { useEffect } from "react";
+import { Toaster, sileo } from "sileo";
+import "sileo/styles.css";
 
 export default function SileoProvider() {
   useEffect(() => {

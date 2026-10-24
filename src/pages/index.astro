@@ -1,11 +1,12 @@
 ---
 import { getSession } from "auth-astro/server";
 import Dashboard from "../frontend/components/Dashboard.astro";
-import SinFinca from "../frontend/components/SinFinca.astro";
+import NoFarm from "../frontend/components/NoFarm.astro";
 import Welcome from "../frontend/components/Welcome.astro";
 import Layout from "../frontend/layouts/Layout.astro";
-import Navbar from "../frontend/components/navbar.astro";
-import { resolveActiveFinca } from "../backend/services/fincas";
+import Navbar from "../frontend/components/Navbar.astro";
+import TripsDiagnosticModal from "../frontend/components/TripsDiagnosticModal.astro";
+import { resolveActiveFinca } from "../backend/services/farms";
 import { getFincaCookie } from "../backend/services/authz";
 
 const session = await getSession(Astro.request);
@@ -30,7 +31,8 @@ if (esStaff && (!tieneFincaSeleccionada || !ctx?.finca)) {
     isAuthenticated ? (
       <>
         <Navbar />
-        {tieneFincaActiva ? <Dashboard /> : <SinFinca tieneFincas={tieneFincas} />}
+        {tieneFincaActiva ? <Dashboard /> : <NoFarm tieneFincas={tieneFincas} />}
+        <TripsDiagnosticModal />
       </>
     ) : (
       <Welcome />

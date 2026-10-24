@@ -1,7 +1,25 @@
 ---
-// Dashboard.astro
-import { getAllPlantsGrid, type PlantMatrixItem } from "../../backend/services/metricsData";
-const plants: PlantMatrixItem[] = getAllPlantsGrid();
+import {
+  buildEmptyPlantsGrid,
+  buildPlantsGridFromRecords,
+  type PlantMatrixItem,
+} from "../../shared/plantMatrix";
+import { toScriptJson } from "../../shared/serialize";
+import { resolveActiveFinca } from "../../backend/services/farms";
+import { getLecturasByFinca } from "../../backend/services/readings";
+
+const ctx = await resolveActiveFinca(Astro.request);
+const plants: PlantMatrixItem[] = ctx?.finca
+  ? buildPlantsGridFromRecords(await getLecturasByFinca(ctx.finca.id))
+  : buildEmptyPlantsGrid();
+const fincaId = ctx?.finca?.id ?? "global";
+
+const registros = plants.flatMap((p) => p.history);
+const tieneRegistros = registros.length > 0;
+const ultimaFecha = registros
+  .map((r) => r.fecha)
+  .sort()
+  .at(-1) ?? "";
 ---
 
 <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 overflow-hidden">
@@ -11,9 +29,26 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
         <h2 class="text-2xl font-bold text-green-950 dark:text-white mb-1">Dashboard Principal</h2>
         <p class="text-green-700 dark:text-stone-300 text-sm">Monitoreo de cultivos reales y simulación ambiental del invernadero.</p>
       </div>
-      <div id="dashboard-sync-indicator" class="inline-flex max-w-full items-center justify-center text-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-stone-100 dark:bg-stone-900/60 text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700">
-        <span class="w-2 h-2 rounded-full bg-stone-400"></span>
-        <span id="dashboard-sync-text">Esperando sincronización de datos reales</span>
+      <div
+        id="dashboard-sync-indicator"
+        class:list={[
+          "inline-flex max-w-full items-center justify-center text-center gap-2 px-3 py-1 rounded-full text-xs font-bold border",
+          tieneRegistros
+            ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800"
+            : "bg-stone-100 dark:bg-stone-900/60 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700",
+        ]}
+      >
+        <span
+          class:list={[
+            "w-2 h-2 rounded-full",
+            tieneRegistros ? "bg-emerald-500 animate-pulse" : "bg-stone-400",
+          ]}
+        ></span>
+        <span id="dashboard-sync-text">
+          {tieneRegistros
+            ? `Datos en Vivo (${ultimaFecha}) • ${registros.length} tomas reales`
+            : "Sin mediciones registradas"}
+        </span>
       </div>
     </div>
 
@@ -66,7 +101,11 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
                 ? "bg-yellow-400"
                 : "bg-lime-500";
 
-          const humedad = !hasData ? "--" : (isCritical ? "35%" : isWarning ? "48%" : "65%");
+          const humedad = !hasData
+            ? "--"
+            : m.humedad !== null && m.humedad !== undefined
+              ? `${m.humedad}%`
+              : "N/D";
           const temp = !hasData ? "N/D" : (m.tempInterna !== null && m.tempInterna !== undefined ? `${m.tempInterna}°C` : "N/D");
           const plantIcon = !hasData ? "🌱" : (isCritical ? "🥀" : isWarning ? "🌿" : "🪴");
           const plantStatus = !hasData ? 'Esperando datos' : (isCritical ? 'Crítico' : isWarning ? 'Atención' : 'Óptimo');
@@ -87,9 +126,16 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
               data-ph={ph}
               data-tsoil={tsoil}
               data-tair={temp}
+              data-text={
+                hasData && m.tempExterna !== null && m.tempExterna !== undefined
+                  ? `${Number(m.tempExterna).toFixed(1)}°C`
+                  : "N/D"
+              }
+              data-hum={humedad}
               data-growth={growth}
               data-prod={hasData ? m.productividad : 'Sin datos'}
               data-health={hasData ? m.sanidad : 'Sin datos'}
+              data-resp={hasData ? m.responsable : 'Equipo de Campo'}
             >
               <div class="flex justify-between items-start mb-1.5">
                 <div class="flex items-center gap-1">
@@ -220,10 +266,10 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
 </div>
 
 <!-- Plant Details Modal -->
-<div id="plant-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+<div id="plant-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4 overflow-y-auto">
   <div class="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" id="plant-modal-backdrop"></div>
   
-  <div class="relative bg-[#f4fce3] dark:bg-stone-800 rounded-2xl shadow-2xl border border-green-100 dark:border-[#166534] w-11/12 max-w-sm md:max-w-2xl p-6 md:p-8 transform scale-95 transition-transform duration-300" id="plant-modal-content">
+  <div class="relative bg-[#f4fce3] dark:bg-stone-800 rounded-2xl shadow-2xl border border-green-100 dark:border-[#166534] w-11/12 max-w-sm md:max-w-2xl p-6 md:p-8 transform scale-95 transition-transform duration-300" id="plant-modal-content" style="max-height: calc(100dvh - 2rem); overflow-y: auto;">
     <button id="close-modal-btn" class="absolute top-4 right-4 text-green-400 hover:text-green-700 dark:hover:text-green-300 bg-green-100 dark:bg-stone-700 rounded-full p-1.5 transition-colors">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
     </button>
@@ -277,22 +323,40 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
   </div>
 </div>
 
+<script is:inline define:vars={{ fincaId }}>window.__MACOLLO_FINCA_ID__ = fincaId;</script>
+<script
+  is:inline
+  id="dashboard-initial-records"
+  type="application/json"
+  set:html={toScriptJson(registros)}
+></script>
+
 <script>
   import * as THREE from "three";
+  import { getWeatherEmoji } from "../../backend/services/weather";
+  import { resolvePlantCoordinates } from "../../shared/plantMatrix";
   import {
-    fetchWeatherData,
-    getWeatherEmoji,
-  } from "../../backend/services/weather";
+    mergeRecords,
+    purgeMockStorage,
+    readStoredRecords,
+  } from "../../shared/clientStorage";
+  import type { MetricRecord } from "../../shared/plantMatrix";
+  import {
+    applyTempUnitToDocument,
+    convertTempValue,
+    getSyncIntervalMs,
+    onPreferencesChanged,
+  } from "../../shared/preferences";
+  import { showReadingAlerts } from "../../shared/alerts";
 
-  // --- CONFIGURACIÓN INICIAL ---
+  let restartWeatherPolling: (() => void) | null = null;
+
   const container = document.getElementById("three-container");
   const timeDisplay = document.getElementById("time-display");
 
   if (container) {
-    // --- ESCENA BÁSICA ---
     const scene = new THREE.Scene();
 
-    // Configurar cámara según el tamaño del contenedor
     const camera = new THREE.PerspectiveCamera(
       75,
       container.clientWidth / container.clientHeight,
@@ -302,12 +366,10 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
     // Alejar la cámara para que se vea el cielo y el sol
     camera.position.set(0, 8, 32);
 
-    // Configurar el renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
-    // Ajustar el canvas al tamaño real del contenedor (ventana o layout)
     const resizeRenderer = () => {
       const w = container.clientWidth;
       const h = container.clientHeight;
@@ -321,7 +383,6 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
       new ResizeObserver(resizeRenderer).observe(container);
     }
 
-    // Añadir un suelo simple (para notar mejor las sombras/iluminación)
     const groundGeometry = new THREE.PlaneGeometry(50, 50);
     const groundMaterial = new THREE.MeshStandardMaterial({
       color: 0x2e8b57,
@@ -332,7 +393,6 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Añadir un modelo básico del "invernadero" en el centro
     const greenhouseGeometry = new THREE.BoxGeometry(10, 5, 6);
     const greenhouseMaterial = new THREE.MeshStandardMaterial({
       color: 0xaaaaaa,
@@ -345,15 +405,12 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
     greenhouse.receiveShadow = true;
     scene.add(greenhouse);
 
-    // Luz ambiental suave para que las partes oscuras no sean completamente negras
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
     scene.add(ambientLight);
 
-    // --- 1. LUZ DEL SOL ---
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
     dirLight.castShadow = true;
 
-    // Mejorar la calidad de las sombras
     dirLight.shadow.mapSize.width = 1024;
     dirLight.shadow.mapSize.height = 1024;
     dirLight.shadow.camera.near = 0.5;
@@ -364,7 +421,6 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
     dirLight.shadow.camera.bottom = -20;
     scene.add(dirLight);
 
-    // --- 2. SOL VISUAL ---
     const sunGeometry = new THREE.SphereGeometry(2, 32, 32);
     const sunMaterial = new THREE.MeshBasicMaterial({
       color: 0xfffca3,
@@ -372,16 +428,13 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
     const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
     scene.add(sunMesh);
 
-    // --- 3. LUNA VISUAL ---
     const moonGeometry = new THREE.SphereGeometry(1.5, 32, 32);
     const moonMaterial = new THREE.MeshBasicMaterial({ color: 0xe0e0e0 });
     const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
     scene.add(moonMesh);
 
-    // --- FUNCIÓN DE CÁLCULO DE POSICIÓN ---
     function updateSun(hour: number) {
-      // Actualizar el display de tiempo
-      if (timeDisplay) {
+        if (timeDisplay) {
         const hh = Math.floor(hour).toString().padStart(2, "0");
         const mm = Math.floor((hour % 1) * 60)
           .toString()
@@ -394,8 +447,7 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
       const distanceY = 12; // Altura máxima en el cielo (cenit)
       const z = -10; // Ligeramente por detrás
 
-      // Entre las 6:00 y las 18:00 (Día)
-      if (hour >= 6 && hour <= 18) {
+        if (hour >= 6 && hour <= 18) {
         moonMesh.visible = false;
         sunMesh.visible = true;
 
@@ -422,12 +474,10 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
         }
         scene.background = skyColor;
       } else {
-        // Noche (Luna)
         sunMesh.visible = false;
         moonMesh.visible = true;
         scene.background = new THREE.Color(0x0a0a2a);
 
-        // Progreso de la noche: 18:00 (0) -> 6:00 (1)
         const nightHour = hour > 18 ? hour - 18 : hour + 6;
         const progress = nightHour / 12;
         const angle = progress * Math.PI;
@@ -444,11 +494,9 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
       }
     }
 
-    // --- BUCLE DE ANIMACIÓN ---
     function animate() {
       requestAnimationFrame(animate);
 
-      // Obtener la hora real actual
       const now = new Date();
       const currentHour =
         now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
@@ -458,11 +506,9 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
       renderer.render(scene, camera);
     }
 
-    // Activar sombras en el renderer
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // --- 3. DATOS DEL CLIMA (Predicción para el Invernadero) ---
     async function fetchWeather(lat: number, lon: number, isFallback = false) {
       try {
         const tempEl = document.getElementById("weather-temp");
@@ -472,10 +518,29 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
         const iconEl = document.getElementById("weather-icon");
         const titleEl = document.getElementById("weather-title");
 
-        const data = await fetchWeatherData(lat, lon, isFallback);
+        const data = await fetch(
+          `/api/weather?lat=${lat}&lon=${lon}&fallback=${isFallback ? "1" : "0"}`,
+        ).then(async (res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        });
+
+        (window as any).__MACOLLO_WEATHER__ = {
+          temperatureC: data.temperature,
+          humidity: data.humidity,
+          rainProbability: data.rainProbability,
+          weatherCode: data.weatherCode,
+          windSpeed: data.windSpeed,
+          isFallback: data.isFallback,
+        };
+        window.dispatchEvent(
+          new CustomEvent("macollo:weather-updated", {
+            detail: { temperatureC: data.temperature },
+          }),
+        );
 
         if (tempEl)
-          tempEl.textContent = Math.round(data.temperature).toString();
+          tempEl.textContent = Math.round(convertTempValue(data.temperature)).toString();
         if (humEl) humEl.innerHTML = `<span class="text-lg">💧</span><span class="value">${data.humidity}%</span>`;
         if (rainEl) rainEl.innerHTML = `<span class="text-lg">🌧️</span><span class="value">${data.rainProbability}%</span>`;
         if (windEl) windEl.innerHTML = `<span class="text-lg">💨</span><span class="value">${data.windSpeed} km/h</span>`;
@@ -494,9 +559,7 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
 
     async function fetchAQI(lat: number, lon: number) {
       try {
-        const token = "b3e64cc0156d4ea004ea5f3dd5b2e2a4d4e37656";
-        const url = `https://api.waqi.info/feed/geo:${lat};${lon}/?token=${token}`;
-        const res = await fetch(url);
+        const res = await fetch(`/api/aqi?lat=${lat}&lon=${lon}`);
         const json = await res.json();
 
         if (json.status === "ok") {
@@ -539,57 +602,60 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
       }
     }
 
+    let weatherTimer: ReturnType<typeof setInterval> | null = null;
+    let weatherLocation: { lat: number; lon: number; isFallback: boolean } | null = null;
+
+    function refreshWeather() {
+      if (!weatherLocation) return;
+      const { lat, lon, isFallback } = weatherLocation;
+      fetchWeather(lat, lon, isFallback);
+      fetchAQI(lat, lon);
+    }
+
+    function scheduleWeather() {
+      if (weatherTimer) clearInterval(weatherTimer);
+      weatherTimer = setInterval(refreshWeather, getSyncIntervalMs());
+    }
+
+    function setWeatherLocation(lat: number, lon: number, isFallback: boolean) {
+      weatherLocation = { lat, lon, isFallback };
+      refreshWeather();
+      scheduleWeather();
+    }
+
     function initWeather() {
-      // Intentar obtener la ubicación del dispositivo
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            fetchWeather(lat, lon, false);
-            fetchAQI(lat, lon);
-            // Configurar actualización automática cada 10 min
-            setInterval(() => {
-              fetchWeather(lat, lon, false);
-              fetchAQI(lat, lon);
-            }, 600000);
-          },
+          (position) =>
+            setWeatherLocation(
+              position.coords.latitude,
+              position.coords.longitude,
+              false,
+            ),
           (error) => {
             console.warn(
               "Geolocalización denegada o fallida, usando Medellín por defecto.",
               error,
             );
-            // Coordenadas por defecto (Medellín)
-            const fallbackLat = 6.2442;
-            const fallbackLon = -75.5812;
-            fetchWeather(fallbackLat, fallbackLon, true);
-            fetchAQI(fallbackLat, fallbackLon);
-            setInterval(() => {
-              fetchWeather(fallbackLat, fallbackLon, true);
-              fetchAQI(fallbackLat, fallbackLon);
-            }, 600000);
+            setWeatherLocation(6.2442, -75.5812, true);
           },
           { timeout: 10000 },
         );
       } else {
-        // Navegador no soporta geolocalización
-        const fallbackLat = 6.2442;
-        const fallbackLon = -75.5812;
-        fetchWeather(fallbackLat, fallbackLon, true);
-        fetchAQI(fallbackLat, fallbackLon);
-        setInterval(() => {
-          fetchWeather(fallbackLat, fallbackLon, true);
-          fetchAQI(fallbackLat, fallbackLon);
-        }, 600000);
+        setWeatherLocation(6.2442, -75.5812, true);
       }
     }
+
+    restartWeatherPolling = () => {
+      refreshWeather();
+      scheduleWeather();
+    };
 
     initWeather();
 
     animate();
   }
 
-  // --- LÓGICA DEL MODAL DE PLANTAS ---
   const modal = document.getElementById('plant-modal');
   const modalContent = document.getElementById('plant-modal-content');
   const closeModalBtn = document.getElementById('close-modal-btn');
@@ -598,7 +664,6 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
   if (modal && modalContent) {
     const openModal = () => {
       modal.classList.remove('hidden');
-      // Forzar reflow para que la animación funcione
       void modal.offsetWidth;
       modal.classList.remove('opacity-0');
       modalContent.classList.remove('scale-95');
@@ -619,7 +684,6 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
       card.addEventListener('click', (e) => {
         const t = e.currentTarget as HTMLElement;
         
-        // Poblar datos del modal
         const elTitle = document.getElementById('modal-plant-title');
         const elIcon = document.getElementById('modal-plant-icon');
         const elStatus = document.getElementById('modal-plant-status');
@@ -652,133 +716,31 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
         if (reEl) reEl.textContent = t.dataset.resp || 'Equipo de Campo';
 
         openModal();
+        applyTempUnitToDocument();
       });
     });
   }
 
-  // --- SINCRONIZACIÓN EN VIVO CON HISTORIAL Y GOOGLE SHEETS ---
-  const STORAGE_KEY_RECORDS = 'macollo_custom_history_records';
-  const STORAGE_KEY_RECORDS_ALT = 'aquasens_custom_history_records';
+  const FINCA_SCOPE = (window as any).__MACOLLO_FINCA_ID__ ?? "global";
 
-  function resolveCoordsDashboard(rawId: string, rawFila?: string, rawCol?: string) {
-    const pRaw = String(rawId || '').trim();
-    const fRaw = String(rawFila || '').trim();
-    const cRaw = String(rawCol || '').trim();
-
-    let filaIdx = -1;
-    let colIdx = -1;
-
-    // 1. Buscar código compuesto T[0-3O]-P[1-5] en cualquiera de los valores
-    const candidateTexts = [pRaw, fRaw, cRaw].filter(Boolean);
-    for (const text of candidateTexts) {
-      const compMatch = text.match(/(?:^|[^a-zA-Z])T([0-3O])[\s\-_/.]*(?:P|F|COL|PLANTA)?[\s\-_/.]*([1-5])\b/i);
-      if (compMatch) {
-        const fChar = compMatch[1].toUpperCase() === 'O' ? '0' : compMatch[1];
-        filaIdx = parseInt(fChar, 10);
-        colIdx = parseInt(compMatch[2], 10) - 1;
-        break;
-      }
-    }
-
-    // 2. Extraer tratamiento (fila) si aún no está determinado
-    if (filaIdx === -1 && fRaw) {
-      const tratMatch = fRaw.match(/(?:TRATAMIENTO|FILA|CAMA|BLOQUE|SECCION)[\s\-_:]*T?([0-3O])\b/i);
-      if (tratMatch) {
-        const fChar = tratMatch[1].toUpperCase() === 'O' ? '0' : tratMatch[1];
-        filaIdx = parseInt(fChar, 10);
-      } else {
-        const tMatch = fRaw.match(/(?:^|[^a-zA-Z])T([0-3O])(?:[^a-zA-Z0-9]|$)/i);
-        if (tMatch) {
-          const fChar = tMatch[1].toUpperCase() === 'O' ? '0' : tMatch[1];
-          filaIdx = parseInt(fChar, 10);
-        } else {
-          const dMatch = fRaw.match(/^([0-3])$/);
-          if (dMatch) {
-            filaIdx = parseInt(dMatch[1], 10);
-          }
-        }
-      }
-    }
-
-    // 3. Extraer columna/planta (1..5) si aún no está determinada
-    const colCandidates = [cRaw, pRaw].filter(Boolean);
-    if (colIdx === -1) {
-      for (const text of colCandidates) {
-        const pMatch = text.match(/(?:^|[^a-zA-Z])P[\s\-_:]*0?([1-5])(?:[^a-zA-Z0-9]|$)/i);
-        if (pMatch) {
-          colIdx = parseInt(pMatch[1], 10) - 1;
-          break;
-        }
-        const namedColMatch = text.match(/(?:PLANTA|COL|COLUMNA|SITIO)[\s\-_:]*0?([1-5])\b/i);
-        if (namedColMatch) {
-          colIdx = parseInt(namedColMatch[1], 10) - 1;
-          break;
-        }
-        const numMatch = text.match(/^0?([1-5])$/);
-        if (numMatch) {
-          colIdx = parseInt(numMatch[1], 10) - 1;
-          break;
-        }
-      }
-    }
-
-    // 4. Si filaIdx aún no se resolvió pero se dispone de número global 1..20
-    if (filaIdx === -1) {
-      const globalMatch = pRaw.match(/^P[-_\s]?0?([1-9]|1[0-9]|20)$/i) || pRaw.match(/^0?([1-9]|1[0-9]|20)$/);
-      if (globalMatch) {
-        const num = parseInt(globalMatch[1], 10);
-        filaIdx = Math.floor((num - 1) / 5);
-        if (colIdx === -1) {
-          colIdx = (num - 1) % 5;
-        }
-      }
-    }
-
-    if (filaIdx < 0 || filaIdx > 3) filaIdx = 0;
-    if (colIdx < 0 || colIdx > 4) colIdx = 0;
-
-    const FILAS = ['t0', 't1', 't2', 't3'];
-    const COLUMNAS = ['Col 1', 'Col 2', 'Col 3', 'Col 4', 'Col 5'];
-    return {
-      fila: FILAS[filaIdx],
-      columna: COLUMNAS[colIdx],
-      code: `T${filaIdx}-P${colIdx + 1}`,
-      plantNumber: filaIdx * 5 + colIdx + 1,
-      plantId: `P-${(filaIdx * 5 + colIdx + 1) < 10 ? '0' + (filaIdx * 5 + colIdx + 1) : (filaIdx * 5 + colIdx + 1)}`
-    };
+  let serverRecords: MetricRecord[] = [];
+  try {
+    const raw = document.getElementById("dashboard-initial-records")?.textContent;
+    serverRecords = raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.error("Error parseando los registros iniciales:", err);
   }
 
-  function purgeMockStorage() {
-    const keys = [STORAGE_KEY_RECORDS, STORAGE_KEY_RECORDS_ALT];
-    keys.forEach(k => {
-      try {
-        const stored = localStorage.getItem(k);
-        if (!stored) return;
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          const realOnly = parsed.filter((r: any) => r && typeof r.id === 'string' && r.id.startsWith('MET-GS-'));
-          if (realOnly.length === 0) {
-            localStorage.removeItem(k);
-          } else if (realOnly.length !== parsed.length) {
-            localStorage.setItem(k, JSON.stringify(realOnly));
-          }
-        }
-      } catch {
-        localStorage.removeItem(k);
-      }
-    });
-  }
-
-  function syncDashboardWithRealRecords() {
+  function applyDashboardRecords() {
     try {
-      purgeMockStorage();
-      const stored = localStorage.getItem(STORAGE_KEY_RECORDS) || localStorage.getItem(STORAGE_KEY_RECORDS_ALT);
-      if (!stored) return;
-      const records = JSON.parse(stored);
-      if (!Array.isArray(records) || records.length === 0) return;
+      purgeMockStorage(FINCA_SCOPE);
 
-      const dates = Array.from(new Set(records.map((r: any) => r.fecha))).sort((a: any, b: any) => b.localeCompare(a));
-      const latestDate = dates[0] || '2026-09-30';
+      const stored = readStoredRecords(FINCA_SCOPE);
+      const records = mergeRecords(serverRecords, stored);
+      if (records.length === 0) return;
+
+      const dates = Array.from(new Set(records.map((r) => r.fecha))).sort((a, b) => b.localeCompare(a));
+      const latestDate = dates[0] || new Date().toISOString().slice(0, 10);
 
       const syncText = document.getElementById('dashboard-sync-text');
       if (syncText) {
@@ -801,13 +763,13 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
         const fila = card.dataset.fila;
         const col = card.dataset.columna;
 
-        const plantRecords = records.filter((r: any) => {
+        const plantRecords = records.filter((r) => {
           if (r.code && r.code === code) return true;
           if (r.plantId && r.plantId === plantId) return true;
           if (r.fila === fila && r.columna === col) return true;
-          const parsed = resolveCoordsDashboard(r.code || r.plantId, r.fila, r.columna);
+          const parsed = resolvePlantCoordinates(r.code || r.plantId, r.fila, r.columna);
           return parsed.fila === fila && parsed.columna === col;
-        }).sort((a: any, b: any) => a.fecha.localeCompare(b.fecha));
+        }).sort((a, b) => a.fecha.localeCompare(b.fecha));
 
         if (plantRecords.length === 0) return;
 
@@ -819,9 +781,10 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
         const tempStr = (latest.tempInterna !== null && latest.tempInterna !== undefined && !isNaN(Number(latest.tempInterna)))
           ? `${Number(latest.tempInterna).toFixed(1)}°C`
           : (latest.tempInvernadero !== undefined && latest.tempInvernadero !== null ? `${Number(latest.tempInvernadero).toFixed(1)}°C` : 'N/D');
-        const humedad = latest.humedad !== undefined && latest.humedad !== null
-          ? `${latest.humedad}%`
-          : (isCritical ? '35%' : isWarning ? '48%' : '65%');
+        const humedad =
+          latest.humedad !== undefined && latest.humedad !== null
+            ? `${latest.humedad}%`
+            : 'N/D';
         const ph = Number(latest.phSuelo).toFixed(1);
         const tsoil = (latest.tempSuelo !== null && latest.tempSuelo !== undefined && !isNaN(Number(latest.tempSuelo)))
           ? `${Number(latest.tempSuelo).toFixed(1)}°C`
@@ -869,12 +832,48 @@ const plants: PlantMatrixItem[] = getAllPlantsGrid();
 
         card.className = `plant-card relative group overflow-hidden rounded-xl border p-2.5 transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer ${statusBorder}`;
       });
+
+      applyTempUnitToDocument();
+      showReadingAlerts(records);
     } catch (e) {
       console.error('Error sincronizando Dashboard con datos reales:', e);
     }
   }
 
-  syncDashboardWithRealRecords();
-  window.addEventListener('storage', syncDashboardWithRealRecords);
-  window.addEventListener('aquasens:data-synced', syncDashboardWithRealRecords);
+  let lecturasTimer: ReturnType<typeof setInterval> | null = null;
+
+  async function refreshLecturasFromServer() {
+    if (!/^\d+$/.test(String(FINCA_SCOPE))) return;
+    try {
+      const response = await fetch(`/api/farms/${FINCA_SCOPE}/readings`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      if (Array.isArray(data?.records)) {
+        serverRecords = data.records;
+        applyDashboardRecords();
+      }
+    } catch (err) {
+      console.warn("[Dashboard] No se pudieron actualizar las lecturas:", err);
+    }
+  }
+
+  function scheduleLecturasSync() {
+    if (lecturasTimer) clearInterval(lecturasTimer);
+    lecturasTimer = setInterval(refreshLecturasFromServer, getSyncIntervalMs());
+  }
+
+  function restartAutoSync() {
+    scheduleLecturasSync();
+    restartWeatherPolling?.();
+    void refreshLecturasFromServer();
+  }
+
+  applyDashboardRecords();
+  void refreshLecturasFromServer();
+  scheduleLecturasSync();
+  onPreferencesChanged(() => restartAutoSync());
+  window.addEventListener('storage', applyDashboardRecords);
+  window.addEventListener('aquasens:data-synced', applyDashboardRecords);
 </script>

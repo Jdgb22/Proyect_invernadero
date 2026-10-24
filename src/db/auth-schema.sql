@@ -1,6 +1,6 @@
 -- ============================================================
 -- Script DDL para PostgreSQL - Sistema de Autenticación
--- Proyecto Invernadero - Ejecutar en pgAdmin 4
+-- Macollo - Ejecutar en pgAdmin 4
 -- ============================================================
 -- INSTRUCCIONES:
 --   1. Abre pgAdmin 4

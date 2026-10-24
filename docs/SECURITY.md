@@ -1,4 +1,4 @@
-# Política de Seguridad — Proyecto Invernadero (Macollo)
+# Política de Seguridad — Macollo
 
 > Detalle técnico en [AUTH](./AUTH.md). Decisiones en ADR-003/006. Última revisión: octubre 2026.
 
@@ -13,7 +13,7 @@ Nunca en código, PRs, logs ni Sheets: `AUTH_SECRET`, `SMTP_PASS`, `GOOGLE_CLIEN
 | Transporte   | HSTS (`max-age=1a, includeSubDomains`), `trustHost` + fix proxy, SSL PG en prod                                            |
 | Navegador    | `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `COOP`, `CSP` (middleware)                    |
 | Rutas        | Middleware protege páginas y APIs; cada handler revalida sesión + autorización de finca (Zero Trust)                       |
-| Rate-limit   | Ventana deslizante por IP en `register`, `forgot/reset-password`, `callback/credentials`, `invitaciones/usar`              |
+| Rate-limit   | Ventana deslizante por IP en `register`, `forgot/reset-password`, `callback/credentials`, `invitations/use`                |
 | Input        | Zod `safeParse` en `register`, `sync-sheets`, `export-excel`                                                               |
 | Credenciales | bcrypt salt 10, solo hashes `$2a$/$2b$`; recuperación con código 6 dígitos/15 min + destino enmascarado; contraseña mín. 8 |
 | Sesión       | JWT firmado (`AUTH_SECRET` obligatorio en prod), rol releído de BD en cada operación, cookies seguras tras proxy           |
