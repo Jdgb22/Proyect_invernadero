@@ -3,7 +3,7 @@ import { getSession } from "auth-astro/server";
 import SettingsComponent from "../frontend/components/Settings.astro";
 import Welcome from "../frontend/components/Welcome.astro";
 import Layout from "../frontend/layouts/Layout.astro";
-import Navbar from "../frontend/components/navbar.astro";
+import Navbar from "../frontend/components/Navbar.astro";
 
 const session = await getSession(Astro.request);
 const isAuthenticated = !!session;

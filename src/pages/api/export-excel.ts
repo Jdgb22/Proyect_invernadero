@@ -7,8 +7,8 @@ import {
   unauthorized,
   forbidden,
 } from "../../backend/services/authz";
-import { resolveActiveFinca } from "../../backend/services/fincas";
-import { getLecturasByFinca } from "../../backend/services/lecturas";
+import { resolveActiveFinca } from "../../backend/services/farms";
+import { getLecturasByFinca } from "../../backend/services/readings";
 import { generateExcelBuffer } from "../../backend/services/excelExport";
 
 const XLSX_MIME =

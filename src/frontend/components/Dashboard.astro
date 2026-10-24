@@ -5,8 +5,8 @@ import {
   type PlantMatrixItem,
 } from "../../shared/plantMatrix";
 import { toScriptJson } from "../../shared/serialize";
-import { resolveActiveFinca } from "../../backend/services/fincas";
-import { getLecturasByFinca } from "../../backend/services/lecturas";
+import { resolveActiveFinca } from "../../backend/services/farms";
+import { getLecturasByFinca } from "../../backend/services/readings";
 
 const ctx = await resolveActiveFinca(Astro.request);
 const plants: PlantMatrixItem[] = ctx?.finca
@@ -333,10 +333,7 @@ const ultimaFecha = registros
 
 <script>
   import * as THREE from "three";
-  import {
-    fetchWeatherData,
-    getWeatherEmoji,
-  } from "../../backend/services/weather";
+  import { getWeatherEmoji } from "../../backend/services/weather";
   import { resolvePlantCoordinates } from "../../shared/plantMatrix";
   import {
     mergeRecords,
@@ -521,7 +518,26 @@ const ultimaFecha = registros
         const iconEl = document.getElementById("weather-icon");
         const titleEl = document.getElementById("weather-title");
 
-        const data = await fetchWeatherData(lat, lon, isFallback);
+        const data = await fetch(
+          `/api/weather?lat=${lat}&lon=${lon}&fallback=${isFallback ? "1" : "0"}`,
+        ).then(async (res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        });
+
+        (window as any).__MACOLLO_WEATHER__ = {
+          temperatureC: data.temperature,
+          humidity: data.humidity,
+          rainProbability: data.rainProbability,
+          weatherCode: data.weatherCode,
+          windSpeed: data.windSpeed,
+          isFallback: data.isFallback,
+        };
+        window.dispatchEvent(
+          new CustomEvent("macollo:weather-updated", {
+            detail: { temperatureC: data.temperature },
+          }),
+        );
 
         if (tempEl)
           tempEl.textContent = Math.round(convertTempValue(data.temperature)).toString();
@@ -543,9 +559,7 @@ const ultimaFecha = registros
 
     async function fetchAQI(lat: number, lon: number) {
       try {
-        const token = "b3e64cc0156d4ea004ea5f3dd5b2e2a4d4e37656";
-        const url = `https://api.waqi.info/feed/geo:${lat};${lon}/?token=${token}`;
-        const res = await fetch(url);
+        const res = await fetch(`/api/aqi?lat=${lat}&lon=${lon}`);
         const json = await res.json();
 
         if (json.status === "ok") {
@@ -831,7 +845,7 @@ const ultimaFecha = registros
   async function refreshLecturasFromServer() {
     if (!/^\d+$/.test(String(FINCA_SCOPE))) return;
     try {
-      const response = await fetch(`/api/fincas/${FINCA_SCOPE}/lecturas`, {
+      const response = await fetch(`/api/farms/${FINCA_SCOPE}/readings`, {
         headers: { Accept: "application/json" },
       });
       if (!response.ok) return;

@@ -1,10 +1,10 @@
-# Datos Demo — Proyecto Invernadero
+# Datos Demo — Macollo
 
 > Para presentaciones, onboarding y pruebas (TEST-07) sin tocar datos reales.
 
 ## 1. Archivo
 
-[`sample-lecturas-demo.csv`](./sample-lecturas-demo.csv): **20 filas (T0-P1…T3-P5), fecha `2026-10-09`**, con casos pedagógicos:
+[`sample-readings-demo.csv`](./sample-readings-demo.csv): **20 filas (T0-P1…T3-P5), fecha `2026-10-09`**, con casos pedagógicos:
 
 - 🟢 Mayoría óptima (pH 6.0–6.8).
 - 🟡 `T0-P3` (pH 5.7) y `T2-P4` (pH 5.4) en Atención.
@@ -15,7 +15,7 @@ El archivo usa el mismo contrato de columnas que acepta el importador (`src/page
 
 ## 2. Cómo usarlo (2 minutos)
 
-1. Súbelo a Google Sheets (Archivo → Importar) **o** sírvelo local: `python3 -m http.server` en `docs/` y usa `http://localhost:8000/sample-lecturas-demo.csv`.
+1. Súbelo a Google Sheets (Archivo → Importar) **o** sírvelo local: `python3 -m http.server` en `docs/` y usa `http://localhost:8000/sample-readings-demo.csv`.
 2. Hoja pública (paso 2 del [FIELD-PROTOCOL](./FIELD-PROTOCOL.md) §4).
 3. En la app, con la **cuenta dueña** de la finca activa: Historial → Conectar Google Sheets → pegar URL → debe responder `count: 20`.
 4. Dashboard: 16 🟢 + 2 🟡 + 2 🔴. Métricas: promedio pH ≈ 6.4.

@@ -6,11 +6,11 @@ import {
   unauthorized,
   forbidden,
 } from "../../../backend/services/authz";
-import { resolveActiveFinca } from "../../../backend/services/fincas";
-import { getLecturasByFinca } from "../../../backend/services/lecturas";
+import { resolveActiveFinca } from "../../../backend/services/farms";
+import { getLecturasByFinca } from "../../../backend/services/readings";
 import { getOwnEmail } from "../../../backend/services/profile";
 import type { MetricRecord } from "../../../shared/plantMatrix";
-import { sendWeeklySummaryEmail } from "../../../services/notifications";
+import { sendWeeklySummaryEmail } from "../../../backend/services/notifications";
 
 const PH_MIN = 6;
 const PH_MAX = 6.8;

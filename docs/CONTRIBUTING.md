@@ -1,4 +1,4 @@
-# Contribuir — Proyecto Invernadero (Macollo)
+# Contribuir — Macollo
 
 Guía para el equipo (6 devs). Stack y setup en [README](../README.md); decisiones en [`decisions/`](./decisions/).
 
@@ -32,7 +32,7 @@ Guía para el equipo (6 devs). Stack y setup en [README](../README.md); decision
 | Endpoint/ruta nueva | `ENDPOINTS.md` + `ROUTES.md`  | Con ejemplo `curl` y códigos reales del handler         |
 | Tabla/columna nueva | `DATABASE.md`                 | ER + script SQL + plan de migración                     |
 | Requisito           | `REQUIREMENTS.md`             | ID RF/RNF + traza CU/US + criterio de aceptación        |
-| Flujo usuario       | `MANUAL_USUARIO.md`           | Pasos clicables, no descripción técnica                 |
+| Flujo usuario       | `docs/USER_MANUAL.md`         | Pasos clicables, no descripción técnica                 |
 
 ## 5. Revisión de PR (checklist)
 

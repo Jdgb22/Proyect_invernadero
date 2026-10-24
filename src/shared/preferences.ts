@@ -121,6 +121,7 @@ export function applyTheme(preference = getThemePreference()): boolean {
   const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const dark = preference === "dark" || (preference === "system" && systemDark);
   document.documentElement.classList.toggle("dark", dark);
+  document.documentElement.classList.toggle("light", preference === "light");
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
   return dark;
 }

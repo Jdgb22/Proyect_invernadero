@@ -3,7 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { pool } from "../../../db/client";
 import { json, parseJsonBody } from "../../../backend/services/authz";
-import { createFinca } from "../../../backend/services/fincas";
+import { createFinca } from "../../../backend/services/farms";
 
 const RegisterSchema = z
   .object({

@@ -68,12 +68,12 @@
 
 ## Data Management Users
 
-### US-007: Exportar datos a Excel
+### US-007: Exportar datos a Excel y CSV
 
 - **Usuario:** Usuario autenticado
-- **Descripción:** El usuario puede exportar las mediciones a un archivo Excel.
-- **Formato:** Archivo `Macollo_Mediciones_Invernadero_YYYY-MM-DD.xlsx` con 3 hojas (Mediciones de Hoy, Historial Completo, Rangos Agronómicos). Solo `.xlsx` (CSV no implementado).
-- **Resultado esperado:** Archivo descargable vía `GET/POST /api/export-excel` (POST acepta `{ plants }` para filtrar).
+- **Descripción:** El usuario puede exportar las mediciones a un archivo Excel (.xlsx) o CSV (.csv).
+- **Formato:** Archivo `Macollo_Mediciones_Invernadero_YYYY-MM-DD.xlsx` con 3 hojas (Mediciones de Hoy, Historial Completo, Rangos Agronómicos), o archivo `.csv` descargable vía `GET /api/export-csv`.
+- **Resultado esperado:** Archivos descargables vía `GET/POST /api/export-excel` y `GET /api/export-csv`.
 
 ### US-008: Ver historial de datos
 
@@ -112,5 +112,5 @@
 ### US-012: Panel del staff y finca activa
 
 - **Usuario:** Superadmin / Admin
-- **Descripción:** El staff aterriza en el panel `/admin` (lista de todas las fincas). Con **Entrar** fija la `finca_activa` (cookie) y abre su tablero/métricas/historial como si fuera un miembro; puede archivar/restaurar. Solo Superadmin gestiona usuarios y elimina fincas.
+- **Descripción:** El staff aterriza en el panel `/admin` (lista de todas las fincas). Con **Entrar** fija la `finca_activa` (cookie) y abre su tablero/métricas/history como si fuera un miembro; puede archivar/restaurar. Solo Superadmin gestiona usuarios y elimina fincas.
 - **Resultado esperado:** El staff opera cualquier finca sin ser miembro; el navbar muestra `Panel` y, con finca activa, `Tablero`/`Métricas`/`Historial`.

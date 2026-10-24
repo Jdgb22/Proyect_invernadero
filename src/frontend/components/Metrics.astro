@@ -15,8 +15,8 @@ import {
   getProdBadge,
 } from "../../shared/badges";
 import { toScriptJson } from "../../shared/serialize";
-import { resolveActiveFinca } from "../../backend/services/fincas";
-import { getLecturasByFinca } from "../../backend/services/lecturas";
+import { resolveActiveFinca } from "../../backend/services/farms";
+import { getLecturasByFinca } from "../../backend/services/readings";
 
 interface Props {
   currentUserName?: string;
@@ -157,7 +157,7 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
         <p class="text-xs sm:text-sm text-green-600 dark:text-stone-400 mt-1">
           Sesión activa: <strong class="text-green-900 dark:text-stone-300 font-semibold">{currentUserName}</strong> ({currentUserRole})
           <span class="mx-2 text-green-300 dark:text-stone-700 hidden sm:inline">•</span>
-          <a href="/historial" class="inline-flex items-center gap-1 text-green-600 dark:text-stone-400 font-bold hover:underline">
+          <a href="/history" class="inline-flex items-center gap-1 text-green-600 dark:text-stone-400 font-bold hover:underline">
             <span>📅 Ver Historial Multidía</span>
             <span>→</span>
           </a>
@@ -2488,7 +2488,7 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
       }
 
       try {
-        const response = await fetch(`/api/fincas/${fincaId}/lecturas`, {
+        const response = await fetch(`/api/farms/${fincaId}/readings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ records: [newRecord] }),
@@ -3015,7 +3015,7 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
   async function refreshMetricsFromServer() {
     if (!/^\d+$/.test(String(FINCA_SCOPE))) return;
     try {
-      const response = await fetch(`/api/fincas/${FINCA_SCOPE}/lecturas`, {
+      const response = await fetch(`/api/farms/${FINCA_SCOPE}/readings`, {
         headers: { Accept: "application/json" },
       });
       if (!response.ok) return;

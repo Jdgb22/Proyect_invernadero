@@ -1,4 +1,4 @@
-# Diagramas UML — Proyecto Invernadero (Macollo)
+# Diagramas UML — Macollo
 
 > Mermaid, derivado del código (oct-2026). ER detallado en [DATABASE](./DATABASE.md) §4; secuencias/actividades en sus docs.
 
@@ -66,8 +66,8 @@ classDiagram
 ```mermaid
 flowchart TB
     subgraph Client[Navegador]
-        Pags[Páginas Astro: index, signin, metrics, historial, settings]
-        Comp[Componentes: Dashboard, Metrics, Historial, Settings, navbar]
+        Pags[Páginas Astro: index, metrics, history, settings, farms, admin, gallery, invite]
+        Comp[Componentes: Dashboard, Metrics, History, Settings, Navbar, NoFarm, Gallery, GalleryDetail, TripsDiagnosticModal]
         T3[Three.js: escena sol/luna + sombras]
         LS[Estado en memoria: plantsState, records Sheets]
         Pags --> Comp
@@ -77,7 +77,9 @@ flowchart TB
     subgraph Server[Astro SSR en Vercel]
         APIAuth[API auth: register, forgot/reset, Auth.js]
         APIXLS[API export-excel: ExcelJS 3 hojas]
+        APICSV[API export-csv: descarga .csv]
         APISync[API sync-sheets: CSV → records]
+        APIFarms[API farms: CRUD, miembros, invitaciones, lecturas]
         APIProxy[API siata: proxy timeout 3s]
         Svc[Servicios: plantMatrix, sheetsSync, excelExport, weather, siata, notifications]
         MW[middleware: fix proxy + guarda /dashboard]

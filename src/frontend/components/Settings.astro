@@ -10,7 +10,7 @@ import {
 import {
   listFincasForUser,
   resolveActiveFinca,
-} from "../../backend/services/fincas";
+} from "../../backend/services/farms";
 
 const session = await getSession(Astro.request);
 
@@ -222,7 +222,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
                       </p>
                     </div>
                     <div class="flex gap-2">
-                      <a href={`/fincas/${f.id}`} class="px-3 py-1.5 text-xs font-semibold bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 rounded-lg text-stone-800 dark:text-stone-200 transition-colors">
+                      <a href={`/farms/${f.id}`} class="px-3 py-1.5 text-xs font-semibold bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 rounded-lg text-stone-800 dark:text-stone-200 transition-colors">
                         Ver
                       </a>
                       {f.rol_finca !== "dueno" && f.activa && (
@@ -236,7 +236,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
               )
             }
           </ul>
-          <a href="/fincas" class="inline-block text-sm font-semibold text-green-600 dark:text-green-400 hover:underline">Ir a Mis Fincas →</a>
+          <a href="/farms" class="inline-block text-sm font-semibold text-green-600 dark:text-green-400 hover:underline">Ir a Mis Fincas →</a>
         </div>
       </div>
 
@@ -620,7 +620,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
 
       resetDataBtn.disabled = true;
       try {
-        const response = await fetch(`/api/fincas/${fincaScope}/lecturas`, {
+        const response = await fetch(`/api/farms/${fincaScope}/readings`, {
           method: 'DELETE',
           headers: { Accept: 'application/json' },
         });
@@ -668,16 +668,16 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
 
   document.getElementById('settings-join-btn')?.addEventListener('click', async () => {
     const input = document.getElementById('settings-join-code') as HTMLInputElement;
-    const codigo = input.value.trim();
-    if (!codigo) {
+    const code = input.value.trim();
+    if (!code) {
       getSileo()?.error({ title: "Ingresa un código de invitación." });
       return;
     }
     try {
-      const res = await fetch('/api/invitaciones/usar', {
+      const res = await fetch('/api/invitations/use', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo }),
+        body: JSON.stringify({ code }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'No se pudo canjear el código.');
@@ -692,7 +692,7 @@ const badge = roleBadge[user?.role || "Campesino"] || roleBadge.Campesino;
     btn.addEventListener('click', async () => {
       if (!confirm('¿Salir de esta finca? Perderás acceso a sus datos.')) return;
       try {
-        const res = await fetch('/api/fincas/salir', {
+        const res = await fetch('/api/farms/leave', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fincaId: Number(btn.dataset.salir) }),

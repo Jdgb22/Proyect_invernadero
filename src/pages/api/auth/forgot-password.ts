@@ -3,7 +3,7 @@ import { pool } from "../../../db/client";
 import {
   sendRecoveryEmail,
   sendRecoverySms,
-} from "../../../services/notifications";
+} from "../../../backend/services/notifications";
 import { json, parseJsonBody } from "../../../backend/services/authz";
 
 function maskIdentifier(id: string, isEmail: boolean): string {

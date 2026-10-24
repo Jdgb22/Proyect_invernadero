@@ -8,8 +8,8 @@ import {
   forbidden,
   parseJsonBody,
 } from "../../backend/services/authz";
-import { resolveActiveFinca } from "../../backend/services/fincas";
-import { insertLecturas } from "../../backend/services/lecturas";
+import { resolveActiveFinca } from "../../backend/services/farms";
+import { insertLecturas } from "../../backend/services/readings";
 import {
   fetchSheetRecords,
   SheetsSyncError,

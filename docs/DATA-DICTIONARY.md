@@ -1,4 +1,4 @@
-# Diccionario de Datos — Proyecto Invernadero (Macollo)
+# Diccionario de Datos — Macollo
 
 > Fuente: `src/shared/plantMatrix.ts` (tipos y resolución de coordenadas), `src/backend/services/sheetsSync.ts` (columnas CSV), `src/backend/services/excelExport.ts` (hojas), `src/db/*.sql` (tablas). Para llenar hojas ver [FIELD-PROTOCOL](./FIELD-PROTOCOL.md).
 

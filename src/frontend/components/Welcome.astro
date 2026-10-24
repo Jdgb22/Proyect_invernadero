@@ -832,7 +832,7 @@ const today = new Date().toISOString().slice(0, 10);
   const urlParams = new URLSearchParams(window.location.search);
   const authError = urlParams.get('error');
 
-  // Destino tras iniciar sesión (?desde=/invitar/XXXX). Solo rutas internas, evita open-redirect.
+  // Destino tras iniciar sesión (?desde=/invite/XXXX). Solo rutas internas, evita open-redirect.
   const rawDesde = urlParams.get('desde') || '';
   const safeDesde = /^\/(?!\/)/.test(rawDesde) ? rawDesde : '/';
   if (authError && errorMsg) {
@@ -959,13 +959,21 @@ const today = new Date().toISOString().slice(0, 10);
       let hasError = false;
 
       if (typeof signIn === 'function') {
-        const result = await signIn("credentials", {
+        const result: any = await signIn("credentials", {
           email: username,
           password: password,
           redirect: false,
           callbackUrl: safeDesde,
         } as any);
-        if ((result as any)?.error) hasError = true;
+
+        if (result?.error) {
+          hasError = true;
+        } else if (result instanceof Response) {
+          // auth-astro devuelve la Response del callback cuando falla el login
+          // (con redirect:false), no un objeto con `.error`.
+          const data = await result.clone().json().catch(() => null);
+          hasError = String(data?.url || "").includes("error=");
+        }
       } else {
         const csrfRes = await fetch('/api/auth/csrf');
         const csrfData = await csrfRes.json();

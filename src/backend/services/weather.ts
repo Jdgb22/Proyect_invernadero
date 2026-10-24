@@ -18,9 +18,10 @@ export async function fetchWeatherData(
   lat: number,
   lon: number,
   isFallback = false,
+  fetcher: typeof fetch = fetch,
 ): Promise<WeatherData> {
   try {
-    const openMeteoData = await fetchOpenMeteo(lat, lon);
+    const openMeteoData = await fetchOpenMeteo(lat, lon, fetcher);
     return {
       ...openMeteoData,
       source: "Open-Meteo (Global)",
@@ -40,9 +41,10 @@ export async function fetchWeatherData(
   }
 }
 
-async function fetchOpenMeteo(lat: number, lon: number) {
-  const res = await fetch(
+async function fetchOpenMeteo(lat: number, lon: number, fetcher: typeof fetch) {
+  const res = await fetcher(
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=precipitation_probability&timezone=auto`,
+    { signal: AbortSignal.timeout(10000) },
   );
 
   if (!res.ok)

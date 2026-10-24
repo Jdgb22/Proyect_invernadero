@@ -6,17 +6,17 @@ import { getSession } from 'auth-astro/server';
  * dentro del componente Welcome. Esta ruta se conserva solo como alias para no
  * romper enlaces antiguos y redirige conservando el destino y la invitación.
  *
- *  - ?desde=/invitar/XXXX  → destino tras iniciar sesión
- *  - ?codigo=K7M4XP9Q      → código de invitación (se reenvía por si se usa)
+ *  - ?desde=/invite/XXXX  → destino tras iniciar sesión
+ *  - ?code=K7M4XP9Q      → código de invitación (se reenvía por si se usa)
  */
 
 const session = await getSession(Astro.request);
-const codigo = Astro.url.searchParams.get('codigo')?.trim() || '';
+const code = Astro.url.searchParams.get('code')?.trim() || '';
 const desde = Astro.url.searchParams.get('desde') || '';
 
 const params = new URLSearchParams();
 if (desde) params.set('desde', desde);
-if (codigo) params.set('codigo', codigo);
+if (code) params.set('code', code);
 
 if (!session) {
   return Astro.redirect(`/${params.toString() ? `?${params.toString()}` : ''}`);

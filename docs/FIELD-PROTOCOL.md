@@ -1,6 +1,6 @@
 # Protocolo de Campo — Toma de Datos (para operarios)
 
-> Cómo llenar la hoja para que el sistema la entienda a la primera. Referencia técnica: [DATA-DICTIONARY](./DATA-DICTIONARY.md). Guía de la app: [MANUAL_USUARIO](../MANUAL_USUARIO.md).
+> Cómo llenar la hoja para que el sistema la entienda a la primera. Referencia técnica: [DATA-DICTIONARY](./DATA-DICTIONARY.md). Guía de la app: [USER_MANUAL](./USER_MANUAL.md).
 
 ## 1. Antes de salir
 

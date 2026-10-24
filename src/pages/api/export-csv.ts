@@ -6,8 +6,8 @@ import {
   unauthorized,
   forbidden,
 } from "../../backend/services/authz";
-import { resolveActiveFinca } from "../../backend/services/fincas";
-import { getLecturasByFinca } from "../../backend/services/lecturas";
+import { resolveActiveFinca } from "../../backend/services/farms";
+import { getLecturasByFinca } from "../../backend/services/readings";
 import { generateCsv } from "../../backend/services/csvExport";
 
 function sanitizeFilename(text: string): string {
