@@ -5,13 +5,13 @@
 
 Base URL local: `http://localhost:4321`. Todos responden `Content-Type: application/json` salvo indicación.
 
-> **Auth**: las rutas de datos (`/api/fincas*`, `/api/finca*`, `/api/invitaciones*`, `/api/admin*`, `/api/sync-sheets`, `/api/export-excel`, `/api/siata`) exigen sesión (middleware → `401`) **y** revalidan permisos de finca dentro del handler. Las rutas públicas se limitan a `/api/auth/*`. Ver [ROUTES](./ROUTES.md) y [AUTH](./AUTH.md).
+> **Auth**: las rutas de datos (`/api/farms*`, `/api/farm*`, `/api/invitations*`, `/api/admin*`, `/api/sync-sheets`, `/api/export-excel`, `/api/siata`) exigen sesión (middleware → `401`) **y** revalidan permisos de finca dentro del handler. Las rutas públicas se limitan a `/api/auth/*`. Ver [ROUTES](./ROUTES.md) y [AUTH](./AUTH.md).
 
 ---
 
 ## Auth — `POST /api/auth/register`
 
-Crea un usuario con contraseña hasheada (bcrypt, salt 10 rondas). Validación **Zod Zero Trust** (`RegisterSchema`): `name` mín. 2, `email` formato válido (opcional), `phone` (opcional), `birthDate` (opcional), `password` **mín. 8**, `accountType` ∈ {`Campesino` (def.), `Agropecuario`}, `fincaNombre` opcional (**obligatorio en la práctica para Agropecuario**); `refine` exige al menos email o teléfono. Primer error Zod en `message` (400). **No acepta `fincaCode`**: las invitaciones solo se canjean por `POST /api/invitaciones/usar`.
+Crea un usuario con contraseña hasheada (bcrypt, salt 10 rondas). Validación **Zod Zero Trust** (`RegisterSchema`): `name` mín. 2, `email` formato válido (opcional), `phone` (opcional), `birthDate` (opcional), `password` **mín. 8**, `accountType` ∈ {`Campesino` (def.), `Agropecuario`}, `fincaNombre` opcional (**obligatorio en la práctica para Agropecuario**); `refine` exige al menos email o teléfono. Primer error Zod en `message` (400). **No acepta `fincaCode`**: las invitaciones solo se canjean por `POST /api/invitations/use`.
 
 **Archivo:** `src/pages/api/auth/register.ts` · **Auth:** no requerida.
 
@@ -128,13 +128,13 @@ Valida el código y actualiza la contraseña (bcrypt), luego invalida el token.
 
 Rutas automáticas de `auth-astro` (proveedores **Credentials** + **Google**, sesión **JWT**, adaptador Postgres). Ver [AUTH](./AUTH.md).
 
-| Ruta                                  | Uso                                                                                        |
-| :------------------------------------ | :----------------------------------------------------------------------------------------- |
-| `GET /api/auth/signin`                | Página/flujo de login Auth.js                                                              |
-| `POST /api/auth/callback/credentials` | Login email+contraseña (valida contra `users` con bcrypt; acepta email, nombre o teléfono) |
-| `GET/POST /api/auth/callback/google`  | OAuth Google (`GOOGLE_CLIENT_ID/SECRET`)                                                   |
-| `GET /api/auth/session`               | Sesión actual (incluye `user.role` del JWT)                                                |
-| `POST /api/auth/signout`              | Cierre de sesión                                                                           |
+| Ruta                                  | Uso                                                                               |
+| :------------------------------------ | :-------------------------------------------------------------------------------- |
+| `GET /api/auth/signin`                | Página/flujo de login Auth.js                                                     |
+| `POST /api/auth/callback/credentials` | Login email+contraseña (valida contra `users` con bcrypt; acepta email o celular) |
+| `GET/POST /api/auth/callback/google`  | OAuth Google (`GOOGLE_CLIENT_ID/SECRET`)                                          |
+| `GET /api/auth/session`               | Sesión actual (incluye `user.role` del JWT)                                       |
+| `POST /api/auth/signout`              | Cierre de sesión                                                                  |
 
 ---
 
@@ -171,7 +171,7 @@ El servidor normaliza la URL a `export?format=csv` (soporta `/d/e/` publicados, 
 
 **Columnas reconocidas** (búsqueda flexible, sin tildes): `ID_planta` (`T0-P1`, `TO-P2`… con `resolvePlantCoordinates`), `fecha` (YYYY-MM-DD, DD/MM/YYYY o serial Excel), `responsable`, `T_Ext_C`, `T_Int_C`, `humedad_Pct`, `T_Planta_C` (= temp suelo), `Ph`, `ALtura_cm`, + opcionales `fase`, `productividad`, `sanidad`, `observacion`.
 
-**Defaults y reglas:** pH clamp 0–14 (def. 6.4); `tempInterna` = `T_Int_C`; humedad clamp 0–100 (def. 65); crecimiento derivado de altura; sanidad derivada de pH si no viene (`<5.2|>7.8` Crítica, `<5.8|>7.2` Vulnerable, `6.2–6.7` Excelente); **2026-09-29/30 → `tempSuelo: null`** (sensor no tomado); responsable def. `Equipo de Campo`.
+**Defaults y reglas:** pH clamp 0–14 (def. 6.4); `tempInterna` = `T_Int_C`; humedad clamp 0–100 (def. 65); crecimiento derivado de altura; sanidad derivada de pH si no viene (`<5.2|>7.8` Crítica, `<5.8|>7.2` Vulnerable, `6.2–6.7` Excelente); `tempSuelo: null` cuando no se tomó la medida; responsable def. `Equipo de Campo`.
 
 **Respuestas:**
 
@@ -182,6 +182,22 @@ El servidor normaliza la URL a `export?format=csv` (soporta `/d/e/` publicados, 
 - `500` → `{ success: false, error, details }`
 
 ---
+
+## Galería
+
+| Ruta                     | Método | Descripción                                                                                                                        | Auth   | Implementación                       |
+| :----------------------- | :----- | :--------------------------------------------------------------------------------------------------------------------------------- | :----- | :----------------------------------- |
+| `/api/gallery/upload`    | POST   | Sube foto (form-data `file`) a `public/uploads/gallery/`, crea registro en `photos` con `finca_id` de la finca activa y `user_id`. | Sesión | `src/pages/api/gallery/upload.ts`    |
+| `/api/gallery/[id]/file` | GET    | Sirve imagen por ID. Solo accesible si la foto pertenece a la finca activa del usuario. Cache `immutable`.                         | Sesión | `src/pages/api/gallery/[id]/file.ts` |
+
+## Diagnóstico Trips (IA)
+
+Este proyecto consume la API externa [macollo-trips-api](https://github.com/VoctorMCL/macollo-trips-api) (FastAPI + BioCLIP 2.5) para la detección de trips. Consultar su documentación para detalles de endpoints, modelos y despliegue.
+
+| Ruta                   | Método | Descripción                                                                                                                                                                                                                                  | Auth            | Implementación                     |
+| :--------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------- | :--------------------------------- |
+| `/api/trips-diagnosis` | GET    | Health check hacia `${ML_API_URL}/api/health` (servicio [macollo-trips-api](https://github.com/VoctorMCL/macollo-trips-api)).                                                                                                                | Sesión opcional | `src/pages/api/trips-diagnosis.ts` |
+| `/api/trips-diagnosis` | POST   | Reenvía imagen/form-data al servicio ML (`${ML_API_URL}/api/predict`) de [macollo-trips-api](https://github.com/VoctorMCL/macollo-trips-api). Al capturar o subir desde el modal se guarda automáticamente en la galería de la finca activa. | Sesión opcional | `src/pages/api/trips-diagnosis.ts` |
 
 ## Datos — `GET | POST /api/export-excel`
 
@@ -214,28 +230,31 @@ curl -X POST http://localhost:4321/api/export-excel \
 
 Todas exigen sesión y revalidan membresía/rol dentro del handler. Niveles: `staff` (Superadmin/Admin, acceso total), `dueno`, `miembro`, `none`.
 
-| Ruta                                  | Método   | Descripción                                                                                | Nivel               |
-| :------------------------------------ | :------- | :----------------------------------------------------------------------------------------- | :------------------ |
-| `/api/fincas`                         | GET      | Lista fincas visibles (staff: todas)                                                       | Sesión              |
-| `/api/fincas`                         | POST     | Crea finca `{ nombre, descripcion?, ubicacion? }` + matriz 20 plantas (máx. 5 por usuario) | Agropecuario/staff  |
-| `/api/fincas/:id`                     | GET      | Detalle (miembros, invitaciones, plantas)                                                  | Miembro/staff       |
-| `/api/fincas/:id`                     | PATCH    | Edita `{ nombre?, descripcion?, ubicacion? }`                                              | Dueño/staff         |
-| `/api/fincas/:id`                     | DELETE   | **Hard delete** (borra finca y lecturas)                                                   | **Solo Superadmin** |
-| `/api/fincas/:id/archivo`             | POST     | `{ activa }` archiva/restaura                                                              | Dueño/staff         |
-| `/api/fincas/:id/miembros`            | GET      | Lista miembros                                                                             | Dueño/staff         |
-| `/api/fincas/:id/miembros?userId=N`   | DELETE   | Expulsa (no al dueño)                                                                      | Dueño/staff         |
-| `/api/fincas/:id/invitaciones`        | GET      | Lista invitaciones                                                                         | Dueño/staff         |
-| `/api/fincas/:id/invitaciones`        | POST     | Crea `{ expiraEn, usosMaximos }` → código nanoid de 8 chars (p.ej. `K7M4XP9Q`)             | Dueño/staff         |
-| `/api/fincas/:id/invitaciones/:invId` | DELETE   | Revoca                                                                                     | Dueño/staff         |
-| `/api/fincas/:id/lecturas`            | GET      | Lecturas de la finca (`MetricRecord[]`)                                                    | Miembro/staff       |
-| `/api/fincas/:id/lecturas`            | POST     | `{ records }` → upsert en `lecturas`                                                       | Miembro/staff       |
-| `/api/fincas/salir`                   | POST     | `{ fincaId }` abandona (si no eres dueño)                                                  | Miembro             |
-| `/api/finca/activa`                   | GET/POST | Lee/fija cookie `finca_activa`                                                             | Sesión              |
-| `/api/invitaciones/usar`              | POST     | `{ codigo }` canjea (rate-limited, atómico)                                                | Sesión              |
-| `/api/invitaciones/peek`              | GET      | `?codigo=` vista previa (nombre, expiración, usos)                                         | Sesión              |
-| `/api/admin/users`                    | GET      | `?q=` lista usuarios + `fincas_count`                                                      | Superadmin          |
-| `/api/admin/users/:id`                | PATCH    | `{ role }` cambia rol                                                                      | Superadmin          |
-| `/api/admin/users/:id`                | DELETE   | Elimina cuenta (no el último Superadmin, ni a uno mismo, ni a un dueño de finca)           | Superadmin          |
+| Ruta                                | Método   | Descripción                                                                                | Nivel               |
+| :---------------------------------- | :------- | :----------------------------------------------------------------------------------------- | :------------------ |
+| `/api/farms`                        | GET      | Lista fincas visibles (staff: todas)                                                       | Sesión              |
+| `/api/farms`                        | POST     | Crea finca `{ nombre, descripcion?, ubicacion? }` + matriz 20 plantas (máx. 5 por usuario) | Agropecuario/staff  |
+| `/api/farms/:id`                    | GET      | Detalle (miembros, invitaciones, plantas)                                                  | Miembro/staff       |
+| `/api/farms/:id`                    | PATCH    | Edita `{ nombre?, descripcion?, ubicacion? }`                                              | Dueño/staff         |
+| `/api/farms/:id`                    | DELETE   | **Hard delete** (borra finca y lecturas)                                                   | **Solo Superadmin** |
+| `/api/farms/:id/archive`            | POST     | `{ activa }` archiva/restaura                                                              | Dueño/staff         |
+| `/api/farms/:id/members`            | GET      | Lista miembros                                                                             | Dueño/staff         |
+| `/api/farms/:id/members?userId=N`   | DELETE   | Expulsa (no al dueño)                                                                      | Dueño/staff         |
+| `/api/farms/:id/invitations`        | GET      | Lista invitaciones                                                                         | Dueño/staff         |
+| `/api/farms/:id/invitations`        | POST     | Crea `{ expiraEn, usosMaximos }` → código nanoid de 8 chars (p.ej. `K7M4XP9Q`)             | Dueño/staff         |
+| `/api/farms/:id/invitations/:invId` | DELETE   | Revoca                                                                                     | Dueño/staff         |
+| `/api/farms/:id/readings`           | GET      | Lecturas de la finca (`MetricRecord[]`)                                                    | Miembro/staff       |
+| `/api/farms/:id/readings`           | POST     | `{ records }` → upsert en `lecturas`                                                       | Miembro/staff       |
+| `/api/farms/leave`                  | POST     | `{ fincaId }` abandona (si no eres dueño)                                                  | Miembro             |
+| `/api/farms/active`                 | GET/POST | Lee/fija cookie `finca_activa` (alias retrocompatible `/api/farm/active`)                  | Sesión              |
+| `/api/invitations/use`              | POST     | `{ code }` canjea (rate-limited, atómico)                                                  | Sesión              |
+| `/api/invitations/peek`             | GET      | `?code=` vista previa (nombre, expiración, usos)                                           | Sesión              |
+| `/api/admin/users`                  | GET      | `?q=` lista usuarios + `fincas_count`                                                      | Superadmin          |
+| `/api/admin/users/:id`              | PATCH    | `{ role }` cambia rol                                                                      | Superadmin          |
+| `/api/admin/users/:id`              | DELETE   | Elimina cuenta (no el último Superadmin, ni a uno mismo, ni a un dueño de finca)           | Superadmin          |
+| `/api/export-csv`                   | GET      | Descarga archivo `.csv` con el historial agronómico de la finca activa                     | Miembro/staff       |
+| `/api/weather`                      | GET      | `?lat=&lon=&fallback=` Proxy hacia Open-Meteo (pronóstico y condiciones actuales)          | Sesión              |
+| `/api/aqi`                          | GET      | `?lat=&lon=` Proxy hacia WAQI (Índice de Calidad del Aire)                                 | Sesión              |
 
 Códigos: `400` body/acción inválida · `403` sin permiso · `404` inexistente · `409` ya miembro · `410` invitación revocada/expirada/agotada.
 

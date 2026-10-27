@@ -1,18 +1,22 @@
 ---
-// src/frontend/components/Metrics.astro
 // Panel Profesional de Métricas Agronómicas para Invernadero Macollo.
 // Matriz de 4 Filas (t0 a t3) × 5 Columnas (Col 1 a Col 5) = 20 Plantas.
 // Al hacer clic en cualquier planta (en el selector rápido o en la tabla Excel),
 // se abre un MODAL emergente con la última medición de hoy y sus gráficos individuales.
 
 import {
-  getAllPlantsGrid,
+  buildEmptyPlantsGrid,
   buildPlantsGridFromRecords,
   type PlantMatrixItem,
-  type MetricRecord
-} from "../../backend/services/metricsData";
-import { resolveActiveFinca } from "../../backend/services/fincas";
-import { getLecturasByFinca } from "../../backend/services/lecturas";
+} from "../../shared/plantMatrix";
+import {
+  getHealthBadge,
+  getPhBadge,
+  getProdBadge,
+} from "../../shared/badges";
+import { toScriptJson } from "../../shared/serialize";
+import { resolveActiveFinca } from "../../backend/services/farms";
+import { getLecturasByFinca } from "../../backend/services/readings";
 
 interface Props {
   currentUserName?: string;
@@ -25,74 +29,45 @@ const ctx = await resolveActiveFinca(Astro.request);
 const fincaId = ctx?.finca?.id ?? "global";
 const plants: PlantMatrixItem[] = ctx?.finca
   ? buildPlantsGridFromRecords(await getLecturasByFinca(ctx.finca.id))
-  : getAllPlantsGrid();
-
-// Helpers para badges y semáforos
-function getPhBadge(ph: number) {
-  if (ph >= 6.0 && ph <= 6.8) {
-    return { label: "Óptimo", class: "bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 border-lime-300" };
-  }
-  if (ph >= 5.5 && ph <= 7.2) {
-    return { label: "Atención", class: "bg-green-100 text-green-800 dark:bg-stone-900/50 dark:text-stone-300 border-green-300" };
-  }
-  return { label: "Crítico", class: "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300" };
-}
-
-function getProdBadge(prod: string) {
-  if (prod === 'Alta') return "bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 border-lime-300";
-  if (prod === 'Media') return "bg-green-100 text-green-800 dark:bg-stone-900/50 dark:text-stone-300 border-green-300";
-  return "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300";
-}
-
-function getHealthBadge(sanidad: string) {
-  if (sanidad === 'Excelente' || sanidad === 'Saludable') {
-    return { icon: '🟢', label: sanidad, class: "bg-lime-50 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300 border-lime-200 dark:border-lime-800" };
-  }
-  if (sanidad === 'Vulnerable') {
-    return { icon: '🟡', label: sanidad, class: "bg-green-50 text-green-700 dark:bg-stone-900/40 dark:text-stone-300 border-green-200 dark:border-stone-800" };
-  }
-  return { icon: '🔴', label: sanidad, class: "bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800" };
-}
+  : buildEmptyPlantsGrid();
 
 const hasRealData = plants.some(p => Boolean(p.latestMetric && p.latestMetric.fecha));
-const totalPlants = plants.length || 20;
 
-const validPh = hasRealData ? plants.filter(p => p.latestMetric.phSuelo !== null && p.latestMetric.phSuelo !== undefined) : [];
+const validPh = hasRealData ? plants.filter(p => Boolean(p.latestMetric.fecha) && p.latestMetric.phSuelo !== null && p.latestMetric.phSuelo !== undefined) : [];
 const globalAvgPh = validPh.length > 0 ? +(validPh.reduce((acc, p) => acc + p.latestMetric.phSuelo, 0) / validPh.length).toFixed(2) : "--";
 
-const validTin = hasRealData ? plants.filter(p => p.latestMetric.tempInterna !== null && p.latestMetric.tempInterna !== undefined && !isNaN(Number(p.latestMetric.tempInterna))) : [];
+const validTin = hasRealData ? plants.filter(p => Boolean(p.latestMetric.fecha) && p.latestMetric.tempInterna !== null && p.latestMetric.tempInterna !== undefined && !isNaN(Number(p.latestMetric.tempInterna))) : [];
 const globalAvgTin = validTin.length > 0 ? +(validTin.reduce((acc, p) => acc + Number(p.latestMetric.tempInterna), 0) / validTin.length).toFixed(1) : null;
 const globalAvgTinStr = hasRealData ? (globalAvgTin !== null ? `${globalAvgTin}°C` : "N/D") : "--";
 
-const validTout = hasRealData ? plants.filter(p => p.latestMetric.tempExterna !== null && p.latestMetric.tempExterna !== undefined) : [];
-const globalAvgTout = validTout.length > 0 ? +(validTout.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / validTout.length).toFixed(1) : "--";
+const validTout = hasRealData ? plants.filter(p => Boolean(p.latestMetric.fecha) && p.latestMetric.tempExterna !== null && p.latestMetric.tempExterna !== undefined) : [];
+const globalAvgTout = validTout.length > 0 ? +(validTout.reduce((acc, p) => acc + (p.latestMetric.tempExterna ?? 0), 0) / validTout.length).toFixed(1) : "--";
 
-const validTsoil = hasRealData ? plants.filter(p => p.latestMetric.tempSuelo !== null && p.latestMetric.tempSuelo !== undefined) : [];
+const validTsoil = hasRealData ? plants.filter(p => Boolean(p.latestMetric.fecha) && p.latestMetric.tempSuelo !== null && p.latestMetric.tempSuelo !== undefined) : [];
 const globalAvgTsoil = validTsoil.length > 0 ? +(validTsoil.reduce((acc, p) => acc + (p.latestMetric.tempSuelo || 0), 0) / validTsoil.length).toFixed(1) : "--";
 
-const validGrowth = hasRealData ? plants.filter(p => p.latestMetric.crecimiento !== null && p.latestMetric.crecimiento !== undefined) : [];
+const validGrowth = hasRealData ? plants.filter(p => Boolean(p.latestMetric.fecha) && p.latestMetric.crecimiento !== null && p.latestMetric.crecimiento !== undefined) : [];
 const globalAvgGrowth = validGrowth.length > 0 ? Math.round(validGrowth.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / validGrowth.length) : "--";
 
-const validHumedad = hasRealData ? plants.filter(p => p.latestMetric.humedad !== null && p.latestMetric.humedad !== undefined && !isNaN(Number(p.latestMetric.humedad))) : [];
+const validHumedad = hasRealData ? plants.filter(p => Boolean(p.latestMetric.fecha) && p.latestMetric.humedad !== null && p.latestMetric.humedad !== undefined && !isNaN(Number(p.latestMetric.humedad))) : [];
 const globalAvgHumedad = validHumedad.length > 0 ? Math.round(validHumedad.reduce((acc, p) => acc + Number(p.latestMetric.humedad), 0) / validHumedad.length) : "--";
 
 const filasKeys = ['t0', 't1', 't2', 't3'] as const;
 const filaMetrics = filasKeys.map((f) => {
   const fPlants = plants.filter(p => p.fila === f);
-  const count = fPlants.length || 1;
-  const phArr = hasRealData ? fPlants.filter(p => p.latestMetric.phSuelo != null) : [];
+  const phArr = hasRealData ? fPlants.filter(p => Boolean(p.latestMetric.fecha) && p.latestMetric.phSuelo != null) : [];
   const avgPh = phArr.length > 0 ? +(phArr.reduce((acc, p) => acc + p.latestMetric.phSuelo, 0) / phArr.length).toFixed(2) : 0;
 
   const tinArr = hasRealData ? fPlants.filter(p => p.latestMetric.tempInterna != null && !isNaN(Number(p.latestMetric.tempInterna))) : [];
   const avgTin = tinArr.length > 0 ? +(tinArr.reduce((acc, p) => acc + Number(p.latestMetric.tempInterna), 0) / tinArr.length).toFixed(1) : null;
 
   const toutArr = hasRealData ? fPlants.filter(p => p.latestMetric.tempExterna != null) : [];
-  const avgTout = toutArr.length > 0 ? +(toutArr.reduce((acc, p) => acc + p.latestMetric.tempExterna, 0) / toutArr.length).toFixed(1) : 0;
+  const avgTout = toutArr.length > 0 ? +(toutArr.reduce((acc, p) => acc + (p.latestMetric.tempExterna ?? 0), 0) / toutArr.length).toFixed(1) : 0;
 
   const tsoilArr = hasRealData ? fPlants.filter(p => p.latestMetric.tempSuelo != null) : [];
   const avgTsoil = tsoilArr.length > 0 ? +(tsoilArr.reduce((acc, p) => acc + (p.latestMetric.tempSuelo || 0), 0) / tsoilArr.length).toFixed(1) : 0;
 
-  const growthArr = hasRealData ? fPlants.filter(p => p.latestMetric.crecimiento != null) : [];
+  const growthArr = hasRealData ? fPlants.filter(p => Boolean(p.latestMetric.fecha) && p.latestMetric.crecimiento != null) : [];
   const avgGrowth = growthArr.length > 0 ? Math.round(growthArr.reduce((acc, p) => acc + p.latestMetric.crecimiento, 0) / growthArr.length) : 0;
 
   return {
@@ -107,24 +82,56 @@ const filaMetrics = filasKeys.map((f) => {
   };
 });
 
-const healthCounts = {
-  Excelente: hasRealData ? plants.filter(p => p.latestMetric.sanidad === 'Excelente').length : 0,
-  Saludable: hasRealData ? plants.filter(p => p.latestMetric.sanidad === 'Saludable').length : 0,
-  Vulnerable: hasRealData ? plants.filter(p => p.latestMetric.sanidad === 'Vulnerable').length : 0,
-  Crítica: hasRealData ? plants.filter(p => p.latestMetric.sanidad === 'Crítica').length : 0,
+const filaConMayor = (key: "avgPh" | "avgTin" | "avgTout" | "avgTsoil" | "avgGrowth") => {
+  const conDatos = filaMetrics.filter((f) => Number(f[key]) > 0);
+  if (conDatos.length === 0) return null;
+  return conDatos.reduce((a, b) => (Number(b[key]) > Number(a[key]) ? b : a));
 };
 
-const prodCounts = {
-  Alta: hasRealData ? plants.filter(p => p.latestMetric.productividad === 'Alta').length : 0,
-  Media: hasRealData ? plants.filter(p => p.latestMetric.productividad === 'Media').length : 0,
-  Baja: hasRealData ? plants.filter(p => p.latestMetric.productividad === 'Baja').length : 0,
-};
+const filaMasCalida = filaConMayor("avgTin");
+const filaMayorCrecimiento = filaConMayor("avgGrowth");
 
-const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthCounts.Saludable) / totalPlants) * 100) : "--";
+const phChartInfo =
+  globalAvgPh === "--"
+    ? "Aún no hay mediciones de pH para la finca activa."
+    : `El pH del suelo regula la absorción de nutrientes. Promedio general: ${globalAvgPh} (banda óptima 6.0 - 6.8).`;
+
+const tinChartInfo =
+  globalAvgTin === null
+    ? "Aún no hay mediciones de temperatura interna para la finca activa."
+    : `Temperatura interna promedio: ${globalAvgTin}°C (rango de confort 23 - 26°C).${
+        filaMasCalida ? ` Mayor media en ${filaMasCalida.label}: ${filaMasCalida.avgTin}°C.` : ""
+      }`;
+
+const toutChartInfo =
+  globalAvgTout === "--"
+    ? "Aún no hay mediciones de temperatura exterior para la finca activa."
+    : `Temperatura exterior promedio: ${globalAvgTout}°C.${
+        globalAvgTin !== null && typeof globalAvgTout === "number"
+          ? ` Diferencial con el interior: ${(globalAvgTin - globalAvgTout).toFixed(1)}°C.`
+          : ""
+      }`;
+
+const tsoilChartInfo =
+  globalAvgTsoil === "--"
+    ? "Aún no hay mediciones de temperatura del sustrato para la finca activa."
+    : `Temperatura radicular promedio: ${globalAvgTsoil}°C (rango óptimo 19 - 22°C).`;
+
+const growthChartInfo =
+  globalAvgGrowth === "--"
+    ? "Aún no hay mediciones de crecimiento para la finca activa."
+    : `Crecimiento vegetativo promedio: ${globalAvgGrowth}%.${
+        filaMayorCrecimiento
+          ? ` Mayor avance en ${filaMayorCrecimiento.label}: ${filaMayorCrecimiento.avgGrowth}%.`
+          : ""
+      }`;
+
+const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zona óptima de operación está entre 60% y 80% para favorecer el desarrollo foliar sin propiciar hongos ni estrés hídrico.`;
+
 ---
 
 <!-- Datos de plantas serializados de forma segura para el script de cliente -->
-<script id="plants-data-source" type="application/json" set:html={JSON.stringify(plants)}></script>
+<script is:inline id="plants-data-source" type="application/json" set:html={toScriptJson(plants)}></script>
 <script is:inline define:vars={{ fincaId }}>window.__MACOLLO_FINCA_ID__ = fincaId;</script>
 
 <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
@@ -150,7 +157,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
         <p class="text-xs sm:text-sm text-green-600 dark:text-stone-400 mt-1">
           Sesión activa: <strong class="text-green-900 dark:text-stone-300 font-semibold">{currentUserName}</strong> ({currentUserRole})
           <span class="mx-2 text-green-300 dark:text-stone-700 hidden sm:inline">•</span>
-          <a href="/historial" class="inline-flex items-center gap-1 text-green-600 dark:text-stone-400 font-bold hover:underline">
+          <a href="/history" class="inline-flex items-center gap-1 text-green-600 dark:text-stone-400 font-bold hover:underline">
             <span>📅 Ver Historial Multidía</span>
             <span>→</span>
           </a>
@@ -371,7 +378,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           data-chart-subtitle="Zona óptima (6.0 - 6.8 pH) y dispersión de las 20 plantas"
           data-chart-icon="🧪"
           data-chart-badge={`${globalAvgPh} pH Promedio`}
-          data-chart-info="El pH del suelo regula directamente la solubilidad y absorción de nutrientes. El promedio general es de ${globalAvgPh} pH, ubicándose en la banda óptima agronómica. Se aprecian valores controlados en las 4 filas con alertas puntuales en t2 Col 4."
+          data-chart-info={phChartInfo}
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
@@ -462,7 +469,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           data-chart-subtitle="Microclima interior por fila y zonas de ventilación"
           data-chart-icon="🌡️"
           data-chart-badge={`${globalAvgTinStr} Promedio`}
-          data-chart-info={globalAvgTin !== null ? `La temperatura interna promedio es de ${globalAvgTin}°C, situándose dentro de la zona de confort agronómico (23°C - 26°C). Las filas t0 y t3 gozan de excelente ventilación, mientras que la fila t2 presenta acumulación térmica en su extremo.` : "Temperatura foliar no tomada el 2026-09-29 y 2026-09-30 debido a mantenimiento de sensores."}
+          data-chart-info={tinChartInfo}
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
@@ -533,7 +540,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           data-chart-subtitle="Clima exterior registrado en sensores perimetrales"
           data-chart-icon="☀️"
           data-chart-badge={`${globalAvgTout}°C Promedio`}
-          data-chart-info="Monitorea las condiciones climáticas del entorno que impactan la cubierta del invernadero. El promedio exterior es de ${globalAvgTout}°C, lo que genera un diferencial térmico protector de +4.6°C al interior."
+          data-chart-info={toutChartInfo}
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
@@ -596,7 +603,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           data-chart-subtitle="Condición térmica del sustrato radicular de absorción"
           data-chart-icon="🌱"
           data-chart-badge={`${globalAvgTsoil}°C Promedio`}
-          data-chart-info="La temperatura en la rizosfera (zona de raíces) promedia ${globalAvgTsoil}°C, situándose en el rango óptimo (19°C - 22°C) que asegura un flujo radicular óptimo y previene anoxia en las raíces."
+          data-chart-info={tsoilChartInfo}
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
@@ -667,7 +674,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           data-chart-subtitle="Porcentaje de desarrollo foliar y vigor por fila"
           data-chart-icon="📈"
           data-chart-badge={`${globalAvgGrowth}% Promedio`}
-          data-chart-info="Indica el porcentaje de desarrollo fenológico. La Fila t3 lidera el avance con 87% (etapa de maduración avanzada), la Fila t0 con 82% (floración vigorosa), t1 con 76% y t2 con 68%."
+          data-chart-info={growthChartInfo}
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
@@ -730,7 +737,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           data-chart-subtitle="Porcentaje de humedad relativa por fila y zona óptima (60–80%)"
           data-chart-icon="💧"
           data-chart-badge={`${globalAvgHumedad}% Promedio`}
-          data-chart-info={`La humedad relativa promedio es de ${globalAvgHumedad}%, monitoreada en todas las filas del invernadero. La zona óptima de operación se sitúa entre 60% y 80% para favorecer el desarrollo foliar sin propiciar hongos ni estrés hídrico.`}
+          data-chart-info={humedadChartInfo}
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
@@ -844,7 +851,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           id="table-search"
           type="text"
           placeholder="Buscar por planta (ej: P-01), fila (t0..t3), columna o responsable..."
-          class="px-3 py-1.5 rounded-xl border border-green-200 dark:border-stone-600 bg-green-50 dark:bg-stone-700/50 text-green-950 dark:text-white min-w-[260px] focus:ring-2 focus:ring-lime-500 outline-none"
+          class="w-full sm:w-auto sm:min-w-[260px] px-3 py-1.5 rounded-xl border border-green-200 dark:border-stone-600 bg-green-50 dark:bg-stone-700/50 text-green-950 dark:text-white focus:ring-2 focus:ring-lime-500 outline-none"
         />
 
         <select
@@ -1433,7 +1440,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
 </div>
 
 <!-- 5. MODAL: REGISTRAR NUEVA MEDICIÓN (FORMULARIO) -->
-<div id="modal-add" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">
+<div id="modal-add" data-no-temp-convert class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300">
   <div class="bg-[#f4fce3] dark:bg-stone-800 rounded-2xl shadow-2xl border border-green-200 dark:border-[#166534] max-w-xl w-full max-h-[90vh] overflow-y-auto p-6">
     
     <div class="flex justify-between items-start mb-5 pb-3 border-b border-green-100 dark:border-[#166534]">
@@ -1605,6 +1612,28 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
 
 <!-- SCRIPT CLIENTE -->
 <script>
+  import {
+    getHealthBadge as getHealthBadgeClient,
+    getPhBadge as getPhBadgeClient,
+    getProdBadge as getProdBadgeClient,
+  } from "../../shared/badges";
+  import {
+    resolvePlantCoordinates,
+    type MetricRecord,
+  } from "../../shared/plantMatrix";
+  import {
+    mergeRecords,
+    purgeMockStorage,
+    readStoredRecords,
+  } from "../../shared/clientStorage";
+  import { escapeHtml } from "../../shared/serialize";
+  import {
+    applyTempUnitToDocument,
+    getSyncIntervalMs,
+    onPreferencesChanged,
+  } from "../../shared/preferences";
+  import { showReadingAlerts } from "../../shared/alerts";
+
   // Cargar estado inicial de plantas desde el script embebido
   let plantsState: any[] = [];
   try {
@@ -1613,6 +1642,10 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
   } catch (err) {
     console.error("Error al cargar datos de plantas:", err);
   }
+
+  let serverRecords: MetricRecord[] = plantsState.flatMap(
+    (plant: any) => plant.history || [],
+  );
 
   // Elementos del Modal de Planta Individual
   const plantModal = document.getElementById('plant-metrics-modal');
@@ -1626,8 +1659,6 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
   const modalPlantSubtitle = document.getElementById('modal-plant-subtitle');
   const modalPlantHealth = document.getElementById('modal-plant-health');
   const modalPlantPhase = document.getElementById('modal-plant-phase');
-  const modalPlantTime = document.getElementById('modal-plant-time');
-  const modalPlantResp = document.getElementById('modal-plant-resp');
   const modalPlantObs = document.getElementById('modal-plant-obs');
 
   const modalKpiPh = document.getElementById('modal-kpi-ph');
@@ -2021,61 +2052,92 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
     if (!found) return;
     currentOpenPlant = found;
     const m = found.latestMetric;
+    const hasData = Boolean(m.fecha);
+    const svgs = [
+      modalSvgPh,
+      modalSvgTin,
+      modalSvgTout,
+      modalSvgTsoil,
+      modalSvgGrowth,
+      modalSvgHealth,
+    ];
 
     // Poblar textos de cabecera
     if (modalPlantTitle) modalPlantTitle.textContent = `Planta ${found.plantId} (Fila ${found.fila} • ${found.columna})`;
     if (modalPlantSubtitle) {
-      modalPlantSubtitle.innerHTML = `Medición de hoy registrada a las <strong id="modal-plant-time">${m.hora}</strong> (${m.fecha}) • Responsable: <strong id="modal-plant-resp">${m.responsable}</strong>`;
+      modalPlantSubtitle.innerHTML = hasData
+        ? `Última medición a las <strong id="modal-plant-time">${escapeHtml(m.hora)}</strong> (${escapeHtml(m.fecha)}) • Responsable: <strong id="modal-plant-resp">${escapeHtml(m.responsable)}</strong>`
+        : 'Sin mediciones registradas para esta planta.';
     }
 
     const isCritical = m.sanidad === 'Crítica';
     const isWarning = m.sanidad === 'Vulnerable';
-    const icon = isCritical ? '🥀' : isWarning ? '🌿' : '🪴';
+    const icon = hasData ? (isCritical ? '🥀' : isWarning ? '🌿' : '🪴') : '🪴';
     if (modalPlantIcon) modalPlantIcon.textContent = icon;
 
     if (modalPlantHealth) {
-      modalPlantHealth.textContent = `${isCritical ? '🔴' : isWarning ? '🟡' : '🟢'} ${m.sanidad}`;
+      modalPlantHealth.textContent = hasData
+        ? `${isCritical ? '🔴' : isWarning ? '🟡' : '🟢'} ${m.sanidad}`
+        : '⚪ Sin datos';
       modalPlantHealth.className = `px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-        isCritical 
-          ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
-          : isWarning
-            ? 'bg-green-50 text-green-700 border-green-200 dark:bg-stone-950/40 dark:text-stone-300 dark:border-stone-800'
-            : 'bg-lime-50 text-lime-700 border-lime-200 dark:bg-lime-950/40 dark:text-lime-300 dark:border-lime-800'
+        !hasData
+          ? 'bg-stone-100 text-stone-600 border-stone-200 dark:bg-stone-900/50 dark:text-stone-400 dark:border-stone-700'
+          : isCritical
+            ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
+            : isWarning
+              ? 'bg-green-50 text-green-700 border-green-200 dark:bg-stone-950/40 dark:text-stone-300 dark:border-stone-800'
+              : 'bg-lime-50 text-lime-700 border-lime-200 dark:bg-lime-950/40 dark:text-lime-300 dark:border-lime-800'
       }`;
     }
 
-    if (modalPlantPhase) modalPlantPhase.textContent = m.faseCrecimiento;
-    if (modalPlantObs) modalPlantObs.textContent = m.observaciones || 'Sin observaciones adicionales registradas hoy.';
+    if (modalPlantPhase) modalPlantPhase.textContent = hasData ? m.faseCrecimiento : 'Sin datos';
+    if (modalPlantObs) modalPlantObs.textContent = hasData
+      ? m.observaciones || 'Sin observaciones adicionales registradas hoy.'
+      : 'Aún no hay mediciones para esta planta.';
 
     // Poblar KPIs numéricos
-    if (modalKpiPh) modalKpiPh.textContent = m.phSuelo.toFixed(1);
+    if (modalKpiPh) modalKpiPh.textContent = hasData ? m.phSuelo.toFixed(1) : 'N/D';
     if (modalKpiPhDesc) {
-      const isPhOpt = m.phSuelo >= 6.0 && m.phSuelo <= 6.8;
-      modalKpiPhDesc.textContent = isPhOpt ? 'Óptimo (6.0-6.8)' : m.phSuelo < 6.0 ? 'Ácido (<6.0)' : 'Alcalino (>6.8)';
-      modalKpiPhDesc.className = `block text-[10px] font-bold mt-0.5 ${isPhOpt ? 'text-lime-600' : 'text-green-600'}`;
+      const isPhOpt = hasData && m.phSuelo >= 6.0 && m.phSuelo <= 6.8;
+      modalKpiPhDesc.textContent = !hasData
+        ? 'Sin datos'
+        : isPhOpt
+          ? 'Óptimo (6.0-6.8)'
+          : m.phSuelo < 6.0
+            ? 'Ácido (<6.0)'
+            : 'Alcalino (>6.8)';
+      modalKpiPhDesc.className = `block text-[10px] font-bold mt-0.5 ${!hasData ? 'text-stone-500' : isPhOpt ? 'text-lime-600' : 'text-green-600'}`;
     }
 
     if (modalKpiTin) {
-      modalKpiTin.textContent = (m.tempInterna !== null && m.tempInterna !== undefined)
+      modalKpiTin.textContent = hasData && m.tempInterna !== null && m.tempInterna !== undefined
         ? `${Number(m.tempInterna).toFixed(1)}°C`
         : 'N/D';
     }
-    if (modalKpiTsoil) modalKpiTsoil.textContent = (m.tempSuelo !== null && m.tempSuelo !== undefined && !isNaN(Number(m.tempSuelo))) ? `${Number(m.tempSuelo).toFixed(1)}°C` : 'N/D';
-    if (modalKpiTout) modalKpiTout.textContent = (m.tempExterna !== null && m.tempExterna !== undefined && !isNaN(Number(m.tempExterna))) ? `${Number(m.tempExterna).toFixed(1)}°C` : 'N/D';
-    if (modalKpiGrowth) modalKpiGrowth.textContent = `${m.crecimiento}%`;
-    if (modalKpiGrowthBar) modalKpiGrowthBar.style.width = `${m.crecimiento}%`;
-    if (modalKpiProd) modalKpiProd.textContent = m.productividad;
+    if (modalKpiTsoil) modalKpiTsoil.textContent = hasData && m.tempSuelo !== null && m.tempSuelo !== undefined && !isNaN(Number(m.tempSuelo)) ? `${Number(m.tempSuelo).toFixed(1)}°C` : 'N/D';
+    if (modalKpiTout) modalKpiTout.textContent = hasData && m.tempExterna !== null && m.tempExterna !== undefined && !isNaN(Number(m.tempExterna)) ? `${Number(m.tempExterna).toFixed(1)}°C` : 'N/D';
+    if (modalKpiGrowth) modalKpiGrowth.textContent = hasData ? `${m.crecimiento}%` : 'N/D';
+    if (modalKpiGrowthBar) modalKpiGrowthBar.style.width = hasData ? `${m.crecimiento}%` : '0%';
+    if (modalKpiProd) modalKpiProd.textContent = hasData ? m.productividad : 'N/D';
 
     // Mostrar modal
     plantModal?.classList.remove('hidden');
 
     // Renderizar los 6 gráficos SVG vectoriales individuales
-    renderSvgPh(found.history);
-    renderSvgTin(found.history);
-    renderSvgTout(found.history);
-    renderSvgTsoil(found.history);
-    renderSvgGrowth(found.history);
-    renderSvgHealth(found.history);
+    if (found.history.length === 0) {
+      svgs.forEach((svg) => {
+        if (svg) svg.innerHTML = '';
+      });
+    } else {
+      renderSvgPh(found.history);
+      renderSvgTin(found.history);
+      renderSvgTout(found.history);
+      renderSvgTsoil(found.history);
+      renderSvgGrowth(found.history);
+      renderSvgHealth(found.history);
+    }
+
+    applyTempUnitToDocument();
   }
 
   // Elementos del Modal de Maximización de Gráfico (Lightbox Fullscreen)
@@ -2127,6 +2189,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
     }
 
     chartMaxModal?.classList.remove('hidden');
+    applyTempUnitToDocument();
   }
 
   // Delegar clics para maximizar en cualquier tarjeta con clase .chart-card-maximizable
@@ -2292,19 +2355,17 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
     }
 
     try {
-      const response = await fetch('/api/export-excel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plants: plantsState })
-      });
+      const response = await fetch('/api/export-excel');
 
       if (!response.ok) {
         throw new Error(`Error en servidor (${response.status})`);
       }
 
       const blob = await response.blob();
-      const nowStr = new Date().toISOString().slice(0, 10);
-      const filename = `Macollo_Mediciones_Invernadero_${nowStr}.xlsx`;
+      const disposition = response.headers.get('Content-Disposition') || '';
+      const filename =
+        /filename="?([^";]+)"?/.exec(disposition)?.[1] ||
+        `Macollo_Mediciones_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2372,7 +2433,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
   btnCloseModal?.addEventListener('click', closeModalForm);
   btnCancelModal?.addEventListener('click', closeModalForm);
 
-  formNewMetric?.addEventListener('submit', (e) => {
+  formNewMetric?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fila = (document.getElementById('input-fila') as HTMLSelectElement).value;
     const columna = (document.getElementById('input-columna') as HTMLSelectElement).value;
@@ -2416,6 +2477,34 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
         observaciones: obs
       };
 
+      const fincaId = (window as any).__MACOLLO_FINCA_ID__ ?? 'global';
+      const sileo = (window as any).sileo;
+      if (fincaId === 'global') {
+        sileo?.error?.({
+          title: 'Sin finca activa',
+          description: 'Selecciona una finca antes de registrar mediciones.',
+        });
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/farms/${fincaId}/readings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records: [newRecord] }),
+        });
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(data?.message || `Error ${response.status}`);
+        }
+      } catch (err) {
+        sileo?.error?.({
+          title: 'No se pudo guardar la medición',
+          description: err instanceof Error ? err.message : String(err),
+        });
+        return;
+      }
+
       targetPlant.latestMetric = newRecord;
       targetPlant.history.push(newRecord);
 
@@ -2437,12 +2526,12 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
         row.dataset.obs = obs;
 
         const cells = row.querySelectorAll('td');
-        if (cells[2]) cells[2].innerHTML = `<span class="font-semibold text-green-950 dark:text-white block text-xs">${todayStr}</span><span class="text-[11px] text-green-600 font-mono">${timeStr}</span>`;
+        if (cells[2]) cells[2].innerHTML = `<span class="font-semibold text-green-950 dark:text-white block text-xs">${escapeHtml(todayStr)}</span><span class="text-[11px] text-green-600 font-mono">${escapeHtml(timeStr)}</span>`;
         if (cells[3]) cells[3].innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black border bg-lime-100 text-lime-800 border-lime-300"><span>${ph.toFixed(1)}</span><span class="text-[9px] opacity-75">pH</span></span>`;
         if (cells[4]) cells[4].innerHTML = `<span class="px-2 py-0.5 rounded bg-green-50 font-mono font-bold text-green-700">${tin.toFixed(1)}°C</span>`;
         if (cells[5]) cells[5].innerHTML = `<span class="px-2 py-0.5 rounded bg-blue-50 font-mono font-bold text-blue-700">${tout.toFixed(1)}°C</span>`;
         if (cells[6]) cells[6].innerHTML = `<span class="px-2 py-0.5 rounded bg-lime-50 font-mono font-bold text-lime-700">${tsoil.toFixed(1)}°C</span>`;
-        if (cells[7]) cells[7].innerHTML = `<div class="flex items-center justify-between text-xs font-bold text-green-800 mb-1"><span>${targetPlant.latestMetric.faseCrecimiento}</span><span class="text-lime-600 font-mono">${growth}%</span></div><div class="w-full bg-green-200 h-1.5 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-teal-500 to-lime-500 h-full rounded-full" style="width: ${growth}%"></div></div>`;
+        if (cells[7]) cells[7].innerHTML = `<div class="flex items-center justify-between text-xs font-bold text-green-800 mb-1"><span>${escapeHtml(targetPlant.latestMetric.faseCrecimiento)}</span><span class="text-lime-600 font-mono">${growth}%</span></div><div class="w-full bg-green-200 h-1.5 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-teal-500 to-lime-500 h-full rounded-full" style="width: ${growth}%"></div></div>`;
       }
 
       // Reabrir modal de la planta con los datos actualizados
@@ -2453,184 +2542,53 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
     formNewMetric?.reset();
   });
 
-  // --- SINCRONIZACIÓN EN TIEMPO REAL CON HISTORIAL Y GOOGLE SHEETS ---
   const FINCA_SCOPE = (window as any).__MACOLLO_FINCA_ID__ ?? 'global';
-  const STORAGE_KEY_RECORDS = `macollo_custom_history_records_${FINCA_SCOPE}`;
-  const STORAGE_KEY_RECORDS_ALT = `aquasens_custom_history_records_${FINCA_SCOPE}`;
-
-  function getPhBadgeClient(ph: number) {
-    if (ph >= 6.0 && ph <= 6.8) {
-      return { label: "Óptimo", class: "bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 border-lime-300" };
-    }
-    if (ph >= 5.5 && ph <= 7.2) {
-      return { label: "Atención", class: "bg-green-100 text-green-800 dark:bg-stone-900/50 dark:text-stone-300 border-green-300" };
-    }
-    return { label: "Crítico", class: "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300" };
-  }
-
-  function getProdBadgeClient(prod: string) {
-    if (prod === 'Alta') return "bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 border-lime-300";
-    if (prod === 'Media') return "bg-green-100 text-green-800 dark:bg-stone-900/50 dark:text-stone-300 border-green-300";
-    return "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300";
-  }
-
-  function getHealthBadgeClient(sanidad: string) {
-    if (sanidad === 'Excelente' || sanidad === 'Saludable') {
-      return { icon: '🟢', label: sanidad, class: "bg-lime-50 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300 border-lime-200 dark:border-lime-800" };
-    }
-    if (sanidad === 'Vulnerable') {
-      return { icon: '🟡', label: sanidad, class: "bg-green-50 text-green-700 dark:bg-stone-900/40 dark:text-stone-300 border-green-200 dark:border-stone-800" };
-    }
-    return { icon: '🔴', label: sanidad, class: "bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800" };
-  }
-
-  function resolveCoordsMetrics(rawId?: string, filaStr?: string, colStr?: string) {
-    const pRaw = String(rawId || '').trim();
-    const fRaw = String(filaStr || '').trim();
-    const cRaw = String(colStr || '').trim();
-
-    let filaIdx = -1;
-    let colIdx = -1;
-
-    // 1. Buscar código compuesto T[0-3O]-P[1-5] en cualquiera de los valores
-    const candidateTexts = [pRaw, fRaw, cRaw].filter(Boolean);
-    for (const text of candidateTexts) {
-      const compMatch = text.match(/(?:^|[^a-zA-Z])T([0-3O])[\s\-_/.]*(?:P|F|COL|PLANTA)?[\s\-_/.]*([1-5])\b/i);
-      if (compMatch) {
-        const fChar = compMatch[1].toUpperCase() === 'O' ? '0' : compMatch[1];
-        filaIdx = parseInt(fChar, 10);
-        colIdx = parseInt(compMatch[2], 10) - 1;
-        break;
-      }
-    }
-
-    // 2. Extraer tratamiento (fila) si aún no está determinado
-    if (filaIdx === -1 && fRaw) {
-      const tratMatch = fRaw.match(/(?:TRATAMIENTO|FILA|CAMA|BLOQUE|SECCION)[\s\-_:]*T?([0-3O])\b/i);
-      if (tratMatch) {
-        const fChar = tratMatch[1].toUpperCase() === 'O' ? '0' : tratMatch[1];
-        filaIdx = parseInt(fChar, 10);
-      } else {
-        const tMatch = fRaw.match(/(?:^|[^a-zA-Z])T([0-3O])(?:[^a-zA-Z0-9]|$)/i);
-        if (tMatch) {
-          const fChar = tMatch[1].toUpperCase() === 'O' ? '0' : tMatch[1];
-          filaIdx = parseInt(fChar, 10);
-        } else {
-          const dMatch = fRaw.match(/^([0-3])$/);
-          if (dMatch) {
-            filaIdx = parseInt(dMatch[1], 10);
-          }
-        }
-      }
-    }
-
-    // 3. Extraer columna/planta (1..5) si aún no está determinada
-    const colCandidates = [cRaw, pRaw].filter(Boolean);
-    if (colIdx === -1) {
-      for (const text of colCandidates) {
-        const pMatch = text.match(/(?:^|[^a-zA-Z])P[\s\-_:]*0?([1-5])(?:[^a-zA-Z0-9]|$)/i);
-        if (pMatch) {
-          colIdx = parseInt(pMatch[1], 10) - 1;
-          break;
-        }
-        const namedColMatch = text.match(/(?:PLANTA|COL|COLUMNA|SITIO)[\s\-_:]*0?([1-5])\b/i);
-        if (namedColMatch) {
-          colIdx = parseInt(namedColMatch[1], 10) - 1;
-          break;
-        }
-        const numMatch = text.match(/^0?([1-5])$/);
-        if (numMatch) {
-          colIdx = parseInt(numMatch[1], 10) - 1;
-          break;
-        }
-      }
-    }
-
-    // 4. Si filaIdx aún no se resolvió pero se dispone de número global 1..20
-    if (filaIdx === -1) {
-      const globalMatch = pRaw.match(/^P[-_\s]?0?([1-9]|1[0-9]|20)$/i) || pRaw.match(/^0?([1-9]|1[0-9]|20)$/);
-      if (globalMatch) {
-        const num = parseInt(globalMatch[1], 10);
-        filaIdx = Math.floor((num - 1) / 5);
-        if (colIdx === -1) {
-          colIdx = (num - 1) % 5;
-        }
-      }
-    }
-
-    if (filaIdx < 0 || filaIdx > 3) filaIdx = 0;
-    if (colIdx < 0 || colIdx > 4) colIdx = 0;
-
-    const FILAS = ['t0', 't1', 't2', 't3'];
-    const COLUMNAS = ['Col 1', 'Col 2', 'Col 3', 'Col 4', 'Col 5'];
-    const plantNum = filaIdx * 5 + colIdx + 1;
-    const plantId = `P-${String(plantNum).padStart(2, '0')}`;
-    return {
-      fila: FILAS[filaIdx],
-      columna: COLUMNAS[colIdx],
-      code: `T${filaIdx}-P${colIdx + 1}`,
-      plantNumber: plantNum,
-      plantId
-    };
-  }
 
   function renderGeneralChartsDynamic(plants: any[]) {
     if (!plants || plants.length === 0) return;
-    const totalPlants = plants.length || 20;
 
-    const validPh = plants.filter((p: any) => p.latestMetric.phSuelo !== null && p.latestMetric.phSuelo !== undefined && !isNaN(Number(p.latestMetric.phSuelo)));
+    const validPh = plants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.phSuelo !== null && p.latestMetric.phSuelo !== undefined && !isNaN(Number(p.latestMetric.phSuelo)));
     const globalAvgPh = validPh.length > 0 ? +(validPh.reduce((acc: number, p: any) => acc + Number(p.latestMetric.phSuelo), 0) / validPh.length).toFixed(2) : 6.5;
 
-    const validTin = plants.filter((p: any) => p.latestMetric.tempInterna !== null && p.latestMetric.tempInterna !== undefined && !isNaN(Number(p.latestMetric.tempInterna)));
+    const validTin = plants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.tempInterna !== null && p.latestMetric.tempInterna !== undefined && !isNaN(Number(p.latestMetric.tempInterna)));
     const globalAvgTin = validTin.length > 0 ? +(validTin.reduce((acc: number, p: any) => acc + Number(p.latestMetric.tempInterna), 0) / validTin.length).toFixed(1) : null;
     const globalAvgTinStr = globalAvgTin !== null ? `${globalAvgTin}°C` : 'N/D';
 
-    const validTout = plants.filter((p: any) => p.latestMetric.tempExterna !== null && p.latestMetric.tempExterna !== undefined && !isNaN(Number(p.latestMetric.tempExterna)));
+    const validTout = plants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.tempExterna !== null && p.latestMetric.tempExterna !== undefined && !isNaN(Number(p.latestMetric.tempExterna)));
     const globalAvgTout = validTout.length > 0 ? +(validTout.reduce((acc: number, p: any) => acc + Number(p.latestMetric.tempExterna), 0) / validTout.length).toFixed(1) : 21.0;
 
-    const validTsoil = plants.filter((p: any) => p.latestMetric.tempSuelo !== null && p.latestMetric.tempSuelo !== undefined && !isNaN(Number(p.latestMetric.tempSuelo)));
+    const validTsoil = plants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.tempSuelo !== null && p.latestMetric.tempSuelo !== undefined && !isNaN(Number(p.latestMetric.tempSuelo)));
     const globalAvgTsoil = validTsoil.length > 0 ? +(validTsoil.reduce((acc: number, p: any) => acc + Number(p.latestMetric.tempSuelo), 0) / validTsoil.length).toFixed(1) : 20.0;
 
-    const validGrowth = plants.filter((p: any) => p.latestMetric.crecimiento !== null && p.latestMetric.crecimiento !== undefined && !isNaN(Number(p.latestMetric.crecimiento)));
+    const validGrowth = plants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.crecimiento !== null && p.latestMetric.crecimiento !== undefined && !isNaN(Number(p.latestMetric.crecimiento)));
     const globalAvgGrowth = validGrowth.length > 0 ? Math.round(validGrowth.reduce((acc: number, p: any) => acc + Number(p.latestMetric.crecimiento), 0) / validGrowth.length) : 0;
 
-    const validHumedad = plants.filter((p: any) => p.latestMetric.humedad !== null && p.latestMetric.humedad !== undefined && !isNaN(Number(p.latestMetric.humedad)));
+    const validHumedad = plants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.humedad !== null && p.latestMetric.humedad !== undefined && !isNaN(Number(p.latestMetric.humedad)));
     const globalAvgHumedad = validHumedad.length > 0 ? Math.round(validHumedad.reduce((acc: number, p: any) => acc + Number(p.latestMetric.humedad), 0) / validHumedad.length) : null;
 
     const filasKeys = ['t0', 't1', 't2', 't3'];
     const rowMetrics = filasKeys.map((f) => {
       const fPlants = plants.filter((p: any) => p.fila === f);
-      const phArr = fPlants.filter((p: any) => p.latestMetric.phSuelo != null && !isNaN(Number(p.latestMetric.phSuelo)));
+      const phArr = fPlants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.phSuelo != null && !isNaN(Number(p.latestMetric.phSuelo)));
       const avgPh = phArr.length > 0 ? +(phArr.reduce((a: number, b: any) => a + Number(b.latestMetric.phSuelo), 0) / phArr.length).toFixed(2) : 6.5;
 
-      const tinArr = fPlants.filter((p: any) => p.latestMetric.tempInterna !== null && p.latestMetric.tempInterna !== undefined && !isNaN(Number(p.latestMetric.tempInterna)));
+      const tinArr = fPlants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.tempInterna !== null && p.latestMetric.tempInterna !== undefined && !isNaN(Number(p.latestMetric.tempInterna)));
       const avgTin = tinArr.length > 0 ? +(tinArr.reduce((a: number, b: any) => a + Number(b.latestMetric.tempInterna), 0) / tinArr.length).toFixed(1) : null;
 
-      const toutArr = fPlants.filter((p: any) => p.latestMetric.tempExterna != null && !isNaN(Number(p.latestMetric.tempExterna)));
+      const toutArr = fPlants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.tempExterna != null && !isNaN(Number(p.latestMetric.tempExterna)));
       const avgTout = toutArr.length > 0 ? +(toutArr.reduce((a: number, b: any) => a + Number(b.latestMetric.tempExterna), 0) / toutArr.length).toFixed(1) : 21.0;
 
-      const tsoilArr = fPlants.filter((p: any) => p.latestMetric.tempSuelo != null && !isNaN(Number(p.latestMetric.tempSuelo)));
+      const tsoilArr = fPlants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.tempSuelo != null && !isNaN(Number(p.latestMetric.tempSuelo)));
       const avgTsoil = tsoilArr.length > 0 ? +(tsoilArr.reduce((a: number, b: any) => a + Number(b.latestMetric.tempSuelo), 0) / tsoilArr.length).toFixed(1) : 20.0;
 
-      const growthArr = fPlants.filter((p: any) => p.latestMetric.crecimiento != null && !isNaN(Number(p.latestMetric.crecimiento)));
+      const growthArr = fPlants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.crecimiento != null && !isNaN(Number(p.latestMetric.crecimiento)));
       const avgGrowth = growthArr.length > 0 ? Math.round(growthArr.reduce((a: number, b: any) => a + Number(b.latestMetric.crecimiento), 0) / growthArr.length) : 0;
 
-      const humArr = fPlants.filter((p: any) => p.latestMetric.humedad != null && !isNaN(Number(p.latestMetric.humedad)));
+      const humArr = fPlants.filter((p: any) => Boolean(p.latestMetric.fecha) && p.latestMetric.humedad != null && !isNaN(Number(p.latestMetric.humedad)));
       const avgHumedad = humArr.length > 0 ? Math.round(humArr.reduce((a: number, b: any) => a + Number(b.latestMetric.humedad), 0) / humArr.length) : null;
 
       return { fila: f, avgPh, avgTin, avgTout, avgTsoil, avgGrowth, avgHumedad, plants: fPlants };
     });
-
-    const healthCounts: Record<string, number> = { Excelente: 0, Saludable: 0, Vulnerable: 0, Crítica: 0 };
-    const prodCounts: Record<string, number> = { Alta: 0, Media: 0, Baja: 0 };
-    plants.forEach((p: any) => {
-      const h = p.latestMetric.sanidad;
-      if (healthCounts[h] !== undefined) healthCounts[h]++;
-      const pr = p.latestMetric.productividad;
-      if (prodCounts[pr] !== undefined) prodCounts[pr]++;
-    });
-
-    const healthyRatio = Math.round(((healthCounts.Excelente + healthCounts.Saludable) / totalPlants) * 100);
 
     // Actualizar Top 6 KPIs
     const kpiPh = document.getElementById('kpi-global-ph');
@@ -2647,12 +2605,6 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
 
     const kpiGrowth = document.getElementById('kpi-global-growth');
     if (kpiGrowth) kpiGrowth.textContent = `${globalAvgGrowth}`;
-
-    const kpiHealth = document.getElementById('kpi-global-health');
-    if (kpiHealth) kpiHealth.textContent = `${healthyRatio}`;
-
-    const kpiHealthSub = document.getElementById('kpi-global-health-sub');
-    if (kpiHealthSub) kpiHealthSub.textContent = `${healthCounts.Excelente + healthCounts.Saludable}/${totalPlants} Plantas OK`;
 
     // Gráfico 1: pH
     const badgePh = document.getElementById('general-badge-ph');
@@ -2897,37 +2849,15 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
     }
   }
 
-  function purgeMockStorage() {
-    const keys = [STORAGE_KEY_RECORDS, STORAGE_KEY_RECORDS_ALT];
-    keys.forEach(k => {
-      try {
-        const stored = localStorage.getItem(k);
-        if (!stored) return;
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          const realOnly = parsed.filter((r: any) => r && typeof r.id === 'string' && r.id.startsWith('MET-GS-'));
-          if (realOnly.length === 0) {
-            localStorage.removeItem(k);
-          } else if (realOnly.length !== parsed.length) {
-            localStorage.setItem(k, JSON.stringify(realOnly));
-          }
-        }
-      } catch {
-        localStorage.removeItem(k);
-      }
-    });
-  }
-
   function syncMetricsWithRealRecords() {
     try {
-      purgeMockStorage();
-      const stored = localStorage.getItem(STORAGE_KEY_RECORDS) || localStorage.getItem(STORAGE_KEY_RECORDS_ALT);
-      if (!stored) return;
-      const records = JSON.parse(stored);
-      if (!Array.isArray(records) || records.length === 0) return;
+      purgeMockStorage(FINCA_SCOPE);
+      const stored = readStoredRecords(FINCA_SCOPE);
+      if (stored.length === 0 && serverRecords.length === 0) return;
+      const records = mergeRecords(serverRecords, stored);
 
-      const dates = Array.from(new Set(records.map((r: any) => r.fecha))).sort((a: any, b: any) => b.localeCompare(a));
-      const latestDate = dates[0] || '2026-09-30';
+      const dates = Array.from(new Set(records.map((r) => r.fecha))).sort((a, b) => b.localeCompare(a));
+      const latestDate = dates[0] || new Date().toISOString().slice(0, 10);
 
       const liveBadge = document.getElementById('metrics-live-badge');
       if (liveBadge) {
@@ -2942,7 +2872,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           if (r.code && r.code === plant.code) return true;
           if (r.plantId && r.plantId === plant.plantId) return true;
           if (r.fila === plant.fila && r.columna === plant.columna) return true;
-          const parsed = resolveCoordsMetrics(r.code || r.plantId, r.fila, r.columna);
+          const parsed = resolvePlantCoordinates(r.code || r.plantId, r.fila, r.columna);
           return parsed.fila === plant.fila && parsed.columna === plant.columna;
         }).sort((a: any, b: any) => a.fecha.localeCompare(b.fecha));
 
@@ -3012,7 +2942,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
 
           const cellFecha = row.querySelector('.table-cell-fecha');
           if (cellFecha) {
-            cellFecha.innerHTML = `<span class="font-semibold text-green-950 dark:text-white block text-xs">${m.fecha}</span><span class="text-[11px] text-green-600 dark:text-stone-400 font-mono">${m.hora}</span>`;
+            cellFecha.innerHTML = `<span class="font-semibold text-green-950 dark:text-white block text-xs">${escapeHtml(m.fecha)}</span><span class="text-[11px] text-green-600 dark:text-stone-400 font-mono">${escapeHtml(m.hora)}</span>`;
           }
 
           const cellPh = row.querySelector('.table-cell-ph');
@@ -3042,7 +2972,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           const cellGrowth = row.querySelector('.table-cell-growth');
           if (cellGrowth) {
             const growthText = (m.alturaCm !== undefined && m.alturaCm !== null) ? `${m.alturaCm}cm` : `${m.crecimiento}%`;
-            cellGrowth.innerHTML = `<div class="flex items-center justify-between text-xs font-bold text-green-800 dark:text-stone-300 mb-1"><span class="text-[11px] truncate max-w-[80px]">${m.faseCrecimiento}</span><span class="text-lime-600 dark:text-lime-400 font-mono">${growthText}</span></div><div class="w-full bg-green-200 dark:bg-stone-700 h-1.5 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-teal-500 to-lime-500 h-full rounded-full" style="width: ${m.crecimiento}%"></div></div>`;
+            cellGrowth.innerHTML = `<div class="flex items-center justify-between text-xs font-bold text-green-800 dark:text-stone-300 mb-1"><span class="text-[11px] truncate max-w-[80px]">${escapeHtml(m.faseCrecimiento)}</span><span class="text-lime-600 dark:text-lime-400 font-mono">${growthText}</span></div><div class="w-full bg-green-200 dark:bg-stone-700 h-1.5 rounded-full overflow-hidden"><div class="bg-gradient-to-r from-teal-500 to-lime-500 h-full rounded-full" style="width: ${m.crecimiento}%"></div></div>`;
           }
 
           const cellProd = row.querySelector('.table-cell-prod');
@@ -3060,7 +2990,7 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
           const cellResp = row.querySelector('.table-cell-resp');
           if (cellResp) {
             const initials = m.responsable.split(' ').map((n: string) => n[0]).slice(0, 2).join('');
-            cellResp.innerHTML = `<div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full ${m.avatarColor || 'bg-green-600'} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0">${initials}</div><div><span class="font-bold text-green-950 dark:text-white text-xs block">${m.responsable}</span><span class="text-[10px] text-green-600 dark:text-stone-400 block font-normal">${m.responsableRol || ''}</span></div></div>`;
+            cellResp.innerHTML = `<div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full ${m.avatarColor || 'bg-green-600'} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0">${escapeHtml(initials)}</div><div><span class="font-bold text-green-950 dark:text-white text-xs block">${escapeHtml(m.responsable)}</span><span class="text-[10px] text-green-600 dark:text-stone-400 block font-normal">${escapeHtml(m.responsableRol || '')}</span></div></div>`;
           }
         }
       });
@@ -3072,13 +3002,46 @@ const healthyRatio = hasRealData ? Math.round(((healthCounts.Excelente + healthC
       if (currentOpenPlant) {
         openPlantModal(currentOpenPlant.fila, currentOpenPlant.columna);
       }
+
+      applyTempUnitToDocument();
+      showReadingAlerts(records);
     } catch (err) {
       console.error('Error al sincronizar métricas con registros reales:', err);
     }
   }
 
+  let metricsSyncTimer: ReturnType<typeof setInterval> | null = null;
+
+  async function refreshMetricsFromServer() {
+    if (!/^\d+$/.test(String(FINCA_SCOPE))) return;
+    try {
+      const response = await fetch(`/api/farms/${FINCA_SCOPE}/readings`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      if (Array.isArray(data?.records)) {
+        serverRecords = data.records;
+        syncMetricsWithRealRecords();
+      }
+    } catch (err) {
+      console.warn("[Metrics] No se pudieron actualizar las lecturas:", err);
+    }
+  }
+
+  function scheduleMetricsSync() {
+    if (metricsSyncTimer) clearInterval(metricsSyncTimer);
+    metricsSyncTimer = setInterval(refreshMetricsFromServer, getSyncIntervalMs());
+  }
+
   // Inicializar sincronización en tiempo real
   syncMetricsWithRealRecords();
+  void refreshMetricsFromServer();
+  scheduleMetricsSync();
+  onPreferencesChanged(() => {
+    scheduleMetricsSync();
+    void refreshMetricsFromServer();
+  });
   window.addEventListener('storage', syncMetricsWithRealRecords);
   window.addEventListener('aquasens:data-synced', syncMetricsWithRealRecords);
 </script>

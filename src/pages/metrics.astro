@@ -3,33 +3,27 @@ import { getSession } from "auth-astro/server";
 import Metrics from "../frontend/components/Metrics.astro";
 import Welcome from "../frontend/components/Welcome.astro";
 import Layout from "../frontend/layouts/Layout.astro";
-import Navbar from "../frontend/components/navbar.astro";
+import Navbar from "../frontend/components/Navbar.astro";
 import { getAuthUser } from "../backend/services/authz";
-import { listFincasForUser } from "../backend/services/fincas";
+import { listFincasForUser } from "../backend/services/farms";
+import { roleLabel } from "../shared/roles";
 
 const session = await getSession(Astro.request);
 const isAuthenticated = !!session;
 const userName = session?.user?.name || "Usuario";
 
-// Redirigir a /fincas si el usuario no tiene ninguna finca activa
+// Redirigir a /farms si el usuario no tiene ninguna finca activa
 if (isAuthenticated) {
   const user = await getAuthUser(Astro.request);
   if (user) {
     const fincas = await listFincasForUser(user.id, user.role);
     if (fincas.filter((f) => f.activa).length === 0) {
-      return Astro.redirect("/fincas");
+      return Astro.redirect("/farms");
     }
   }
 }
 
-const roleLabel: Record<string, string> = {
-  Superadmin: "Superadmin",
-  Admin: "Administrador de Cultivo",
-  Agropecuario: "Dueño de Finca",
-  Campesino: "Operario de Campo",
-};
-const userRole =
-  roleLabel[(session?.user as any)?.role as string] || "Operario de Campo";
+const userRole = roleLabel((session?.user as any)?.role);
 ---
 
 <Layout>

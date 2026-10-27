@@ -1,0 +1,40 @@
+---
+import { getSession } from "auth-astro/server";
+import HistoryComponent from "../frontend/components/History.astro";
+import Welcome from "../frontend/components/Welcome.astro";
+import Layout from "../frontend/layouts/Layout.astro";
+import Navbar from "../frontend/components/Navbar.astro";
+import { getAuthUser } from "../backend/services/authz";
+import { listFincasForUser } from "../backend/services/farms";
+import { roleLabel } from "../shared/roles";
+
+const session = await getSession(Astro.request);
+const isAuthenticated = !!session;
+const userName = session?.user?.name || "Usuario";
+
+// Redirigir a /farms si el usuario no tiene ninguna finca activa
+if (isAuthenticated) {
+  const user = await getAuthUser(Astro.request);
+  if (user) {
+    const fincas = await listFincasForUser(user.id, user.role);
+    if (fincas.filter((f) => f.activa).length === 0) {
+      return Astro.redirect("/farms");
+    }
+  }
+}
+
+const userRole = roleLabel((session?.user as any)?.role);
+---
+
+<Layout>
+  {
+    isAuthenticated ? (
+      <>
+        <Navbar />
+        <HistoryComponent currentUserName={userName} currentUserRole={userRole} />
+      </>
+    ) : (
+      <Welcome />
+    )
+  }
+</Layout>

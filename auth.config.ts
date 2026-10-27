@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 import { pool } from "./src/db/client";
 
 /**
- * Configuración de Auth.js para el Proyecto Invernadero.
+ * Configuración de Auth.js para Macollo.
  *
  * Proveedores:
  *  - Credentials: login con email + contraseña hasheada (bcrypt) en PostgreSQL
@@ -35,6 +35,21 @@ if (!authSecret) {
     "[Auth] AUTH_SECRET no definido. Usando clave temporal solo para desarrollo. Crea tu .env (ver .env.example).",
   );
 }
+
+// Duración de la sesión (por defecto 24 h). Se puede ajustar con
+// SESSION_MAX_AGE_HOURS en .env. Al no refrescarse (updateAge === maxAge),
+// la sesión expira de forma absoluta aunque el usuario siga activo.
+const sessionMaxAgeHours = Number(process.env.SESSION_MAX_AGE_HOURS);
+const sessionMaxAge = Math.max(
+  1,
+  Math.floor(
+    (Number.isFinite(sessionMaxAgeHours) && sessionMaxAgeHours > 0
+      ? sessionMaxAgeHours
+      : 24) *
+      60 *
+      60,
+  ),
+);
 
 export default defineConfig({
   trustHost: true,
@@ -76,7 +91,14 @@ export default defineConfig({
             `[Auth] Consultando usuario en PostgreSQL: ${identifier}`,
           );
           const res = await pool.query(
-            "SELECT * FROM users WHERE LOWER(COALESCE(email, '')) = LOWER($1) OR phone = $1",
+            `SELECT * FROM users
+             WHERE LOWER(COALESCE(email, '')) = LOWER($1)
+                OR phone = $1
+             ORDER BY CASE
+               WHEN LOWER(COALESCE(email, '')) = LOWER($1) THEN 0
+               ELSE 1
+             END
+             LIMIT 1`,
             [identifier],
           );
           const user = res.rows[0];
@@ -87,21 +109,39 @@ export default defineConfig({
           }
 
           let isValidPassword = false;
+          let needsRehash = false;
 
-          // Verificar contraseña hasheada con bcrypt
           try {
-            if (
-              user.password &&
-              (user.password.startsWith("$2a$") ||
-                user.password.startsWith("$2b$"))
-            ) {
+            if (user.password && /^\$2[aby]\$/.test(user.password)) {
               isValidPassword = await bcrypt.compare(password, user.password);
+            } else if (user.password && user.password === password) {
+              // Cuentas antiguas con contraseña en texto plano: se aceptan una
+              // vez y se migran a bcrypt inmediatamente.
+              isValidPassword = true;
+              needsRehash = true;
             }
           } catch (bcryptErr) {
             console.warn("[Auth] Error comparando hash bcrypt:", bcryptErr);
           }
 
           if (isValidPassword) {
+            if (needsRehash) {
+              try {
+                const hash = await bcrypt.hash(password, 10);
+                await pool.query(
+                  "UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2",
+                  [hash, user.id],
+                );
+                console.log(
+                  `[Auth] Contraseña migrada a bcrypt: ${user.email || user.phone || user.name}`,
+                );
+              } catch (rehashErr) {
+                console.warn(
+                  "[Auth] No se pudo migrar la contraseña:",
+                  rehashErr,
+                );
+              }
+            }
             console.log(
               `[Auth] Login exitoso: ${user.email || user.phone || user.name} (Rol: ${user.role || "Campesino"})`,
             );
@@ -129,6 +169,8 @@ export default defineConfig({
   ],
   session: {
     strategy: "jwt",
+    maxAge: sessionMaxAge,
+    updateAge: sessionMaxAge,
   },
   secret: authSecret || "dev-only-insecure-key-do-not-use-in-production",
   pages: {
@@ -146,7 +188,21 @@ export default defineConfig({
       if (user) {
         token.sub = user.id;
         token.role = (user as any).role || "Campesino";
+        // Auth.js re-firma el JWT en cada lectura y renueva su `exp`, por lo que
+        // sin este sello la sesión nunca caducaría. Guardamos el inicio de sesión
+        // para aplicar una expiración absoluta.
+        token.sessionStartedAt = Math.floor(Date.now() / 1000);
       }
+
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      const startedAt = Number(token.sessionStartedAt);
+      if (!Number.isFinite(startedAt) || startedAt <= 0) {
+        // Sesiones emitidas antes de habilitar la expiración absoluta.
+        token.sessionStartedAt = nowSeconds;
+      } else if (nowSeconds - startedAt >= sessionMaxAge) {
+        return null;
+      }
+
       return token;
     },
   },

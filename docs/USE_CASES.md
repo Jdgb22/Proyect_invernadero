@@ -35,9 +35,9 @@
 **Flujo básico (real):**
 
 1. Usuario accede a `/` (Dashboard)
-2. La matriz se renderiza en servidor desde el dataset (`metricsData.ts`, hoy vacío hasta importar/sincronizar Sheets)
+2. La matriz se renderiza en servidor desde las lecturas de la finca activa (`getLecturasByFinca`) y se completa con datos importados/sincronizados
 3. El navegador pide geolocalización y consulta clima (Open-Meteo directo; SIATA pausado, ADR-007) y AQI, con **refresco cada 10 minutos**
-4. El usuario importa datos desde `/historial` cuando hay nuevas tomas de campo
+4. El usuario importa datos desde `/history` cuando hay nuevas tomas de campo
 
 **Flujo de error:**
 
@@ -114,19 +114,19 @@
 
 ### Caso de Uso: CU-005 - Exportación de Datos
 
-**Actor(es):** Usuario autenticado, Motor de exportación (ExcelJS)
-**Descripción:** El usuario exporta las mediciones a Excel. **Implementado solo `.xlsx`** (`GET/POST /api/export-excel`, 3 hojas: Mediciones de Hoy, Historial Completo, Rangos Agronómicos, archivo `Macollo_Mediciones_Invernadero_YYYY-MM-DD.xlsx`). CSV no implementado.
+**Actor(es):** Usuario autenticado, Motor de exportación (ExcelJS / CSV)
+**Descripción:** El usuario exporta las mediciones a Excel o CSV (`GET/POST /api/export-excel` para archivo `.xlsx` de 3 hojas; `GET /api/export-csv` para archivo `.csv` con historial tabular completo).
 
 **Flujo básico:**
 
-1. Usuario selecciona fecha en `/historial` (POST puede enviar `{ plants }` filtrado)
-2. Usuario hace clic en "Exportar a Excel"
-3. Sistema genera el `.xlsx` y lo descarga automáticamente
+1. Usuario accede a `/history` o `/metrics`
+2. Usuario hace clic en "Exportar a Excel" o "Exportar CSV"
+3. Sistema genera el archivo (`.xlsx` o `.csv`) y lo descarga automáticamente
 
 **Formatos compatibles:**
 
-- Excel (.xlsx): Con encabezados, múltiples hojas por tipo de métrica
-- CSV (.csv): Datos puros, compatible con Excel/Google Sheets
+- Excel (.xlsx): Con encabezados, colores de sanidad, fórmulas y múltiples hojas por tipo de métrica
+- CSV (.csv): Datos tabulares puros, compatible con Excel/Google Sheets
 
 **Post-conditions:**
 
@@ -142,7 +142,7 @@
 
 **Flujo básico:**
 
-1. **Dueño** de la finca activa accede a `/historial` → "Conectar Google Sheets" (el botón no aparece a miembros ni staff y la API responde `403` si no es dueño)
+1. **Dueño** de la finca activa accede a `/history` → "Conectar Google Sheets" (el botón no aparece a miembros ni staff y la API responde `403` si no es dueño)
 2. Usuario pega la URL pública (documento con lectura _"Cualquier persona con el enlace"_ o _"Publicado en la web como CSV"_)
 3. Sistema descarga el CSV, valida fechas/IDs (incluye regla 29/30-sep sin temp. de suelo) y muestra conteo importado
 4. Dashboard/Métricas recargan desde PG (scopeadas por finca activa); opcionalmente se exporta a Excel

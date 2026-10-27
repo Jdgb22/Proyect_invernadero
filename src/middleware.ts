@@ -8,18 +8,20 @@ import { rateLimit, clientIp } from "./backend/services/rateLimit";
  */
 const PROTECTED_PAGES = [
   "/metrics",
-  "/historial",
+  "/history",
   "/settings",
-  "/fincas",
+  "/farms",
+  "/gallery",
   "/admin",
 ];
 
 /** Prefijos de API que exigen sesión (además de los que autorizan internamente). */
 const PROTECTED_API_PREFIXES = [
-  "/api/fincas",
-  "/api/invitaciones",
+  "/api/farms",
+  "/api/invitations",
   "/api/admin",
-  "/api/finca",
+  "/api/farm",
+  "/api/gallery",
   "/api/sync-sheets",
   "/api/export-excel",
 ];
@@ -31,14 +33,15 @@ const RATE_LIMITED: { prefix: string; limit: number; windowSeconds: number }[] =
     { prefix: "/api/auth/forgot-password", limit: 8, windowSeconds: 300 },
     { prefix: "/api/auth/reset-password", limit: 8, windowSeconds: 300 },
     { prefix: "/api/auth/callback/credentials", limit: 20, windowSeconds: 300 },
-    { prefix: "/api/invitaciones/usar", limit: 15, windowSeconds: 300 },
+    { prefix: "/api/invitations/use", limit: 15, windowSeconds: 300 },
   ];
 
 const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+  "Permissions-Policy":
+    "camera=(self *), microphone=(), geolocation=(self), payment=()",
   "Cross-Origin-Opener-Policy": "same-origin",
   "X-DNS-Prefetch-Control": "off",
   // CSP práctica: Astro inyecta scripts/estilos inline en dev; en producción

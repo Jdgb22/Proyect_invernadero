@@ -30,7 +30,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User as Usuario/Dashboard
-    participant Page as Página / (SSR, metricsData.ts)
+    participant Page as Página / (SSR, lecturas + plantMatrix)
     participant Geo as Geolocalización navegador
     participant Proxy as GET /api/siata (proxy)
     participant OM as Open-Meteo API

@@ -1,6 +1,6 @@
 # Base de Datos (PostgreSQL)
 
-> Scripts: `src/db/auth-schema.sql` (auth) y `src/db/invernadero.sql` (agronómico).
+> Scripts: `src/db/auth-schema.sql` (auth) y `src/db/greenhouse-schema.sql` (agronómico).
 > Conexión: `src/db/client.ts` (pool `pg`, SSL en producción, `max: 20`).
 > Última revisión: octubre 2026.
 
@@ -13,9 +13,9 @@ PostgreSQL 17. Dos dominios: **autenticación** (usado activamente por Auth.js y
 ```bash
 createdb invernadero
 psql invernadero -f src/db/auth-schema.sql
-psql invernadero -f src/db/invernadero.sql
+psql invernadero -f src/db/greenhouse-schema.sql
 # (Opcional) migración idempotente solo para bases creadas con el esquema anterior:
-psql invernadero -f src/db/migrations/001-roles-fincas.sql
+psql invernadero -f src/db/migrations/001-roles-farms.sql
 ```
 
 Cuentas y datos de ejemplo (Node ≥ 22, lee `.env`):
@@ -51,7 +51,7 @@ POSTGRES_DATABASE=invernadero
 CREATE TYPE user_role_enum AS ENUM ('Superadmin', 'Admin', 'Agropecuario', 'Campesino');
 ```
 
-> La migración `001-roles-fincas.sql` renombra los valores antiguos (`Super admin`→`Superadmin`, `Agronomo`→`Agropecuario`) de forma idempotente. Ver [AUTH §6](./AUTH.md) para el alcance de cada rol.
+> La migración `001-roles-farms.sql` renombra los valores antiguos (`Super admin`→`Superadmin`, `Agronomo`→`Agropecuario`) de forma idempotente. Ver [AUTH §6](./AUTH.md) para el alcance de cada rol.
 
 ### `users`
 
@@ -88,11 +88,11 @@ CREATE TYPE user_role_enum AS ENUM ('Superadmin', 'Admin', 'Agropecuario', 'Camp
 
 ---
 
-## 3. Dominio agronómico (`invernadero.sql`)
+## 3. Dominio agronómico (`greenhouse-schema.sql`)
 
 Modelo multi-tenant **por finca**: cada finca tiene 20 plantas (matriz 4×5) y cada fila de `lecturas` es una visita a una planta. Script idempotente; las tablas se ejecutan tras `auth-schema.sql`.
 
-Tablas: `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas`, `lecturas` — detalle de columnas en [§5](#5-multi-tenant-fincas-plantas-y-lecturas).
+Tablas: `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas`, `lecturas`, `photos` — detalle de columnas en [§5](#5-multi-tenant-fincas-plantas-y-lecturas).
 
 ---
 
@@ -153,7 +153,7 @@ erDiagram
 
 ## 5. Multi-tenant: fincas, plantas y lecturas
 
-El modelo de datos agronómicos es por finca (una fila de `lecturas` = una visita a una planta). Es el esquema definido en `src/db/invernadero.sql`.
+El modelo de datos agronómicos es por finca (una fila de `lecturas` = una visita a una planta). Es el esquema definido en `src/db/greenhouse-schema.sql`.
 
 ### `fincas`
 
@@ -175,13 +175,17 @@ El modelo de datos agronómicos es por finca (una fila de `lecturas` = una visit
 
 `id BIGSERIAL PK · finca_id FK · planta_id FK →plantas(id) ON DELETE CASCADE · fecha DATE · hora VARCHAR(20) · ph_suelo · temp_interna · temp_externa · temp_suelo · humedad · altura_cm · crecimiento · fase · productividad · sanidad · responsable_id FK→users SET NULL · observaciones · created_at`. Único `(finca_id, planta_id, fecha, hora)` (upsert idempotente). Índices `(finca_id, fecha)` y `(planta_id)`.
 
+### `photos` (galería por finca)
+
+`id UUID PK DEFAULT gen_random_uuid() · filename VARCHAR(255) · url TEXT · mime_type VARCHAR(100) · width · height · size_bytes BIGINT · caption TEXT · finca_id FK→fincas ON DELETE SET NULL · user_id FK→users ON DELETE SET NULL · taken_at · uploaded_at DEFAULT NOW()`. Índices `(finca_id)`, `(user_id)`, `(uploaded_at DESC)`. Fotos compartidas entre miembros de la finca activa.
+
 ---
 
 ## 6. Estado real
 
 - **Auth**: persiste en PG (dominio §2).
-- **Datos agronómicos**: ahora **sí persisten**. `POST /api/sync-sheets` (tras exigir sesión + acceso a la finca activa) hace `INSERT … ON CONFLICT` en `lecturas`. `Metrics.astro` e `Historial.astro` leen desde PG vía `getLecturasByFinca(fincaId)` y se scopean por `finca_activa`. `GET /api/fincas/:id/lecturas` expone las lecturas con control de membresía.
-- **Fallback**: `metricsData.ts` (`initialMetricsData = []`) solo se usa cuando no hay finca activa; ya no es la fuente del tablero.
+- **Datos agronómicos**: ahora **sí persisten**. `POST /api/sync-sheets` (tras exigir sesión + acceso a la finca activa) hace `INSERT … ON CONFLICT` en `lecturas`. `Metrics.astro` e `History.astro` leen desde PG vía `getLecturasByFinca(fincaId)` y se scopean por `finca_activa`. `GET /api/farms/:id/readings` expone las lecturas con control de membresía.
+- **Fallback**: sin finca activa se usa `buildEmptyPlantsGrid()` (matriz de 20 plantas sin mediciones); la fuente del tablero son las lecturas de la BD.
 
 ---
 

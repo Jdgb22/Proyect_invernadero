@@ -11,6 +11,7 @@ import {
   forbidden,
   notFound,
   parseId,
+  parseJsonBody,
 } from "../../../../backend/services/authz";
 
 const ROLES = ["Superadmin", "Admin", "Agropecuario", "Campesino"] as const;
@@ -32,12 +33,8 @@ export const PATCH: APIRoute = async ({ request, params }) => {
   const targetId = parseId(params.id);
   if (!targetId) return notFound("Usuario no encontrado.");
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return json({ message: "Cuerpo JSON inválido." }, 400);
-  }
+  const body = await parseJsonBody(request);
+  if (body === null) return json({ message: "Cuerpo JSON inválido." }, 400);
   const parsed = PatchSchema.safeParse(body);
   if (!parsed.success) return json({ message: "Rol no válido." }, 400);
 

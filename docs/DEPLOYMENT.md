@@ -11,21 +11,25 @@
 
 ## 2. Variables de entorno (Vercel → Settings → Environment Variables)
 
-| Var                                                          | Producción                    | Notas                                                                                                  |
-| :----------------------------------------------------------- | :---------------------------- | :----------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL` o `POSTGRES_HOST/PORT/USER/PASSWORD/DATABASE` | ✅ requerida                  | Apuntar a DB nube (Supabase/Neon/RDS). `client.ts` usa SSL con `rejectUnauthorized: false` en prod.    |
-| `AUTH_SECRET`                                                | ✅ requerida                  | `openssl rand -base64 32`. Sin esto el boot falla (`[Auth] Falta AUTH_SECRET`).                        |
-| `AUTH_TRUST_HOST`                                            | ✅ `true`                     | Tras proxy HTTPS de Vercel.                                                                            |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                  | Si se usa Google              | Registrar en Google Cloud el origen + callback `https://TU_DOMINIO/api/auth/callback/google`.          |
-| `SMTP_USER` / `SMTP_PASS`                                    | Si hay recuperación email     | Gmail: contraseña de aplicación (`myaccount.google.com/apppasswords`). Opcional `SMTP_HOST/PORT/FROM`. |
-| `NODE_ENV`                                                   | `production` (Vercel lo pone) | Activa SSL de PG y validación estricta de `AUTH_SECRET`.                                               |
+| Var                                                          | Producción                    | Notas                                                                                                       |
+| :----------------------------------------------------------- | :---------------------------- | :---------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL` o `POSTGRES_HOST/PORT/USER/PASSWORD/DATABASE` | ✅ requerida                  | Apuntar a DB nube (Supabase/Neon/RDS). `client.ts` usa SSL con `rejectUnauthorized: false` en prod.         |
+| `AUTH_SECRET`                                                | ✅ requerida                  | `openssl rand -base64 32`. Sin esto el boot falla (`[Auth] Falta AUTH_SECRET`).                             |
+| `AUTH_TRUST_HOST`                                            | ✅ `true`                     | Tras proxy HTTPS de Vercel.                                                                                 |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                  | Si se usa Google              | Registrar en Google Cloud el origen + callback `https://TU_DOMINIO/api/auth/callback/google`.               |
+| `SMTP_USER` / `SMTP_PASS`                                    | Si hay recuperación email     | Gmail: contraseña de aplicación (`myaccount.google.com/apppasswords`). Opcional `SMTP_HOST/PORT/FROM`.      |
+| `ML_API_URL`                                                 | Si se usa diagnóstico Trips   | URL pública HTTPS de [macollo-trips-api](https://github.com/VoctorMCL/macollo-trips-api) desplegada en VPS. |
+| `ML_API_KEY`                                                 | Si se usa diagnóstico Trips   | Se envía como `X-API-Key` al servicio ML; debe coincidir con la del VPS.                                    |
+| `NODE_ENV`                                                   | `production` (Vercel lo pone) | Activa SSL de PG y validación estricta de `AUTH_SECRET`.                                                    |
+
+> **La API de ML no se despliega en Vercel.** Requiere ~4 GB de RAM y CPU; va en un VPS aparte con HTTPS (ver [CAMERA-ML](./CAMERA-ML.md)).
 
 `.env` nunca se commitea (ver `.env.example`, `.gitignore`).
 
 ## 3. Base de datos en producción
 
 1. Crear instancia Postgres en la nube + BD `invernadero`.
-2. Ejecutar `src/db/auth-schema.sql` y luego `src/db/invernadero.sql` (psql o SQL editor del proveedor).
+2. Ejecutar `src/db/auth-schema.sql` y luego `src/db/greenhouse-schema.sql` (psql o SQL editor del proveedor).
 3. Crear el primer usuario: registrarse en la app (nace `Campesino` o `Agropecuario` según `accountType`) y promoverlo a staff:
    ```sql
    UPDATE users SET role = 'Superadmin' WHERE email = 'tu@correo.com';
