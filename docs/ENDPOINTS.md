@@ -245,6 +245,7 @@ Todas exigen sesión y revalidan membresía/rol dentro del handler. Niveles: `st
 | `/api/farms/:id/invitations/:invId` | DELETE   | Revoca                                                                                     | Dueño/staff         |
 | `/api/farms/:id/readings`           | GET      | Lecturas de la finca (`MetricRecord[]`)                                                    | Miembro/staff       |
 | `/api/farms/:id/readings`           | POST     | `{ records }` → upsert en `lecturas`                                                       | Miembro/staff       |
+| `/api/farms/:id/readings`           | DELETE   | Borra todo el historial de lecturas de la finca (restablecer datos)                        | Dueño/staff         |
 | `/api/farms/leave`                  | POST     | `{ fincaId }` abandona (si no eres dueño)                                                  | Miembro             |
 | `/api/farms/active`                 | GET/POST | Lee/fija cookie `finca_activa` (alias retrocompatible `/api/farm/active`)                  | Sesión              |
 | `/api/invitations/use`              | POST     | `{ code }` canjea (rate-limited, atómico)                                                  | Sesión              |
@@ -268,3 +269,66 @@ Códigos: `400` body/acción inválida · `403` sin permiso · `404` inexistente
 | `404`  | Cuenta no encontrada (forgot/reset).                                        |
 | `422`  | Sheets inaccesible o sin datos (revisar permisos de lectura del documento). |
 | `500`  | Fallo interno (DB, SIATA, ExcelJS). Trae `details`/`error` para depurar.    |
+
+---
+
+## Perfil — `PATCH /api/users/me`
+
+Actualiza el perfil del usuario autenticado (nombre y/o imagen de avatar). Usado desde el panel **Configuración → Perfil de Usuario**.
+
+**Archivo:** `src/pages/api/users/me.ts` · **Auth:** sesión requerida (middleware → `401`).
+
+**Request body (JSON):**
+
+```json
+{
+  "name": "Juan Pérez",
+  "image": "data:image/jpeg;base64,/9j/4AAQ... | https://...url... | ""
+}
+```
+
+| Campo   | Requerido | Reglas                                                                    |
+| :------ | :-------- | :------------------------------------------------------------------------ |
+| `name`  | No        | `min(2)`, `max(255)`. Al menos uno de `name`/`image` debe venir, o `400`. |
+| `image` | No        | `max(400_000)`; debe ser `data:image/(png                                 | jpeg | webp);base64,...`o`https://...`o`""`. |
+
+**Respuestas:**
+
+- `200` → `{ message: "Perfil actualizado.", user: { name, image } }`
+- `400` → `{ message }` (cuerpo inválido, nombre corto, formato de imagen no válido, o "No se enviaron cambios")
+- `401` → sin sesión
+- `404` → `{ message: "Usuario no encontrado." }`
+- `500` → `{ message: "No se pudo actualizar el perfil." }`
+
+```bash
+curl -X PATCH http://localhost:4321/api/users/me \
+  -H 'Content-Type: application/json' \
+  -H 'Cookie: ...' \
+  -d '{"name":"Juan Pérez"}'
+```
+
+---
+
+## Notificaciones — `POST /api/notifications/weekly-summary`
+
+Envía por email un resumen semanal del estado de la **finca activa** (lecturas, pH promedio, temperatura, plantas críticas/vulnerables, alertas). Usado desde **Configuración → Notificaciones → Resumen Semanal por Email**.
+
+**Archivo:** `src/pages/api/notifications/weekly-summary.ts` · **Auth:** sesión + acceso a la finca activa (miembro/staff); sin finca activa → `400`.
+
+**Request body:** ninguno.
+
+**Respuestas:**
+
+- `200` → `{ sent: true, message: "Resumen enviado a <email>." }`
+- `400` → `{ sent: false, message }` (no hay finca activa, o la cuenta no tiene correo)
+- `401` → sin sesión
+- `403` → sin permiso de lectura de datos de la finca
+- `502` → `{ sent: false, message }` (SMTP no configurado o fallo al enviar el correo)
+
+Requiere `SMTP_USER`/`SMTP_PASS` (o `GMAIL_USER`/`GMAIL_APP_PASSWORD`) en `.env` para envios reales; si faltan, el servidor solo imprime el código en logs.
+
+```bash
+curl -X POST http://localhost:4321/api/notifications/weekly-summary \
+  -H 'Accept: application/json' \
+  -H 'Cookie: ...'
+```
