@@ -1,0 +1,361 @@
+{
+  "ok": false,
+  "strict": false,
+  "browserSkipped": true,
+  "lint": {
+    "ok": false,
+    "errorCount": 4,
+    "warningCount": 7,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "css_transition_used",
+        "severity": "warning",
+        "message": "CSS declaration `transition: border-color 0.2s` runs on the browser clock and cannot be seeked deterministically across render workers.",
+        "selector": ".plant-card",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Keep the class or attribute swap for state; put the visual change on the paused GSAP timeline."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets autoAlpha on a clip element. Selector \"#scene-1\" resolves to element <div id=\"scene-1\" class=\"scene clip\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#scene-1",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets autoAlpha on a clip element. Selector \"#scene-2\" resolves to element <div id=\"scene-2\" class=\"scene clip\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#scene-2",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets autoAlpha on a clip element. Selector \"#scene-3\" resolves to element <div id=\"scene-3\" class=\"scene clip\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#scene-3",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_animates_clip_element",
+        "severity": "error",
+        "message": "GSAP animation sets autoAlpha on a clip element. Selector \"#scene-4\" resolves to element <div id=\"scene-4\" class=\"scene clip\">. The framework manages clip visibility, and autoAlpha writes visibility as well as opacity. Do not animate these properties on clip elements.",
+        "selector": "#scene-4",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Remove the visibility/display/autoAlpha tween, or move the content into a child <div> and target that instead."
+      },
+      {
+        "code": "gsap_infinite_repeat",
+        "severity": "warning",
+        "message": "GSAP tween uses `repeat: -1` (infinite), but the composition declares a finite 20s window. HyperFrames clips deterministic seeking and export to that explicit duration.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Keep the explicit finite composition `data-duration`. Use a finite repeat count only when the loop itself must end before the composition does."
+      },
+      {
+        "code": "composition_file_too_large",
+        "severity": "warning",
+        "message": "This HTML composition file has 428 lines. Smaller sub-compositions are easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Split coherent scenes or layers into separate .html files under compositions/, then mount them from the parent with data-composition-src so each file stays small enough to inspect, revise, and validate independently."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-1\"> is a timeline element that contains nested <div id=\"hook-text-wrap\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-1",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-1\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-2\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-2",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-2\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-3\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-3",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-3\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-4\"> is a timeline element that contains nested <p id=\"outro-pre-claim\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-4",
+        "dataAttributes": {},
+        "sourceFile": "/Users/juandavid/Documents/Proyectos mios/Proyectoinverna/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-4\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 0,
+    "samples": [],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [],
+    "checked": 0,
+    "passed": 0
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "step": 0,
+    "samples": 0
+  },
+  "audio": {
+    "ok": false,
+    "errorCount": 6,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/music/music.mp3 cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#bg-music",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "timeRange": [0, 20],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/sfx/impactBell_heavy_000.ogg cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#sfx-hook",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 1.58,
+        "timeRange": [1.58, 3.58],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/sfx/switch21.ogg cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#sfx-metric",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 5.78,
+        "timeRange": [5.78, 6.58],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/sfx/select_008.ogg cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#sfx-scan-start",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 8.94,
+        "timeRange": [8.94, 9.94],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/sfx/bong_001.ogg cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#sfx-alert",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 12.63,
+        "timeRange": [12.63, 14.13],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      },
+      {
+        "code": "audio_source_unreadable",
+        "severity": "error",
+        "message": "assets/sfx/impactBell_heavy_000.ogg cannot be read as audio ([FFmpeg] ffprobe not found. Please install FFmpeg.), so the render's audio mix fails and the render stops.",
+        "selector": "#sfx-outro",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 17.89,
+        "timeRange": [17.89, 19.89],
+        "fixHint": "Point src at a file with an audio track, or re-export this one."
+      }
+    ]
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

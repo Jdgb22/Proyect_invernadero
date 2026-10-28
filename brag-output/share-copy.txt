@@ -1,0 +1,12 @@
+Del sensor a la cosecha: control total de tu invernadero. 🌿
+
+Descubre Macollo, la plataforma integral de monitoreo agronómico inteligente:
+🌱 Matriz 4×5 en tiempo real planta por planta
+🔬 Diagnóstico fitosanitario con IA (BioCLIP 2.5) para detección de trips
+📈 Análisis de suelo y semáforos de pH por hilera
+📊 Sincronización en vivo con Google Sheets y exportación Excel (.xlsx)
+🌐 Gestión Multi-Finca con roles de campo
+
+Cultiva con certeza. Monitorea con Macollo. 🚀
+
+#AgTech #MachineLearning #BioCLIP #Agriculture #Astro #IoT #Invernadero #SmartFarming
