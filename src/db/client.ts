@@ -1,5 +1,5 @@
-import 'dotenv/config';
-import pg from 'pg';
+import "dotenv/config";
+import pg from "pg";
 
 const { Pool } = pg;
 
@@ -15,18 +15,34 @@ const { Pool } = pg;
  *  - POSTGRES_PASSWORD
  *  - POSTGRES_DATABASE
  */
-export const pool = new Pool({
-  host: process.env.POSTGRES_HOST || 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
-  user: process.env.POSTGRES_USER || 'postgres',
-  password: process.env.POSTGRES_PASSWORD || '',
-  database: process.env.POSTGRES_DATABASE || 'astro_auth_db',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+export const pool = new Pool(
+  process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl:
+          process.env.NODE_ENV === "production"
+            ? { rejectUnauthorized: false }
+            : false,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      }
+    : {
+        host: process.env.POSTGRES_HOST || "localhost",
+        port: parseInt(process.env.POSTGRES_PORT || "5432"),
+        user: process.env.POSTGRES_USER || "postgres",
+        password: process.env.POSTGRES_PASSWORD || "",
+        database: process.env.POSTGRES_DATABASE || "astro_auth_db",
+        ssl:
+          process.env.NODE_ENV === "production"
+            ? { rejectUnauthorized: false }
+            : false,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      },
+);
 
-pool.on('error', (err) => {
-  console.error('[PostgreSQL] Error inesperado en cliente inactivo:', err);
+pool.on("error", (err) => {
+  console.error("[PostgreSQL] Error inesperado en cliente inactivo:", err);
 });
