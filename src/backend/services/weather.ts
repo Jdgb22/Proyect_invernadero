@@ -1,10 +1,11 @@
-interface WeatherData {
+export interface WeatherData {
   temperature: number;
   humidity: number;
   rainProbability: number;
   weatherCode: number;
   windSpeed: number;
   isFallback: boolean;
+  locationName: string;
   source?: string;
 }
 
@@ -14,16 +15,164 @@ export function isValleDeAburra(lat: number, lon: number): boolean {
   return lat >= 6.0 && lat <= 6.5 && lon >= -75.75 && lon <= -75.4;
 }
 
+/**
+ * Obtiene el nombre del municipio/ciudad y departamento correspondiente
+ * a unas coordenadas geográficas dadas (geocodificación inversa).
+ */
+export async function reverseGeocode(
+  lat: number,
+  lon: number,
+  fetcher: typeof fetch = fetch,
+): Promise<string | null> {
+  // 1. Intento primario: BigDataCloud (rápido, sin clave de API, soporte español)
+  try {
+    const res = await fetcher(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es`,
+      { signal: AbortSignal.timeout(3500) },
+    );
+    if (res.ok) {
+      const data = (await res.json()) as {
+        city?: string;
+        locality?: string;
+        principalSubdivision?: string;
+        countryName?: string;
+      };
+      const city = data.city || data.locality || data.principalSubdivision;
+      const state = data.principalSubdivision;
+      if (city && state && city !== state) {
+        return `${city}, ${state}`;
+      }
+      if (city) return city;
+    }
+  } catch {
+    // Si falla o timeout, continúa al respaldo
+  }
+
+  // 2. Respaldo: OpenStreetMap Nominatim
+  try {
+    const res = await fetcher(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+      {
+        headers: { "User-Agent": "MacolloInvernadero/1.0" },
+        signal: AbortSignal.timeout(3500),
+      },
+    );
+    if (res.ok) {
+      const data = (await res.json()) as {
+        address?: {
+          city?: string;
+          town?: string;
+          village?: string;
+          municipality?: string;
+          county?: string;
+          state?: string;
+        };
+      };
+      const addr = data.address || {};
+      const city =
+        addr.city ||
+        addr.town ||
+        addr.village ||
+        addr.municipality ||
+        addr.county;
+      const state = addr.state;
+      if (city && state && city !== state) {
+        return `${city}, ${state}`;
+      }
+      if (city) return city;
+    }
+  } catch {
+    // Si ambos fallan, retornará null
+  }
+
+  return null;
+}
+
+/**
+ * Resuelve una consulta de texto o coordenadas en formato texto a coordenadas lat/lon
+ * y nombre de ubicación.
+ */
+export async function geocodeQuery(
+  query: string,
+  fetcher: typeof fetch = fetch,
+): Promise<{ lat: number; lon: number; name: string } | null> {
+  const trimmed = query.trim();
+  if (!trimmed) return null;
+
+  // Si son coordenadas explícitas "lat, lon"
+  const coordsMatch = trimmed.match(/^(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)$/);
+  if (coordsMatch) {
+    const lat = parseFloat(coordsMatch[1]);
+    const lon = parseFloat(coordsMatch[3]);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) {
+      const revName = await reverseGeocode(lat, lon, fetcher);
+      return {
+        lat,
+        lon,
+        name: revName || `${lat.toFixed(3)}, ${lon.toFixed(3)}`,
+      };
+    }
+  }
+
+  // Búsqueda por nombre en Open-Meteo Geocoding API
+  try {
+    const res = await fetcher(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=1&language=es&format=json`,
+      { signal: AbortSignal.timeout(4000) },
+    );
+    if (res.ok) {
+      const data = (await res.json()) as {
+        results?: Array<{
+          name: string;
+          latitude: number;
+          longitude: number;
+          admin1?: string;
+          country?: string;
+        }>;
+      };
+      if (data.results && data.results.length > 0) {
+        const item = data.results[0];
+        const fullName = item.admin1
+          ? `${item.name}, ${item.admin1}`
+          : item.name;
+        return {
+          lat: item.latitude,
+          lon: item.longitude,
+          name: fullName,
+        };
+      }
+    }
+  } catch {
+    // Fallback o error de red
+  }
+
+  return null;
+}
+
 export async function fetchWeatherData(
   lat: number,
   lon: number,
   isFallback = false,
   fetcher: typeof fetch = fetch,
+  providedLocationName?: string,
 ): Promise<WeatherData> {
   try {
-    const openMeteoData = await fetchOpenMeteo(lat, lon, fetcher);
+    const [openMeteoData, resolvedName] = await Promise.all([
+      fetchOpenMeteo(lat, lon, fetcher),
+      providedLocationName
+        ? Promise.resolve(providedLocationName)
+        : reverseGeocode(lat, lon, fetcher),
+    ]);
+
+    const locationName =
+      resolvedName ||
+      (isFallback
+        ? "Medellín, Antioquia"
+        : `${lat.toFixed(3)}, ${lon.toFixed(3)}`);
+
     return {
       ...openMeteoData,
+      locationName,
       source: "Open-Meteo (Global)",
       isFallback,
     };
@@ -35,6 +184,9 @@ export async function fetchWeatherData(
       rainProbability: 0,
       weatherCode: 0,
       windSpeed: 5,
+      locationName:
+        providedLocationName ||
+        (isFallback ? "Medellín, Antioquia" : "Ubicación actual"),
       source: "Offline Fallback",
       isFallback: true,
     };
@@ -55,7 +207,7 @@ async function fetchOpenMeteo(lat: number, lon: number, fetcher: typeof fetch) {
 
   const currentHour = new Date().getHours();
   // Al usar timezone=auto, la hora local del usuario coincidirá muy de cerca con el índice
-  const rainProb = data.hourly.precipitation_probability[currentHour] || 0;
+  const rainProb = data.hourly?.precipitation_probability?.[currentHour] ?? 0;
 
   return {
     temperature: current.temperature_2m,

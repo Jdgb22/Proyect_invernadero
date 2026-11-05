@@ -9,10 +9,13 @@ import { resolveActiveFinca } from "../../backend/services/farms";
 import { getLecturasByFinca } from "../../backend/services/readings";
 
 const ctx = await resolveActiveFinca(Astro.request);
-const plants: PlantMatrixItem[] = ctx?.finca
-  ? buildPlantsGridFromRecords(await getLecturasByFinca(ctx.finca.id))
+const finca = ctx?.finca ?? null;
+const plants: PlantMatrixItem[] = finca
+  ? buildPlantsGridFromRecords(await getLecturasByFinca(finca.id))
   : buildEmptyPlantsGrid();
-const fincaId = ctx?.finca?.id ?? "global";
+const fincaId = finca?.id ?? "global";
+const fincaNombre = finca?.nombre ?? null;
+const fincaUbicacion = finca?.ubicacion ?? null;
 
 const registros = plants.flatMap((p) => p.history);
 const tieneRegistros = registros.length > 0;
@@ -194,16 +197,45 @@ const ultimaFecha = registros
               <span id="weather-icon" class="text-xl">☀️</span>
             </div>
             <div class="flex flex-col">
-              <span id="weather-title" class="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-stone-400">
-                Clima Local
-              </span>
-              <div class="flex items-end gap-1">
-                <span id="weather-temp" class="text-xl font-black tracking-tighter text-green-900 dark:text-stone-300">--</span>
-                <span class="text-xs font-medium text-green-600 dark:text-stone-400 mb-0.5">°C</span>
+              <div class="flex items-center gap-2">
+                <span id="weather-title" class="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-stone-400">
+                  Clima Local
+                </span>
+                <span id="weather-source-badge" class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                  Detectando...
+                </span>
+              </div>
+              <div class="flex items-center gap-1 mt-0.5" title="Sitio geográfico detectado por GPS">
+                <span class="text-xs text-emerald-600 dark:text-emerald-400">📍</span>
+                <span id="weather-location-name" class="text-xs font-semibold text-stone-800 dark:text-stone-200 truncate max-w-[150px] sm:max-w-[210px]">
+                  Buscando GPS...
+                </span>
               </div>
             </div>
           </div>
+          <div class="flex flex-col items-end gap-1">
+            <div class="flex items-end gap-1">
+              <span id="weather-temp" class="text-2xl font-black tracking-tighter text-green-900 dark:text-stone-300">--</span>
+              <span class="text-xs font-medium text-green-600 dark:text-stone-400 mb-0.5">°C</span>
+            </div>
+            <button
+              id="weather-gps-btn"
+              type="button"
+              class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-200 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 transition-colors"
+              title="Actualizar o reactivar ubicación GPS actual"
+            >
+              <span id="weather-gps-icon">🎯</span>
+              <span id="weather-gps-label">Mi GPS</span>
+            </button>
+          </div>
         </div>
+
+        <!-- Aviso contextual de GPS si se bloquea permiso o hay timeout -->
+        <div id="weather-gps-notice" class="hidden text-[11px] px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 flex items-center justify-between gap-2">
+          <span id="weather-gps-notice-text"></span>
+          <button id="weather-gps-retry-btn" type="button" class="underline font-bold text-amber-900 dark:text-amber-200 hover:opacity-80">Reintentar</button>
+        </div>
+
         <div class="grid grid-cols-3 gap-2">
           <span id="weather-humidity" class="bg-blue-100/50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">💧</span><span class="value">--%</span></span>
           <span id="weather-rain" class="bg-green-100/50 dark:bg-stone-900/50 text-green-700 dark:text-stone-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">🌧️</span><span class="value">--%</span></span>
@@ -323,7 +355,11 @@ const ultimaFecha = registros
   </div>
 </div>
 
-<script is:inline define:vars={{ fincaId }}>window.__MACOLLO_FINCA_ID__ = fincaId;</script>
+<script is:inline define:vars={{ fincaId, fincaNombre, fincaUbicacion }}>
+  window.__MACOLLO_FINCA_ID__ = fincaId;
+  window.__MACOLLO_FINCA_NOMBRE__ = fincaNombre;
+  window.__MACOLLO_FINCA_UBICACION__ = fincaUbicacion;
+</script>
 <script
   is:inline
   id="dashboard-initial-records"
@@ -509,7 +545,23 @@ const ultimaFecha = registros
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    async function fetchWeather(lat: number, lon: number, isFallback = false) {
+    type LocationSource = "gps" | "finca" | "default";
+    let weatherTimer: ReturnType<typeof setInterval> | null = null;
+    let weatherLocation: {
+      lat: number;
+      lon: number;
+      isFallback: boolean;
+      sourceType: LocationSource;
+      locationName?: string;
+    } | null = null;
+
+    async function fetchWeather(
+      lat: number,
+      lon: number,
+      isFallback = false,
+      sourceType: LocationSource = "gps",
+      providedName?: string,
+    ) {
       try {
         const tempEl = document.getElementById("weather-temp");
         const humEl = document.getElementById("weather-humidity");
@@ -517,13 +569,22 @@ const ultimaFecha = registros
         const windEl = document.getElementById("weather-wind");
         const iconEl = document.getElementById("weather-icon");
         const titleEl = document.getElementById("weather-title");
+        const locationNameEl = document.getElementById("weather-location-name");
+        const badgeEl = document.getElementById("weather-source-badge");
 
-        const data = await fetch(
-          `/api/weather?lat=${lat}&lon=${lon}&fallback=${isFallback ? "1" : "0"}`,
-        ).then(async (res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
+        const queryParams = new URLSearchParams({
+          lat: String(lat),
+          lon: String(lon),
+          fallback: isFallback ? "1" : "0",
         });
+        if (providedName) queryParams.set("name", providedName);
+
+        const data = await fetch(`/api/weather?${queryParams.toString()}`).then(
+          async (res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+          },
+        );
 
         (window as any).__MACOLLO_WEATHER__ = {
           temperatureC: data.temperature,
@@ -531,6 +592,7 @@ const ultimaFecha = registros
           rainProbability: data.rainProbability,
           weatherCode: data.weatherCode,
           windSpeed: data.windSpeed,
+          locationName: data.locationName,
           isFallback: data.isFallback,
         };
         window.dispatchEvent(
@@ -540,17 +602,50 @@ const ultimaFecha = registros
         );
 
         if (tempEl)
-          tempEl.textContent = Math.round(convertTempValue(data.temperature)).toString();
-        if (humEl) humEl.innerHTML = `<span class="text-lg">💧</span><span class="value">${data.humidity}%</span>`;
-        if (rainEl) rainEl.innerHTML = `<span class="text-lg">🌧️</span><span class="value">${data.rainProbability}%</span>`;
-        if (windEl) windEl.innerHTML = `<span class="text-lg">💨</span><span class="value">${data.windSpeed} km/h</span>`;
-        if (titleEl) {
-          titleEl.textContent = data.isFallback
-            ? "Clima (Medellín)"
-            : "Clima (Tu ubicación)";
-        }
+          tempEl.textContent = Math.round(
+            convertTempValue(data.temperature),
+          ).toString();
+        if (humEl)
+          humEl.innerHTML = `<span class="text-lg">💧</span><span class="value">${data.humidity}%</span>`;
+        if (rainEl)
+          rainEl.innerHTML = `<span class="text-lg">🌧️</span><span class="value">${data.rainProbability}%</span>`;
+        if (windEl)
+          windEl.innerHTML = `<span class="text-lg">💨</span><span class="value">${data.windSpeed} km/h</span>`;
         if (iconEl) {
           iconEl.textContent = getWeatherEmoji(data.weatherCode);
+        }
+
+        const resolvedName =
+          data.locationName ||
+          (isFallback ? "Medellín, Antioquia" : "Ubicación GPS");
+        if (locationNameEl) {
+          locationNameEl.textContent = resolvedName;
+          locationNameEl.title = `Sitio del clima: ${resolvedName}`;
+        }
+
+        if (titleEl) {
+          titleEl.textContent =
+            sourceType === "gps"
+              ? "Clima GPS"
+              : sourceType === "finca"
+                ? "Clima Finca"
+                : "Clima Local";
+        }
+
+        if (badgeEl) {
+          if (sourceType === "gps") {
+            badgeEl.textContent = "GPS en vivo";
+            badgeEl.className =
+              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300";
+          } else if (sourceType === "finca") {
+            badgeEl.textContent = "Finca";
+            badgeEl.className =
+              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300";
+          } else {
+            badgeEl.textContent = "Predeterminado";
+            badgeEl.className =
+              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-stone-200 text-stone-700 dark:bg-stone-700 dark:text-stone-300";
+          }
         }
       } catch (e) {
         console.error("Error cargando el clima:", e);
@@ -602,13 +697,10 @@ const ultimaFecha = registros
       }
     }
 
-    let weatherTimer: ReturnType<typeof setInterval> | null = null;
-    let weatherLocation: { lat: number; lon: number; isFallback: boolean } | null = null;
-
     function refreshWeather() {
       if (!weatherLocation) return;
-      const { lat, lon, isFallback } = weatherLocation;
-      fetchWeather(lat, lon, isFallback);
+      const { lat, lon, isFallback, sourceType, locationName } = weatherLocation;
+      fetchWeather(lat, lon, isFallback, sourceType, locationName);
       fetchAQI(lat, lon);
     }
 
@@ -617,34 +709,191 @@ const ultimaFecha = registros
       weatherTimer = setInterval(refreshWeather, getSyncIntervalMs());
     }
 
-    function setWeatherLocation(lat: number, lon: number, isFallback: boolean) {
-      weatherLocation = { lat, lon, isFallback };
+    function setWeatherLocation(
+      lat: number,
+      lon: number,
+      isFallback: boolean,
+      sourceType: LocationSource = "gps",
+      providedName?: string,
+    ) {
+      weatherLocation = {
+        lat,
+        lon,
+        isFallback,
+        sourceType,
+        locationName: providedName,
+      };
       refreshWeather();
       scheduleWeather();
     }
 
-    function initWeather() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) =>
-            setWeatherLocation(
-              position.coords.latitude,
-              position.coords.longitude,
-              false,
-            ),
-          (error) => {
-            console.warn(
-              "Geolocalización denegada o fallida, usando Medellín por defecto.",
-              error,
-            );
-            setWeatherLocation(6.2442, -75.5812, true);
-          },
-          { timeout: 10000 },
-        );
-      } else {
-        setWeatherLocation(6.2442, -75.5812, true);
+    function showGpsNotice(message: string, showRetry = true) {
+      const noticeEl = document.getElementById("weather-gps-notice");
+      const textEl = document.getElementById("weather-gps-notice-text");
+      const retryBtn = document.getElementById("weather-gps-retry-btn");
+      if (noticeEl && textEl) {
+        textEl.textContent = message;
+        if (retryBtn) retryBtn.classList.toggle("hidden", !showRetry);
+        noticeEl.classList.remove("hidden");
       }
     }
+
+    function hideGpsNotice() {
+      const noticeEl = document.getElementById("weather-gps-notice");
+      if (noticeEl) noticeEl.classList.add("hidden");
+    }
+
+    function setGpsButtonLoading(isLoading: boolean) {
+      const btn = document.getElementById("weather-gps-btn");
+      const icon = document.getElementById("weather-gps-icon");
+      const label = document.getElementById("weather-gps-label");
+      if (!btn) return;
+      if (isLoading) {
+        btn.setAttribute("disabled", "true");
+        btn.classList.add("opacity-70");
+        if (icon) icon.textContent = "⌛";
+        if (label) label.textContent = "Ubicando...";
+      } else {
+        btn.removeAttribute("disabled");
+        btn.classList.remove("opacity-70");
+        if (icon) icon.textContent = "🎯";
+        if (label) label.textContent = "Mi GPS";
+      }
+    }
+
+    async function fallbackToFincaOrDefault(reasonMessage?: string) {
+      if (reasonMessage) {
+        showGpsNotice(reasonMessage, true);
+      }
+
+      // 1. Si la finca activa tiene ubicación configurada, intentar geocodificarla
+      const fincaUbicacion = (window as any).__MACOLLO_FINCA_UBICACION__;
+      if (
+        fincaUbicacion &&
+        typeof fincaUbicacion === "string" &&
+        fincaUbicacion.trim()
+      ) {
+        try {
+          const res = await fetch(
+            `/api/weather?q=${encodeURIComponent(fincaUbicacion.trim())}`,
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const resolvedName = data.locationName || fincaUbicacion;
+            const locNameEl = document.getElementById("weather-location-name");
+            if (locNameEl) locNameEl.textContent = resolvedName;
+            setWeatherLocation(
+              data.latitude ?? 6.2442,
+              data.longitude ?? -75.5812,
+              false,
+              "finca",
+              resolvedName,
+            );
+            return;
+          }
+        } catch {
+          // continuar al fallback general
+        }
+      }
+
+      // 2. Si no hay finca o falló geocodificación de finca, usar Medellín por defecto
+      const locNameEl = document.getElementById("weather-location-name");
+      if (locNameEl) locNameEl.textContent = "Medellín, Antioquia";
+      setWeatherLocation(
+        6.2442,
+        -75.5812,
+        true,
+        "default",
+        "Medellín, Antioquia",
+      );
+    }
+
+    function requestGpsLocation(highAccuracy = true) {
+      if (!navigator.geolocation) {
+        fallbackToFincaOrDefault("Tu navegador no soporta geolocalización.");
+        return;
+      }
+
+      setGpsButtonLoading(true);
+      const locNameEl = document.getElementById("weather-location-name");
+      if (locNameEl) locNameEl.textContent = "Detectando señal GPS...";
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setGpsButtonLoading(false);
+          hideGpsNotice();
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          try {
+            localStorage.setItem(
+              "macollo_gps_coords",
+              JSON.stringify({ lat, lon, time: Date.now() }),
+            );
+          } catch {}
+          setWeatherLocation(lat, lon, false, "gps");
+        },
+        (error) => {
+          // Si falló la alta precisión por timeout, intentar con precisión estándar
+          if (highAccuracy && error.code === error.TIMEOUT) {
+            console.warn(
+              "GPS timeout en alta precisión, reintentando con precisión estándar...",
+            );
+            requestGpsLocation(false);
+            return;
+          }
+
+          setGpsButtonLoading(false);
+          let msg = "No se pudo obtener el GPS.";
+          if (error.code === error.PERMISSION_DENIED) {
+            msg = "Permiso de GPS no concedido en el navegador.";
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            msg = "Señal de GPS no disponible.";
+          } else if (error.code === error.TIMEOUT) {
+            msg = "Tiempo de espera agotado al buscar señal GPS.";
+          }
+          console.warn("Geolocalización denegada o fallida:", msg, error);
+          fallbackToFincaOrDefault(msg);
+        },
+        {
+          enableHighAccuracy: highAccuracy,
+          timeout: highAccuracy ? 10000 : 6000,
+          maximumAge: 120000, // hasta 2 minutos de caché para respuesta ágil
+        },
+      );
+    }
+
+    function initWeather() {
+      // 1. Revisar si hay coordenadas GPS recientes guardadas en localStorage (< 1 hora)
+      try {
+        const cached = localStorage.getItem("macollo_gps_coords");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (
+            parsed &&
+            Number.isFinite(parsed.lat) &&
+            Number.isFinite(parsed.lon) &&
+            Date.now() - (parsed.time || 0) < 3600000
+          ) {
+            // Cargar de inmediato con la última ubicación GPS conocida
+            setWeatherLocation(parsed.lat, parsed.lon, false, "gps");
+            // Y luego refrescar silenciosamente con el GPS en vivo
+            requestGpsLocation(true);
+            return;
+          }
+        }
+      } catch {}
+
+      // 2. Si no hay caché, solicitar GPS en vivo
+      requestGpsLocation(true);
+    }
+
+    // Botones interactivos para reintentar o reactivar GPS
+    document
+      .getElementById("weather-gps-btn")
+      ?.addEventListener("click", () => requestGpsLocation(true));
+    document
+      .getElementById("weather-gps-retry-btn")
+      ?.addEventListener("click", () => requestGpsLocation(true));
 
     restartWeatherPolling = () => {
       refreshWeather();
