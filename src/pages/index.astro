@@ -29,7 +29,7 @@ if (esStaff && (!tieneFincaSeleccionada || !ctx?.finca)) {
 <Layout>
   {
     isAuthenticated ? (
-      <div class="h-screen max-h-screen flex flex-col overflow-hidden">
+      <div class="min-h-screen lg:h-screen lg:max-h-screen flex flex-col overflow-x-hidden lg:overflow-hidden">
         <Navbar />
         <main class="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden flex flex-col">
           {tieneFincaActiva ? <Dashboard /> : <NoFarm tieneFincas={tieneFincas} />}

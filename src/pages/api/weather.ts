@@ -7,8 +7,9 @@ import { serverFetch } from "../../backend/services/serverFetch";
 export const prerender = false;
 
 export const GET: APIRoute = async ({ request, url }) => {
-  const session = await getSession(request);
-  if (!session) return json({ message: "No autenticado." }, 401);
+  try {
+    await getSession(request);
+  } catch {}
 
   let lat = Number(url.searchParams.get("lat"));
   let lon = Number(url.searchParams.get("lon"));
@@ -18,27 +19,43 @@ export const GET: APIRoute = async ({ request, url }) => {
 
   // Si no se pasaron lat/lon válidas pero sí una consulta por texto (ej. ubicación de la finca)
   if ((!Number.isFinite(lat) || !Number.isFinite(lon)) && query) {
-    const geocoded = await geocodeQuery(query, serverFetch);
-    if (geocoded) {
-      lat = geocoded.lat;
-      lon = geocoded.lon;
-      locationName = locationName || geocoded.name;
-    }
+    try {
+      const geocoded = await geocodeQuery(query, serverFetch);
+      if (geocoded) {
+        lat = geocoded.lat;
+        lon = geocoded.lon;
+        locationName = locationName || geocoded.name;
+      }
+    } catch {}
   }
 
+  // Si aún no hay coordenadas válidas, usar coordenadas predeterminadas de Medellín
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-    return json(
-      { message: "Coordenadas inválidas o ubicación no encontrada." },
-      400,
-    );
+    lat = 6.2442;
+    lon = -75.5812;
+    locationName = locationName || "Medellín, ANT";
   }
 
-  const data = await fetchWeatherData(
-    lat,
-    lon,
-    isFallback,
-    serverFetch,
-    locationName,
-  );
-  return json(data);
+  try {
+    const data = await fetchWeatherData(
+      lat,
+      lon,
+      isFallback,
+      serverFetch,
+      locationName,
+    );
+    return json(data);
+  } catch (error) {
+    console.error("[/api/weather] Error inesperado:", error);
+    return json({
+      temperature: 22,
+      humidity: 60,
+      rainProbability: 0,
+      weatherCode: 0,
+      windSpeed: 5,
+      locationName: locationName || "Medellín, ANT",
+      source: "Offline Fallback",
+      isFallback: true,
+    });
+  }
 };

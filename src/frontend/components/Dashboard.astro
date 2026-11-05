@@ -25,8 +25,8 @@ const ultimaFecha = registros
   .at(-1) ?? "";
 ---
 
-<div class="max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3 lg:h-[calc(100dvh-4rem)] lg:max-h-[calc(100dvh-4rem)] flex flex-col justify-between overflow-hidden">
-  <div class="bg-[#f4fce3] dark:bg-stone-800 rounded-2xl shadow-sm p-3 sm:p-4.5 border border-green-100 dark:border-[#166534] flex-1 flex flex-col min-h-0 justify-between overflow-hidden">
+<div class="max-w-7xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 py-2 sm:py-3 lg:h-[calc(100dvh-4rem)] lg:max-h-[calc(100dvh-4rem)] flex flex-col justify-between overflow-y-auto lg:overflow-hidden">
+  <div class="bg-[#f4fce3] dark:bg-stone-800 rounded-2xl shadow-sm p-2.5 sm:p-4 border border-green-100 dark:border-[#166534] flex-1 flex flex-col min-h-0 justify-between overflow-visible lg:overflow-hidden">
     <div class="mb-2 sm:mb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
       <div>
         <h2 class="text-xl sm:text-2xl font-bold text-green-950 dark:text-white mb-0.5">Dashboard Principal</h2>
@@ -55,9 +55,9 @@ const ultimaFecha = registros
       </div>
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-4 lg:gap-5 items-stretch flex-1 min-h-0 overflow-hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5 sm:gap-4 lg:gap-5 items-stretch flex-1 min-h-0 overflow-visible lg:overflow-hidden pb-4 lg:pb-0">
       <!-- Matriz de Plantas (4x5 = 20 Plantas) -->
-      <div class="flex flex-col min-w-0 h-full justify-between">
+      <div class="flex flex-col min-w-0 h-auto lg:h-full justify-between">
     <div
       class="flex flex-row items-center justify-between gap-2 mb-1.5 shrink-0"
     >
@@ -172,11 +172,11 @@ const ultimaFecha = registros
   </div>
 
 
-  <div class="flex flex-col justify-between min-w-0 h-full gap-2 sm:gap-2.5">
+  <div class="flex flex-col justify-between min-w-0 h-auto lg:h-full gap-2 sm:gap-2.5 mt-2 lg:mt-0">
     <!-- Contenedor para Three.js (formato más grande y visible) -->
     <div
       id="three-container"
-      class="w-full flex-1 min-h-[250px] max-h-[380px] bg-green-900 rounded-xl overflow-hidden shadow-inner relative"
+      class="w-full flex-1 min-h-[220px] sm:min-h-[250px] max-h-[380px] bg-green-900 rounded-xl overflow-hidden shadow-inner relative"
     >
       <div
         id="time-display"
@@ -192,7 +192,7 @@ const ultimaFecha = registros
       <!-- 1. Barra de Clima (Todo en una misma línea sin scroll horizontal) -->
       <div
         id="weather-widget"
-        class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-xs flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden flex-nowrap w-full"
+        class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-xs flex items-center justify-between gap-1 sm:gap-2 overflow-hidden flex-nowrap w-full"
       >
         <!-- Lado izquierdo: Icono, ubicación GPS y estado -->
         <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink">
@@ -200,17 +200,21 @@ const ultimaFecha = registros
             <span id="weather-icon" class="text-base sm:text-lg leading-none">☀️</span>
           </div>
           <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
-            <div class="flex items-center gap-0.5 sm:gap-1 min-w-0" title="Sitio geográfico detectado por GPS">
+            <div
+              id="weather-location-btn"
+              class="flex items-center gap-0.5 sm:gap-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
+              title="Click para actualizar señal GPS"
+            >
               <span class="text-xs text-emerald-600 dark:text-emerald-400 shrink-0">📍</span>
-              <span id="weather-location-name" class="text-xs font-bold text-stone-800 dark:text-stone-200 truncate max-w-[100px] xs:max-w-[130px] sm:max-w-[170px]">
-                Detectando...
+              <span id="weather-location-name" class="text-xs font-bold text-stone-800 dark:text-stone-200 truncate max-w-[90px] xs:max-w-[125px] sm:max-w-[170px]">
+                {fincaUbicacion ? (fincaNombre ? `${fincaNombre} (Finca)` : fincaUbicacion) : "Medellín, ANT"}
               </span>
             </div>
             <span
               id="weather-source-badge"
               class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 shrink-0"
             >
-              GPS
+              {fincaUbicacion ? "Finca" : "Auto"}
             </span>
           </div>
         </div>
@@ -241,7 +245,7 @@ const ultimaFecha = registros
             </span>
             <span
               id="weather-wind"
-              class="bg-amber-100/60 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-bold flex items-center gap-0.5 sm:gap-1 border border-amber-200/50 dark:border-amber-900/40 shrink-0"
+              class="hidden min-[420px]:flex bg-amber-100/60 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-bold items-center gap-0.5 sm:gap-1 border border-amber-200/50 dark:border-amber-900/40 shrink-0"
               title="Velocidad del viento"
             >
               <span class="text-xs">💨</span><span class="value">-- km/h</span>
@@ -252,7 +256,7 @@ const ultimaFecha = registros
 
       <!-- 2. Barra de Calidad Ambiental (Todo en una misma línea sin scroll horizontal) -->
       <div
-        class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-xs flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden flex-nowrap w-full"
+        class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-xs flex items-center justify-between gap-1 sm:gap-2 overflow-hidden flex-nowrap w-full"
       >
         <!-- Lado izquierdo: Icono y Título (sin fotosíntesis) -->
         <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -270,14 +274,14 @@ const ultimaFecha = registros
           <div class="bg-white/70 dark:bg-stone-900/60 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg border border-green-100 dark:border-stone-700 shadow-xs flex items-center gap-1 shrink-0" title="Dióxido de Carbono">
             <span class="text-[9px] font-bold text-green-700 dark:text-stone-400 uppercase">CO₂</span>
             <span class="text-xs font-black tracking-tight text-green-950 dark:text-stone-100">420</span>
-            <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.2 rounded font-bold">ÓPTIMO</span>
+            <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.2 rounded font-bold hidden min-[360px]:inline">ÓPTIMO</span>
           </div>
 
           <!-- DPV -->
           <div class="bg-white/70 dark:bg-stone-900/60 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg border border-green-100 dark:border-stone-700 shadow-xs flex items-center gap-1 shrink-0" title="Déficit de Presión de Vapor">
             <span class="text-[9px] font-bold text-green-700 dark:text-stone-400 uppercase">DPV</span>
             <span class="text-xs font-black tracking-tight text-green-950 dark:text-stone-100">0.8</span>
-            <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.2 rounded font-bold">IDEAL</span>
+            <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.2 rounded font-bold hidden min-[360px]:inline">IDEAL</span>
           </div>
 
           <!-- AQI (Polución Externa) -->
@@ -403,496 +407,425 @@ const ultimaFecha = registros
   const timeDisplay = document.getElementById("time-display");
 
   if (container) {
-    const scene = new THREE.Scene();
+    try {
+      const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(
-      72,
-      container.clientWidth / container.clientHeight,
-      0.1,
-      1000,
-    );
-    // Posición y ángulo de la cámara optimizados para plano 3D más grande y cielo visible
-    camera.position.set(0, 6, 26);
-    camera.lookAt(0, 4, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(renderer.domElement);
-
-    const resizeRenderer = () => {
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      if (w === 0 || h === 0) return;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
+      const camera = new THREE.PerspectiveCamera(
+        72,
+        container.clientWidth / container.clientHeight,
+        0.1,
+        1000,
+      );
+      // Posición y ángulo de la cámara optimizados para plano 3D más grande y cielo visible
+      camera.position.set(0, 6, 26);
       camera.lookAt(0, 4, 0);
-      renderer.setSize(w, h);
-    };
-    window.addEventListener("resize", resizeRenderer);
-    if (typeof ResizeObserver !== "undefined") {
-      new ResizeObserver(resizeRenderer).observe(container);
-    }
 
-    const groundGeometry = new THREE.PlaneGeometry(50, 50);
-    const groundMaterial = new THREE.MeshStandardMaterial({
-      color: 0x2e8b57,
-      roughness: 0.8,
-    }); // Verde para simular pasto
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    scene.add(ground);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(renderer.domElement);
 
-    const greenhouseGeometry = new THREE.BoxGeometry(10, 5, 6);
-    const greenhouseMaterial = new THREE.MeshStandardMaterial({
-      color: 0xaaaaaa,
-      transparent: true,
-      opacity: 0.5,
-    });
-    const greenhouse = new THREE.Mesh(greenhouseGeometry, greenhouseMaterial);
-    greenhouse.position.y = 2.5; // Elevarlo para que quede sobre el suelo
-    greenhouse.castShadow = true;
-    greenhouse.receiveShadow = true;
-    scene.add(greenhouse);
-
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-    scene.add(ambientLight);
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    dirLight.castShadow = true;
-
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
-    dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 150;
-    dirLight.shadow.camera.left = -20;
-    dirLight.shadow.camera.right = 20;
-    dirLight.shadow.camera.top = 20;
-    dirLight.shadow.camera.bottom = -20;
-    scene.add(dirLight);
-
-    const sunGeometry = new THREE.SphereGeometry(2.0, 32, 32);
-    const sunMaterial = new THREE.MeshBasicMaterial({
-      color: 0xfffca3,
-    });
-    const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
-    scene.add(sunMesh);
-
-    const moonGeometry = new THREE.SphereGeometry(1.6, 32, 32);
-    const moonMaterial = new THREE.MeshBasicMaterial({ color: 0xe0e0e0 });
-    const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
-    scene.add(moonMesh);
-
-    function updateSun(hour: number) {
-        if (timeDisplay) {
-        const hh = Math.floor(hour).toString().padStart(2, "0");
-        const mm = Math.floor((hour % 1) * 60)
-          .toString()
-          .padStart(2, "0");
-        timeDisplay.textContent = `Hora: ${hh}:${mm}`;
+      const resizeRenderer = () => {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        if (w === 0 || h === 0) return;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        camera.lookAt(0, 4, 0);
+        renderer.setSize(w, h);
+      };
+      window.addEventListener("resize", resizeRenderer);
+      if (typeof ResizeObserver !== "undefined") {
+        new ResizeObserver(resizeRenderer).observe(container);
       }
 
-      // Órbita optimizada para que el cénit (punto más alto) sea 100% visible con amplio cielo
-      const distanceX = 15; // Distancia horizontal (este a oeste)
-      const distanceY = 10.5; // Altura máxima en el cielo (cenit en ángulo perfecto)
-      const z = -8; // Profundidad detrás del invernadero
+      const groundGeometry = new THREE.PlaneGeometry(50, 50);
+      const groundMaterial = new THREE.MeshStandardMaterial({
+        color: 0x2e8b57,
+        roughness: 0.8,
+      }); // Verde para simular pasto
+      const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      const greenhouseGeometry = new THREE.BoxGeometry(10, 5, 6);
+      const greenhouseMaterial = new THREE.MeshStandardMaterial({
+        color: 0xaaaaaa,
+        transparent: true,
+        opacity: 0.5,
+      });
+      const greenhouse = new THREE.Mesh(greenhouseGeometry, greenhouseMaterial);
+      greenhouse.position.y = 2.5; // Elevarlo para que quede sobre el suelo
+      greenhouse.castShadow = true;
+      greenhouse.receiveShadow = true;
+      scene.add(greenhouse);
+
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      dirLight.castShadow = true;
+
+      dirLight.shadow.mapSize.width = 1024;
+      dirLight.shadow.mapSize.height = 1024;
+      dirLight.shadow.camera.near = 0.5;
+      dirLight.shadow.camera.far = 150;
+      dirLight.shadow.camera.left = -20;
+      dirLight.shadow.camera.right = 20;
+      dirLight.shadow.camera.top = 20;
+      dirLight.shadow.camera.bottom = -20;
+      scene.add(dirLight);
+
+      const sunGeometry = new THREE.SphereGeometry(2.0, 32, 32);
+      const sunMaterial = new THREE.MeshBasicMaterial({
+        color: 0xfffca3,
+      });
+      const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+      scene.add(sunMesh);
+
+      const moonGeometry = new THREE.SphereGeometry(1.6, 32, 32);
+      const moonMaterial = new THREE.MeshBasicMaterial({ color: 0xe0e0e0 });
+      const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+      scene.add(moonMesh);
+
+      function updateSun(hour: number) {
+        if (timeDisplay) {
+          const hh = Math.floor(hour).toString().padStart(2, "0");
+          const mm = Math.floor((hour % 1) * 60)
+            .toString()
+            .padStart(2, "0");
+          timeDisplay.textContent = `Hora: ${hh}:${mm}`;
+        }
+
+        // Órbita optimizada para que el cénit (punto más alto) sea 100% visible con amplio cielo
+        const distanceX = 15; // Distancia horizontal (este a oeste)
+        const distanceY = 10.5; // Altura máxima en el cielo (cenit en ángulo perfecto)
+        const z = -8; // Profundidad detrás del invernadero
 
         if (hour >= 6 && hour <= 18) {
-        moonMesh.visible = false;
-        sunMesh.visible = true;
+          moonMesh.visible = false;
+          sunMesh.visible = true;
 
-        const progress = (hour - 6) / 12; // 0 (6am) a 1 (6pm)
-        const angle = progress * Math.PI;
+          const progress = (hour - 6) / 12; // 0 (6am) a 1 (6pm)
+          const angle = progress * Math.PI;
 
-        const x = Math.cos(angle) * distanceX;
-        const y = Math.sin(angle) * distanceY;
+          const x = Math.cos(angle) * distanceX;
+          const y = Math.sin(angle) * distanceY;
 
-        dirLight.position.set(x, y, z);
-        sunMesh.position.set(x, y, z);
+          dirLight.position.set(x, y, z);
+          sunMesh.position.set(x, y, z);
 
-        const heightFactor = Math.sin(angle);
-        dirLight.intensity = Math.max(0.1, heightFactor * 2);
-        dirLight.color.setHex(0xffffff);
+          const heightFactor = Math.sin(angle);
+          dirLight.intensity = Math.max(0.1, heightFactor * 2);
+          dirLight.color.setHex(0xffffff);
 
-        let skyColor = new THREE.Color();
-        if (progress < 0.2 || progress > 0.8) {
-          skyColor.setHex(0xff7b54);
-          sunMaterial.color.setHex(0xff4500);
-        } else {
-          skyColor.setHex(0x87ceeb);
-          sunMaterial.color.setHex(0xfffca3);
-        }
-        scene.background = skyColor;
-      } else {
-        sunMesh.visible = false;
-        moonMesh.visible = true;
-        scene.background = new THREE.Color(0x0a0a2a);
-
-        const nightHour = hour > 18 ? hour - 18 : hour + 6;
-        const progress = nightHour / 12;
-        const angle = progress * Math.PI;
-
-        const x = Math.cos(angle) * distanceX;
-        const y = Math.sin(angle) * distanceY;
-
-        dirLight.position.set(x, y, z);
-        moonMesh.position.set(x, y, z);
-
-        // Luz de luna más suave y azulada
-        dirLight.intensity = 0.3;
-        dirLight.color.setHex(0xaaccff);
-      }
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      const now = new Date();
-      const currentHour =
-        now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
-
-      updateSun(currentHour);
-
-      renderer.render(scene, camera);
-    }
-
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-    type LocationSource = "gps" | "finca" | "default";
-    let weatherTimer: ReturnType<typeof setInterval> | null = null;
-    let weatherLocation: {
-      lat: number;
-      lon: number;
-      isFallback: boolean;
-      sourceType: LocationSource;
-      locationName?: string;
-    } | null = null;
-
-    async function fetchWeather(
-      lat: number,
-      lon: number,
-      isFallback = false,
-      sourceType: LocationSource = "gps",
-      providedName?: string,
-    ) {
-      try {
-        const tempEl = document.getElementById("weather-temp");
-        const humEl = document.getElementById("weather-humidity");
-        const rainEl = document.getElementById("weather-rain");
-        const windEl = document.getElementById("weather-wind");
-        const iconEl = document.getElementById("weather-icon");
-        const titleEl = document.getElementById("weather-title");
-        const locationNameEl = document.getElementById("weather-location-name");
-        const badgeEl = document.getElementById("weather-source-badge");
-
-        const queryParams = new URLSearchParams({
-          lat: String(lat),
-          lon: String(lon),
-          fallback: isFallback ? "1" : "0",
-        });
-        if (providedName) queryParams.set("name", providedName);
-
-        const data = await fetch(`/api/weather?${queryParams.toString()}`).then(
-          async (res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-          },
-        );
-
-        (window as any).__MACOLLO_WEATHER__ = {
-          temperatureC: data.temperature,
-          humidity: data.humidity,
-          rainProbability: data.rainProbability,
-          weatherCode: data.weatherCode,
-          windSpeed: data.windSpeed,
-          locationName: data.locationName,
-          isFallback: data.isFallback,
-        };
-        window.dispatchEvent(
-          new CustomEvent("macollo:weather-updated", {
-            detail: { temperatureC: data.temperature },
-          }),
-        );
-
-        if (tempEl)
-          tempEl.textContent = Math.round(
-            convertTempValue(data.temperature),
-          ).toString();
-        if (humEl)
-          humEl.innerHTML = `<span class="text-xs">💧</span><span class="value">${data.humidity}%</span>`;
-        if (rainEl)
-          rainEl.innerHTML = `<span class="text-xs">🌧️</span><span class="value">${data.rainProbability}%</span>`;
-        if (windEl)
-          windEl.innerHTML = `<span class="text-xs">💨</span><span class="value">${data.windSpeed} km/h</span>`;
-        if (iconEl) {
-          iconEl.textContent = getWeatherEmoji(data.weatherCode);
-        }
-
-        const resolvedName =
-          data.locationName || (isFallback ? "Medellín, ANT" : "Ubicación GPS");
-        if (locationNameEl) {
-          locationNameEl.textContent = resolvedName;
-          locationNameEl.title = `Sitio del clima: ${resolvedName}`;
-        }
-
-        if (titleEl) {
-          titleEl.textContent =
-            sourceType === "gps"
-              ? "Clima GPS"
-              : sourceType === "finca"
-                ? "Clima Finca"
-                : "Clima Local";
-        }
-
-        if (badgeEl) {
-          if (sourceType === "gps") {
-            badgeEl.textContent = "GPS";
-            badgeEl.className =
-              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 shrink-0";
-          } else if (sourceType === "finca") {
-            badgeEl.textContent = "Finca";
-            badgeEl.className =
-              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 shrink-0";
+          let skyColor = new THREE.Color();
+          if (progress < 0.2 || progress > 0.8) {
+            skyColor.setHex(0xff7b54);
+            sunMaterial.color.setHex(0xff4500);
           } else {
-            badgeEl.textContent = "Auto";
-            badgeEl.className =
-              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-stone-200 text-stone-700 dark:bg-stone-700 dark:text-stone-300 shrink-0";
+            skyColor.setHex(0x87ceeb);
+            sunMaterial.color.setHex(0xfffca3);
           }
-        }
-      } catch (e) {
-        console.error("Error cargando el clima:", e);
-      }
-    }
+          scene.background = skyColor;
+        } else {
+          sunMesh.visible = false;
+          moonMesh.visible = true;
+          scene.background = new THREE.Color(0x0a0a2a);
 
-    async function fetchAQI(lat: number, lon: number) {
-      try {
-        const res = await fetch(`/api/aqi?lat=${lat}&lon=${lon}`);
-        const json = await res.json();
+          const nightHour = hour > 18 ? hour - 18 : hour + 6;
+          const progress = nightHour / 12;
+          const angle = progress * Math.PI;
 
-        if (json.status === "ok") {
-          const aqi = json.data.aqi;
-          const valueEl = document.getElementById("aqi-value");
-          const statusEl = document.getElementById("aqi-status");
+          const x = Math.cos(angle) * distanceX;
+          const y = Math.sin(angle) * distanceY;
 
-          if (valueEl) valueEl.textContent = aqi.toString();
+          dirLight.position.set(x, y, z);
+          moonMesh.position.set(x, y, z);
 
-          if (statusEl) {
-            if (aqi <= 50) {
-              statusEl.textContent = "ÓPTIMO";
-              statusEl.className =
-                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-green-500/20 text-green-700 dark:text-stone-300 font-bold";
-            } else if (aqi <= 100) {
-              statusEl.textContent = "ACEPTABLE";
-              statusEl.className =
-                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 font-bold";
-            } else if (aqi <= 150) {
-              statusEl.textContent = "RIESGO LEVE";
-              statusEl.className =
-                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-700 dark:text-orange-300 font-bold";
-            } else if (aqi <= 200) {
-              statusEl.textContent = "DAÑINO (CERRAR VENT.)";
-              statusEl.className =
-                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-red-500/20 text-red-700 dark:text-red-300 font-bold";
-            } else if (aqi <= 300) {
-              statusEl.textContent = "MUY DAÑINO";
-              statusEl.className =
-                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold";
-            } else {
-              statusEl.textContent = "PELIGROSO";
-              statusEl.className =
-                "text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-rose-900/50 text-rose-300 font-bold";
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching AQI:", err);
-      }
-    }
-
-    function refreshWeather() {
-      if (!weatherLocation) return;
-      const { lat, lon, isFallback, sourceType, locationName } = weatherLocation;
-      fetchWeather(lat, lon, isFallback, sourceType, locationName);
-      fetchAQI(lat, lon);
-    }
-
-    function scheduleWeather() {
-      if (weatherTimer) clearInterval(weatherTimer);
-      weatherTimer = setInterval(refreshWeather, getSyncIntervalMs());
-    }
-
-    function setWeatherLocation(
-      lat: number,
-      lon: number,
-      isFallback: boolean,
-      sourceType: LocationSource = "gps",
-      providedName?: string,
-    ) {
-      weatherLocation = {
-        lat,
-        lon,
-        isFallback,
-        sourceType,
-        locationName: providedName,
-      };
-      refreshWeather();
-      scheduleWeather();
-    }
-
-    function showGpsNotice(message: string, showRetry = true) {
-      const noticeEl = document.getElementById("weather-gps-notice");
-      const textEl = document.getElementById("weather-gps-notice-text");
-      const retryBtn = document.getElementById("weather-gps-retry-btn");
-      if (noticeEl && textEl) {
-        textEl.textContent = message;
-        if (retryBtn) retryBtn.classList.toggle("hidden", !showRetry);
-        noticeEl.classList.remove("hidden");
-      }
-    }
-
-    function hideGpsNotice() {
-      const noticeEl = document.getElementById("weather-gps-notice");
-      if (noticeEl) noticeEl.classList.add("hidden");
-    }
-
-    async function fallbackToFincaOrDefault(reasonMessage?: string) {
-      if (reasonMessage) {
-        showGpsNotice(reasonMessage, true);
-      }
-
-      // 1. Si la finca activa tiene ubicación configurada, intentar geocodificarla
-      const fincaUbicacion = (window as any).__MACOLLO_FINCA_UBICACION__;
-      if (
-        fincaUbicacion &&
-        typeof fincaUbicacion === "string" &&
-        fincaUbicacion.trim()
-      ) {
-        try {
-          const res = await fetch(
-            `/api/weather?q=${encodeURIComponent(fincaUbicacion.trim())}`,
-          );
-          if (res.ok) {
-            const data = await res.json();
-            const resolvedName = data.locationName || fincaUbicacion;
-            const locNameEl = document.getElementById("weather-location-name");
-            if (locNameEl) locNameEl.textContent = resolvedName;
-            setWeatherLocation(
-              data.latitude ?? 6.2442,
-              data.longitude ?? -75.5812,
-              false,
-              "finca",
-              resolvedName,
-            );
-            return;
-          }
-        } catch {
-          // continuar al fallback general
+          // Luz de luna más suave y azulada
+          dirLight.intensity = 0.3;
+          dirLight.color.setHex(0xaaccff);
         }
       }
 
-      // 2. Si no hay finca o falló geocodificación de finca, usar Medellín por defecto
-      const locNameEl = document.getElementById("weather-location-name");
-      if (locNameEl) locNameEl.textContent = "Medellín, ANT";
-      setWeatherLocation(
-        6.2442,
-        -75.5812,
-        true,
-        "default",
-        "Medellín, ANT",
-      );
-    }
+      function animate() {
+        requestAnimationFrame(animate);
 
-    function requestGpsLocation(highAccuracy = true) {
-      if (!navigator.geolocation) {
-        fallbackToFincaOrDefault("Tu navegador no soporta geolocalización.");
-        return;
+        const now = new Date();
+        const currentHour =
+          now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+
+        updateSun(currentHour);
+
+        renderer.render(scene, camera);
       }
 
-      const locNameEl = document.getElementById("weather-location-name");
-      if (locNameEl) locNameEl.textContent = "Buscando GPS...";
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          hideGpsNotice();
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          try {
-            localStorage.setItem(
-              "macollo_gps_coords",
-              JSON.stringify({ lat, lon, time: Date.now() }),
-            );
-          } catch {}
-          setWeatherLocation(lat, lon, false, "gps");
-        },
-        (error) => {
-          // Si falló la alta precisión por timeout, intentar con precisión estándar
-          if (highAccuracy && error.code === error.TIMEOUT) {
-            console.warn(
-              "GPS timeout en alta precisión, reintentando con precisión estándar...",
-            );
-            requestGpsLocation(false);
-            return;
-          }
-
-          let msg = "No se pudo obtener el GPS.";
-          if (error.code === error.PERMISSION_DENIED) {
-            msg = "Permiso de GPS no concedido en el navegador.";
-          } else if (error.code === error.POSITION_UNAVAILABLE) {
-            msg = "Señal de GPS no disponible.";
-          } else if (error.code === error.TIMEOUT) {
-            msg = "Tiempo de espera agotado al buscar señal GPS.";
-          }
-          console.warn("Geolocalización denegada o fallida:", msg, error);
-          fallbackToFincaOrDefault(msg);
-        },
-        {
-          enableHighAccuracy: highAccuracy,
-          timeout: highAccuracy ? 10000 : 6000,
-          maximumAge: 120000, // hasta 2 minutos de caché para respuesta ágil
-        },
-      );
+      animate();
+    } catch (threeErr) {
+      console.warn("Three.js no pudo inicializarse:", threeErr);
     }
-
-    function initWeather() {
-      // 1. Revisar si hay coordenadas GPS recientes guardadas en localStorage (< 1 hora)
-      try {
-        const cached = localStorage.getItem("macollo_gps_coords");
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (
-            parsed &&
-            Number.isFinite(parsed.lat) &&
-            Number.isFinite(parsed.lon) &&
-            Date.now() - (parsed.time || 0) < 3600000
-          ) {
-            // Cargar de inmediato con la última ubicación GPS conocida
-            setWeatherLocation(parsed.lat, parsed.lon, false, "gps");
-            // Y luego refrescar silenciosamente con el GPS en vivo
-            requestGpsLocation(true);
-            return;
-          }
-        }
-      } catch {}
-
-      // 2. Si no hay caché, solicitar GPS en vivo
-      requestGpsLocation(true);
-    }
-
-    // Botón de reintento si el aviso de GPS está visible
-    document
-      .getElementById("weather-gps-retry-btn")
-      ?.addEventListener("click", () => requestGpsLocation(true));
-
-    restartWeatherPolling = () => {
-      refreshWeather();
-      scheduleWeather();
-    };
-
-    initWeather();
-
-    animate();
   }
+
+  // ---- Lógica de Clima y Calidad Ambiental (Autónoma y Resiliente) ----
+  type LocationSource = "gps" | "finca" | "default";
+  let weatherTimer: ReturnType<typeof setInterval> | null = null;
+  let weatherLocation: {
+    lat: number;
+    lon: number;
+    isFallback: boolean;
+    sourceType: LocationSource;
+    locationName?: string;
+  } | null = null;
+
+  async function fetchWeather(
+    lat: number,
+    lon: number,
+    isFallback = false,
+    sourceType: LocationSource = "gps",
+    providedName?: string,
+  ) {
+    const tempEl = document.getElementById("weather-temp");
+    const humEl = document.getElementById("weather-humidity");
+    const rainEl = document.getElementById("weather-rain");
+    const windEl = document.getElementById("weather-wind");
+    const iconEl = document.getElementById("weather-icon");
+    const locationNameEl = document.getElementById("weather-location-name");
+    const badgeEl = document.getElementById("weather-source-badge");
+
+    try {
+      const queryParams = new URLSearchParams({
+        lat: String(lat),
+        lon: String(lon),
+        fallback: isFallback ? "1" : "0",
+      });
+      if (providedName) queryParams.set("name", providedName);
+
+      const res = await fetch(`/api/weather?${queryParams.toString()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      (window as any).__MACOLLO_WEATHER__ = {
+        temperatureC: data.temperature,
+        humidity: data.humidity,
+        rainProbability: data.rainProbability,
+        weatherCode: data.weatherCode,
+        windSpeed: data.windSpeed,
+        locationName: data.locationName,
+        isFallback: data.isFallback,
+      };
+      window.dispatchEvent(
+        new CustomEvent("macollo:weather-updated", {
+          detail: { temperatureC: data.temperature },
+        }),
+      );
+
+      if (tempEl)
+        tempEl.textContent = Math.round(
+          convertTempValue(data.temperature),
+        ).toString();
+      if (humEl)
+        humEl.innerHTML = `<span class="text-xs">💧</span><span class="value">${data.humidity}%</span>`;
+      if (rainEl)
+        rainEl.innerHTML = `<span class="text-xs">🌧️</span><span class="value">${data.rainProbability}%</span>`;
+      if (windEl)
+        windEl.innerHTML = `<span class="text-xs">💨</span><span class="value">${data.windSpeed} km/h</span>`;
+      if (iconEl) {
+        iconEl.textContent = getWeatherEmoji(data.weatherCode);
+      }
+
+      const resolvedName =
+        data.locationName || (isFallback ? "Medellín, ANT" : "Ubicación GPS");
+      if (locationNameEl) {
+        locationNameEl.textContent = resolvedName;
+        locationNameEl.title = `Sitio del clima: ${resolvedName} (Click para refrescar GPS)`;
+      }
+
+      if (badgeEl) {
+        if (sourceType === "gps") {
+          badgeEl.textContent = "GPS";
+          badgeEl.className =
+            "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 shrink-0";
+        } else if (sourceType === "finca") {
+          badgeEl.textContent = "Finca";
+          badgeEl.className =
+            "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 shrink-0";
+        } else {
+          badgeEl.textContent = "Auto";
+          badgeEl.className =
+            "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-stone-200 text-stone-700 dark:bg-stone-700 dark:text-stone-300 shrink-0";
+        }
+      }
+    } catch (e) {
+      console.error("Error cargando el clima:", e);
+      if (tempEl && (tempEl.textContent === "--" || !tempEl.textContent)) tempEl.textContent = "22";
+      if (humEl && humEl.textContent?.includes("--"))
+        humEl.innerHTML = `<span class="text-xs">💧</span><span class="value">60%</span>`;
+      if (rainEl && rainEl.textContent?.includes("--"))
+        rainEl.innerHTML = `<span class="text-xs">🌧️</span><span class="value">10%</span>`;
+      if (windEl && windEl.textContent?.includes("--"))
+        windEl.innerHTML = `<span class="text-xs">💨</span><span class="value">12 km/h</span>`;
+      if (locationNameEl && (locationNameEl.textContent === "Detectando..." || locationNameEl.textContent === "Buscando GPS...")) {
+        locationNameEl.textContent = "Medellín, ANT";
+      }
+    }
+  }
+
+  async function fetchAQI(lat: number, lon: number) {
+    try {
+      const res = await fetch(`/api/aqi?lat=${lat}&lon=${lon}`);
+      const json = await res.json();
+
+      if (json.status === "ok") {
+        const aqi = json.data?.aqi ?? 28;
+        const valueEl = document.getElementById("aqi-value");
+        const statusEl = document.getElementById("aqi-status");
+
+        if (valueEl) valueEl.textContent = aqi.toString();
+
+        if (statusEl) {
+          if (aqi <= 50) {
+            statusEl.textContent = "ÓPTIMO";
+            statusEl.className =
+              "text-[8px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-700 dark:text-stone-300 font-bold";
+          } else if (aqi <= 100) {
+            statusEl.textContent = "ACEPTABLE";
+            statusEl.className =
+              "text-[8px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 font-bold";
+          } else if (aqi <= 150) {
+            statusEl.textContent = "RIESGO LEVE";
+            statusEl.className =
+              "text-[8px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-700 dark:text-orange-300 font-bold";
+          } else {
+            statusEl.textContent = "ALERTA";
+            statusEl.className =
+              "text-[8px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-700 dark:text-red-300 font-bold";
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching AQI:", err);
+    }
+  }
+
+  function refreshWeather() {
+    if (!weatherLocation) return;
+    const { lat, lon, isFallback, sourceType, locationName } = weatherLocation;
+    fetchWeather(lat, lon, isFallback, sourceType, locationName);
+    fetchAQI(lat, lon);
+  }
+
+  function scheduleWeather() {
+    if (weatherTimer) clearInterval(weatherTimer);
+    weatherTimer = setInterval(refreshWeather, getSyncIntervalMs());
+  }
+
+  function setWeatherLocation(
+    lat: number,
+    lon: number,
+    isFallback: boolean,
+    sourceType: LocationSource = "gps",
+    providedName?: string,
+  ) {
+    weatherLocation = {
+      lat,
+      lon,
+      isFallback,
+      sourceType,
+      locationName: providedName,
+    };
+    refreshWeather();
+    scheduleWeather();
+  }
+
+  function requestGpsLocation(highAccuracy = false) {
+    if (!navigator.geolocation) return;
+
+    const locNameEl = document.getElementById("weather-location-name");
+    if (locNameEl && (!weatherLocation || weatherLocation.sourceType !== "gps")) {
+      locNameEl.textContent = "Buscando GPS...";
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        try {
+          localStorage.setItem(
+            "macollo_gps_coords",
+            JSON.stringify({ lat, lon, time: Date.now() }),
+          );
+        } catch {}
+        setWeatherLocation(lat, lon, false, "gps");
+      },
+      (error) => {
+        console.warn("GPS no disponible:", error.message);
+        if (locNameEl && locNameEl.textContent === "Buscando GPS...") {
+          locNameEl.textContent = weatherLocation?.locationName || "Medellín, ANT";
+        }
+      },
+      {
+        enableHighAccuracy: highAccuracy,
+        timeout: highAccuracy ? 8000 : 4000,
+        maximumAge: 300000,
+      },
+    );
+  }
+
+  function initWeather() {
+    const fincaUbicacion = (window as any).__MACOLLO_FINCA_UBICACION__;
+    const defaultName = fincaUbicacion || "Medellín, ANT";
+
+    let initialLat = 6.2442;
+    let initialLon = -75.5812;
+    let initialSource: LocationSource = fincaUbicacion ? "finca" : "default";
+    let initialName: string | undefined = defaultName;
+
+    // 1. Cargar inmediatamente usando caché GPS si existe y es reciente (< 24h)
+    try {
+      const cached = localStorage.getItem("macollo_gps_coords");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (
+          parsed &&
+          Number.isFinite(parsed.lat) &&
+          Number.isFinite(parsed.lon) &&
+          Date.now() - (parsed.time || 0) < 86400000
+        ) {
+          initialLat = parsed.lat;
+          initialLon = parsed.lon;
+          initialSource = "gps";
+          initialName = parsed.name || undefined;
+        }
+      }
+    } catch {}
+
+    // Iniciar carga inmediata (tarda ~150-250ms, nunca se queda colgado)
+    setWeatherLocation(initialLat, initialLon, false, initialSource, initialName);
+
+    // 2. En segundo plano (sin bloquear la interfaz), solicitar GPS en vivo
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      requestGpsLocation(false);
+    }
+  }
+
+  // Click en el botón/icono de ubicación para forzar re-detección GPS
+  document
+    .getElementById("weather-location-btn")
+    ?.addEventListener("click", () => {
+      requestGpsLocation(true);
+    });
+
+  restartWeatherPolling = () => {
+    refreshWeather();
+    scheduleWeather();
+  };
+
+  // Inicializar clima inmediatamente
+  initWeather();
 
   const modal = document.getElementById('plant-modal');
   const modalContent = document.getElementById('plant-modal-content');
