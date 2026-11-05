@@ -25,17 +25,17 @@ const ultimaFecha = registros
   .at(-1) ?? "";
 ---
 
-<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 overflow-hidden">
-  <div class="bg-[#f4fce3] dark:bg-stone-800 rounded-2xl shadow-sm p-4 sm:p-6 border border-green-100 dark:border-[#166534]">
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div class="max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3 lg:h-[calc(100dvh-4rem)] lg:max-h-[calc(100dvh-4rem)] flex flex-col justify-between overflow-hidden">
+  <div class="bg-[#f4fce3] dark:bg-stone-800 rounded-2xl shadow-sm p-3 sm:p-4.5 border border-green-100 dark:border-[#166534] flex-1 flex flex-col min-h-0 justify-between overflow-hidden">
+    <div class="mb-2 sm:mb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
       <div>
-        <h2 class="text-2xl font-bold text-green-950 dark:text-white mb-1">Dashboard Principal</h2>
-        <p class="text-green-700 dark:text-stone-300 text-sm">Monitoreo de cultivos reales y simulación ambiental del invernadero.</p>
+        <h2 class="text-xl sm:text-2xl font-bold text-green-950 dark:text-white mb-0.5">Dashboard Principal</h2>
+        <p class="text-green-700 dark:text-stone-300 text-xs sm:text-sm">Monitoreo de cultivos reales y simulación ambiental del invernadero.</p>
       </div>
       <div
         id="dashboard-sync-indicator"
         class:list={[
-          "inline-flex max-w-full items-center justify-center text-center gap-2 px-3 py-1 rounded-full text-xs font-bold border",
+          "inline-flex max-w-full items-center justify-center text-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shrink-0",
           tieneRegistros
             ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800"
             : "bg-stone-100 dark:bg-stone-900/60 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700",
@@ -55,33 +55,33 @@ const ultimaFecha = registros
       </div>
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-6 items-start">
+    <div class="grid lg:grid-cols-2 gap-4 lg:gap-5 items-stretch flex-1 min-h-0 overflow-hidden">
       <!-- Matriz de Plantas (4x5 = 20 Plantas) -->
-      <div class="flex flex-col min-w-0">
+      <div class="flex flex-col min-w-0 h-full justify-between">
     <div
-      class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
+      class="flex flex-row items-center justify-between gap-2 mb-1.5 shrink-0"
     >
       <h2
-        class="text-xl font-bold text-green-950 dark:text-white flex items-center gap-2"
+        class="text-sm sm:text-base font-bold text-green-950 dark:text-white flex items-center gap-1.5"
       >
-        <span>🌱</span> Estado de los Cultivos (4 Filas × 5 Plantas)
+        <span>🌱</span> Estado Cultivos (4×5)
       </h2>
       <div
-        class="flex flex-wrap gap-3 sm:gap-4 text-xs font-semibold text-green-700 dark:text-stone-300 mt-2 sm:mt-0"
+        class="flex items-center gap-2.5 text-[11px] font-semibold text-green-700 dark:text-stone-300 shrink-0"
       >
-        <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded-full bg-lime-500 shadow-sm"></span> Óptimo
+        <div class="flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-full bg-lime-500 shadow-xs"></span> Óptimo
         </div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded-full bg-yellow-400 shadow-sm"></span> Atención
+        <div class="flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-full bg-yellow-400 shadow-xs"></span> Atención
         </div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-3 h-3 rounded-full bg-rose-500 shadow-sm"></span> Crítico
+        <div class="flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-xs"></span> Crítico
         </div>
       </div>
     </div>
 
-    <div id="dashboard-plant-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+    <div id="dashboard-plant-grid" class="grid grid-cols-5 gap-1.5 sm:gap-2 flex-1 min-h-0 items-stretch">
       {
         plants.map((p) => {
           const m = p.latestMetric;
@@ -118,7 +118,7 @@ const ultimaFecha = registros
 
           return (
             <div
-              class={`plant-card relative group overflow-hidden rounded-xl border p-2.5 transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer ${statusColor}`}
+              class={`plant-card relative group overflow-hidden rounded-xl border p-1 sm:p-1.5 transition-all hover:-translate-y-0.5 hover:shadow-xs cursor-pointer flex flex-col justify-between ${statusColor}`}
               data-id={p.code}
               data-plantid={p.plantId}
               data-fila={p.fila}
@@ -140,28 +140,28 @@ const ultimaFecha = registros
               data-health={hasData ? m.sanidad : 'Sin datos'}
               data-resp={hasData ? m.responsable : 'Equipo de Campo'}
             >
-              <div class="flex justify-between items-start mb-1.5">
+              <div class="flex justify-between items-start mb-0.5">
                 <div class="flex items-center gap-1">
-                  <span class="text-[10px] font-black uppercase tracking-wider text-green-700 dark:text-stone-300 font-mono">
+                  <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-green-700 dark:text-stone-300 font-mono">
                     {p.code}
                   </span>
-                  <span class="text-[8px] text-green-500 dark:text-stone-400 font-mono">
+                  <span class="text-[8px] text-green-500 dark:text-stone-400 font-mono hidden sm:inline">
                     ({p.plantId})
                   </span>
                 </div>
-                <span class={`plant-dot w-1.5 h-1.5 rounded-full ${iconBg} shadow-sm`} />
+                <span class={`plant-dot w-1.5 h-1.5 rounded-full ${iconBg} shadow-xs`} />
               </div>
-              <div class="plant-icon-display flex justify-center mb-2 text-2xl transition-transform duration-300 group-hover:scale-110">
+              <div class="plant-icon-display flex justify-center my-0.5 text-xl sm:text-2xl transition-transform duration-300 group-hover:scale-110">
                 {plantIcon}
               </div>
-              <div class="grid grid-cols-2 gap-1 text-[9px] font-bold text-green-800 dark:text-stone-300">
+              <div class="grid grid-cols-2 gap-1 text-[8px] sm:text-[9px] font-bold text-green-800 dark:text-stone-300">
                 <div class="flex flex-col items-center bg-[#f4fce3]/60 dark:bg-black/20 rounded py-0.5">
-                  <span class="opacity-60 mb-px">💧</span>
-                  <span class="plant-humedad-val">{humedad}</span>
+                  <span class="opacity-60 text-[8px]">💧</span>
+                  <span class="plant-humedad-val leading-tight">{humedad}</span>
                 </div>
                 <div class="flex flex-col items-center bg-[#f4fce3]/60 dark:bg-black/20 rounded py-0.5">
-                  <span class="opacity-60 mb-px">🌡️</span>
-                  <span class="plant-temp-val">{temp}</span>
+                  <span class="opacity-60 text-[8px]">🌡️</span>
+                  <span class="plant-temp-val leading-tight">{temp}</span>
                 </div>
               </div>
             </div>
@@ -172,129 +172,137 @@ const ultimaFecha = registros
   </div>
 
 
-  <div class="flex flex-col min-w-0">
-    <!-- Contenedor para Three.js -->
+  <div class="flex flex-col justify-between min-w-0 h-full gap-2 sm:gap-2.5">
+    <!-- Contenedor para Three.js (formato más grande y visible) -->
     <div
       id="three-container"
-      class="w-full h-72 sm:h-96 bg-green-900 rounded-xl overflow-hidden shadow-inner relative"
+      class="w-full flex-1 min-h-[250px] max-h-[380px] bg-green-900 rounded-xl overflow-hidden shadow-inner relative"
     >
       <div
         id="time-display"
-        class="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg backdrop-blur-sm font-mono text-sm z-10"
+        class="absolute top-2.5 left-2.5 bg-black/50 text-white px-2.5 py-0.5 rounded-lg backdrop-blur-sm font-mono text-xs z-10"
       >
         Hora: --:--
       </div>
     </div>
 
-    <!-- Panel de widgets debajo del mapa -->
-    <!-- Panel de barras ambientales debajo del mapa -->
-    <div class="flex flex-col gap-3 mt-4">
+    <!-- Panel de barras ambientales debajo del mapa 3D -->
+    <div class="flex flex-col gap-1.5 sm:gap-2 shrink-0 w-full overflow-hidden">
       
-      <!-- 1. Barra de Clima -->
-      <div id="weather-widget" class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <!-- Lado izquierdo: Identificación y ubicación -->
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="p-2.5 bg-[#f4fce3] dark:bg-stone-700 rounded-xl shadow-xs border border-green-100 dark:border-stone-600 shrink-0">
-            <span id="weather-icon" class="text-2xl leading-none">☀️</span>
+      <!-- 1. Barra de Clima (Todo en una misma línea sin scroll horizontal) -->
+      <div
+        id="weather-widget"
+        class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-xs flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden flex-nowrap w-full"
+      >
+        <!-- Lado izquierdo: Icono, ubicación GPS y estado -->
+        <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink">
+          <div class="p-1 sm:p-1.5 bg-[#f4fce3] dark:bg-stone-700 rounded-lg shadow-xs border border-green-100 dark:border-stone-600 shrink-0">
+            <span id="weather-icon" class="text-base sm:text-lg leading-none">☀️</span>
           </div>
-          <div class="flex flex-col min-w-0">
-            <div class="flex items-center gap-2">
-              <span id="weather-title" class="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-stone-300">
-                Clima Local
-              </span>
-              <span id="weather-source-badge" class="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+          <div class="flex items-center gap-1 sm:gap-1.5 min-w-0">
+            <div class="flex items-center gap-0.5 sm:gap-1 min-w-0" title="Sitio geográfico detectado por GPS">
+              <span class="text-xs text-emerald-600 dark:text-emerald-400 shrink-0">📍</span>
+              <span id="weather-location-name" class="text-xs font-bold text-stone-800 dark:text-stone-200 truncate max-w-[100px] xs:max-w-[130px] sm:max-w-[170px]">
                 Detectando...
               </span>
             </div>
-            <div class="flex items-center gap-1 mt-0.5" title="Sitio geográfico detectado por GPS">
-              <span class="text-xs text-emerald-600 dark:text-emerald-400">📍</span>
-              <span id="weather-location-name" class="text-xs font-semibold text-stone-800 dark:text-stone-200 truncate max-w-[200px] sm:max-w-[320px]">
-                Buscando GPS...
-              </span>
-            </div>
+            <span
+              id="weather-source-badge"
+              class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 shrink-0"
+            >
+              GPS
+            </span>
           </div>
         </div>
 
-        <!-- Lado derecho: Temperatura y métricas en una sola fila -->
-        <div class="flex flex-wrap items-center gap-2 sm:gap-3 self-stretch md:self-auto justify-between md:justify-end">
+        <!-- Lado derecho: Temperatura y métricas en la misma línea -->
+        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
           <!-- Temperatura -->
-          <div class="flex items-baseline gap-1 px-3 py-1.5 bg-white/70 dark:bg-stone-900/60 rounded-xl border border-green-100 dark:border-stone-700 shadow-xs">
-            <span id="weather-temp" class="text-2xl sm:text-3xl font-black tracking-tight text-green-950 dark:text-stone-100">--</span>
-            <span class="text-xs font-bold text-green-700 dark:text-stone-400">°C</span>
+          <div class="flex items-baseline gap-0.5 px-1.5 sm:px-2 py-0.5 bg-white/70 dark:bg-stone-900/60 rounded-lg border border-green-100 dark:border-stone-700 shadow-xs shrink-0">
+            <span id="weather-temp" class="text-base sm:text-lg font-black tracking-tight text-green-950 dark:text-stone-100">--</span>
+            <span class="text-[10px] font-bold text-green-700 dark:text-stone-400">°C</span>
           </div>
 
-          <!-- Métricas horizontales -->
-          <div class="flex items-center gap-1.5 sm:gap-2 grow md:grow-0 justify-end">
-            <!-- Humedad -->
-            <span id="weather-humidity" class="bg-blue-100/60 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-blue-200/50 dark:border-blue-900/40">
-              <span class="text-sm">💧</span><span class="value">--%</span>
+          <!-- Píldoras de métricas -->
+          <div class="flex items-center gap-1 sm:gap-1.5 shrink-0 text-xs">
+            <span
+              id="weather-humidity"
+              class="bg-blue-100/60 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-bold flex items-center gap-0.5 sm:gap-1 border border-blue-200/50 dark:border-blue-900/40 shrink-0"
+              title="Humedad relativa"
+            >
+              <span class="text-xs">💧</span><span class="value">--%</span>
             </span>
-            <!-- Lluvia -->
-            <span id="weather-rain" class="bg-emerald-100/60 dark:bg-stone-900/60 text-emerald-800 dark:text-stone-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-emerald-200/50 dark:border-stone-700/50">
-              <span class="text-sm">🌧️</span><span class="value">--%</span>
+            <span
+              id="weather-rain"
+              class="bg-emerald-100/60 dark:bg-stone-900/60 text-emerald-800 dark:text-stone-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-bold flex items-center gap-0.5 sm:gap-1 border border-emerald-200/50 dark:border-stone-700/50 shrink-0"
+              title="Probabilidad de lluvia"
+            >
+              <span class="text-xs">🌧️</span><span class="value">--%</span>
             </span>
-            <!-- Viento -->
-            <span id="weather-wind" class="bg-amber-100/60 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-amber-200/50 dark:border-amber-900/40">
-              <span class="text-sm">💨</span><span class="value">-- km/h</span>
+            <span
+              id="weather-wind"
+              class="bg-amber-100/60 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-bold flex items-center gap-0.5 sm:gap-1 border border-amber-200/50 dark:border-amber-900/40 shrink-0"
+              title="Velocidad del viento"
+            >
+              <span class="text-xs">💨</span><span class="value">-- km/h</span>
             </span>
           </div>
-        </div>
-
-        <!-- Aviso contextual si se requiere -->
-        <div id="weather-gps-notice" class="hidden w-full text-[11px] px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 flex items-center justify-between gap-2">
-          <span id="weather-gps-notice-text"></span>
-          <button id="weather-gps-retry-btn" type="button" class="underline font-bold text-amber-900 dark:text-amber-200 hover:opacity-80">Reintentar</button>
         </div>
       </div>
 
-      <!-- 2. Barra de Calidad Ambiental -->
-      <div class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <!-- Lado izquierdo: Identificación -->
-        <div class="flex items-center gap-3 shrink-0">
-          <div class="p-2.5 bg-lime-100 dark:bg-lime-900/30 rounded-xl shadow-xs border border-lime-200 dark:border-lime-800/50">
-            <span class="text-2xl leading-none">🌿</span>
+      <!-- 2. Barra de Calidad Ambiental (Todo en una misma línea sin scroll horizontal) -->
+      <div
+        class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-xs flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden flex-nowrap w-full"
+      >
+        <!-- Lado izquierdo: Icono y Título (sin fotosíntesis) -->
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div class="p-1 sm:p-1.5 bg-lime-100 dark:bg-lime-900/30 rounded-lg shadow-xs border border-lime-200 dark:border-lime-800/50 shrink-0">
+            <span class="text-base sm:text-lg leading-none">🌿</span>
           </div>
-          <div class="flex flex-col">
-            <span class="text-xs font-bold uppercase tracking-wider text-lime-700 dark:text-lime-400">
-              Calidad Ambiental
-            </span>
-            <span class="text-[11px] text-green-700 dark:text-stone-400 font-medium">
-              Fotosíntesis, Transpiración y Polución
-            </span>
-          </div>
+          <span class="text-xs font-bold uppercase tracking-wider text-lime-700 dark:text-lime-400 shrink-0">
+            Calidad Ambiental
+          </span>
         </div>
 
-        <!-- Lado derecho: CO2, DPV y AQI en una sola fila compacta -->
-        <div class="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 grow md:grow-0 justify-end">
+        <!-- Lado derecho: CO2, DPV y AQI en la misma línea -->
+        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0 text-xs">
           <!-- CO2 -->
-          <div class="bg-white/70 dark:bg-stone-900/60 px-3 py-1.5 rounded-xl border border-green-100 dark:border-stone-700 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+          <div class="bg-white/70 dark:bg-stone-900/60 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg border border-green-100 dark:border-stone-700 shadow-xs flex items-center gap-1 shrink-0" title="Dióxido de Carbono">
             <span class="text-[9px] font-bold text-green-700 dark:text-stone-400 uppercase">CO₂</span>
-            <div class="flex items-center gap-1">
-              <span class="text-sm sm:text-base font-black tracking-tight text-green-950 dark:text-stone-100">420</span>
-              <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.5 rounded-md font-bold">ÓPTIMO</span>
-            </div>
+            <span class="text-xs font-black tracking-tight text-green-950 dark:text-stone-100">420</span>
+            <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.2 rounded font-bold">ÓPTIMO</span>
           </div>
 
           <!-- DPV -->
-          <div class="bg-white/70 dark:bg-stone-900/60 px-3 py-1.5 rounded-xl border border-green-100 dark:border-stone-700 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+          <div class="bg-white/70 dark:bg-stone-900/60 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg border border-green-100 dark:border-stone-700 shadow-xs flex items-center gap-1 shrink-0" title="Déficit de Presión de Vapor">
             <span class="text-[9px] font-bold text-green-700 dark:text-stone-400 uppercase">DPV</span>
-            <div class="flex items-center gap-1">
-              <span class="text-sm sm:text-base font-black tracking-tight text-green-950 dark:text-stone-100">0.8</span>
-              <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.5 rounded-md font-bold">IDEAL</span>
-            </div>
+            <span class="text-xs font-black tracking-tight text-green-950 dark:text-stone-100">0.8</span>
+            <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.2 rounded font-bold">IDEAL</span>
           </div>
 
           <!-- AQI (Polución Externa) -->
-          <div class="bg-white/70 dark:bg-stone-900/60 px-3 py-1.5 rounded-xl border border-green-100 dark:border-stone-700 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+          <div class="bg-white/70 dark:bg-stone-900/60 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg border border-green-100 dark:border-stone-700 shadow-xs flex items-center gap-1 shrink-0" title="Índice de Calidad del Aire (Polución)">
             <span class="text-[9px] font-bold text-green-700 dark:text-stone-400 uppercase">AQI</span>
-            <div class="flex items-center gap-1.5">
-              <span id="aqi-value" class="text-sm sm:text-base font-black tracking-tight text-green-950 dark:text-stone-100">--</span>
-              <span id="aqi-status" class="text-[8px] uppercase px-1.5 py-0.5 rounded-md bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300 font-bold">Cargando</span>
-            </div>
+            <span id="aqi-value" class="text-xs font-black tracking-tight text-green-950 dark:text-stone-100">--</span>
+            <span id="aqi-status" class="text-[8px] uppercase px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300 font-bold">Cargando</span>
           </div>
         </div>
       </div>
-      
+
+      <!-- Aviso contextual de GPS si se requiere -->
+      <div
+        id="weather-gps-notice"
+        class="hidden w-full text-[11px] px-3 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 flex items-center justify-between gap-2"
+      >
+        <span id="weather-gps-notice-text"></span>
+        <button
+          id="weather-gps-retry-btn"
+          type="button"
+          class="underline font-bold text-amber-900 dark:text-amber-200 hover:opacity-80"
+        >
+          Reintentar
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -398,13 +406,14 @@ const ultimaFecha = registros
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(
-      75,
+      72,
       container.clientWidth / container.clientHeight,
       0.1,
       1000,
     );
-    // Alejar la cámara para que se vea el cielo y el sol
-    camera.position.set(0, 8, 32);
+    // Posición y ángulo de la cámara optimizados para plano 3D más grande y cielo visible
+    camera.position.set(0, 6, 26);
+    camera.lookAt(0, 4, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -416,6 +425,7 @@ const ultimaFecha = registros
       if (w === 0 || h === 0) return;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      camera.lookAt(0, 4, 0);
       renderer.setSize(w, h);
     };
     window.addEventListener("resize", resizeRenderer);
@@ -461,14 +471,14 @@ const ultimaFecha = registros
     dirLight.shadow.camera.bottom = -20;
     scene.add(dirLight);
 
-    const sunGeometry = new THREE.SphereGeometry(2, 32, 32);
+    const sunGeometry = new THREE.SphereGeometry(2.0, 32, 32);
     const sunMaterial = new THREE.MeshBasicMaterial({
       color: 0xfffca3,
     });
     const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
     scene.add(sunMesh);
 
-    const moonGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+    const moonGeometry = new THREE.SphereGeometry(1.6, 32, 32);
     const moonMaterial = new THREE.MeshBasicMaterial({ color: 0xe0e0e0 });
     const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
     scene.add(moonMesh);
@@ -482,10 +492,10 @@ const ultimaFecha = registros
         timeDisplay.textContent = `Hora: ${hh}:${mm}`;
       }
 
-      // Órbita más cerrada para asegurar que el sol y la luna no se salgan de pantalla
-      const distanceX = 16; // Distancia horizontal (este a oeste)
-      const distanceY = 12; // Altura máxima en el cielo (cenit)
-      const z = -10; // Ligeramente por detrás
+      // Órbita optimizada para que el cénit (punto más alto) sea 100% visible con amplio cielo
+      const distanceX = 15; // Distancia horizontal (este a oeste)
+      const distanceY = 10.5; // Altura máxima en el cielo (cenit en ángulo perfecto)
+      const z = -8; // Profundidad detrás del invernadero
 
         if (hour >= 6 && hour <= 18) {
         moonMesh.visible = false;
@@ -610,18 +620,17 @@ const ultimaFecha = registros
             convertTempValue(data.temperature),
           ).toString();
         if (humEl)
-          humEl.innerHTML = `<span class="text-lg">💧</span><span class="value">${data.humidity}%</span>`;
+          humEl.innerHTML = `<span class="text-xs">💧</span><span class="value">${data.humidity}%</span>`;
         if (rainEl)
-          rainEl.innerHTML = `<span class="text-lg">🌧️</span><span class="value">${data.rainProbability}%</span>`;
+          rainEl.innerHTML = `<span class="text-xs">🌧️</span><span class="value">${data.rainProbability}%</span>`;
         if (windEl)
-          windEl.innerHTML = `<span class="text-lg">💨</span><span class="value">${data.windSpeed} km/h</span>`;
+          windEl.innerHTML = `<span class="text-xs">💨</span><span class="value">${data.windSpeed} km/h</span>`;
         if (iconEl) {
           iconEl.textContent = getWeatherEmoji(data.weatherCode);
         }
 
         const resolvedName =
-          data.locationName ||
-          (isFallback ? "Medellín, Antioquia" : "Ubicación GPS");
+          data.locationName || (isFallback ? "Medellín, ANT" : "Ubicación GPS");
         if (locationNameEl) {
           locationNameEl.textContent = resolvedName;
           locationNameEl.title = `Sitio del clima: ${resolvedName}`;
@@ -638,17 +647,17 @@ const ultimaFecha = registros
 
         if (badgeEl) {
           if (sourceType === "gps") {
-            badgeEl.textContent = "GPS en vivo";
+            badgeEl.textContent = "GPS";
             badgeEl.className =
-              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300";
+              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 shrink-0";
           } else if (sourceType === "finca") {
             badgeEl.textContent = "Finca";
             badgeEl.className =
-              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300";
+              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 shrink-0";
           } else {
-            badgeEl.textContent = "Predeterminado";
+            badgeEl.textContent = "Auto";
             badgeEl.className =
-              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-stone-200 text-stone-700 dark:bg-stone-700 dark:text-stone-300";
+              "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-stone-200 text-stone-700 dark:bg-stone-700 dark:text-stone-300 shrink-0";
           }
         }
       } catch (e) {
@@ -784,13 +793,13 @@ const ultimaFecha = registros
 
       // 2. Si no hay finca o falló geocodificación de finca, usar Medellín por defecto
       const locNameEl = document.getElementById("weather-location-name");
-      if (locNameEl) locNameEl.textContent = "Medellín, Antioquia";
+      if (locNameEl) locNameEl.textContent = "Medellín, ANT";
       setWeatherLocation(
         6.2442,
         -75.5812,
         true,
         "default",
-        "Medellín, Antioquia",
+        "Medellín, ANT",
       );
     }
 
@@ -801,7 +810,7 @@ const ultimaFecha = registros
       }
 
       const locNameEl = document.getElementById("weather-location-name");
-      if (locNameEl) locNameEl.textContent = "Detectando señal GPS...";
+      if (locNameEl) locNameEl.textContent = "Buscando GPS...";
 
       navigator.geolocation.getCurrentPosition(
         (position) => {

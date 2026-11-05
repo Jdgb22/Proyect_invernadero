@@ -15,6 +15,118 @@ export function isValleDeAburra(lat: number, lon: number): boolean {
   return lat >= 6.0 && lat <= 6.5 && lon >= -75.75 && lon <= -75.4;
 }
 
+const COLOMBIA_SUBDIVISIONS: Record<string, string> = {
+  antioquia: "ANT",
+  atlantico: "ATL",
+  atlántico: "ATL",
+  bogota: "D.C.",
+  bogotá: "D.C.",
+  "bogota d.c.": "D.C.",
+  "bogotá d.c.": "D.C.",
+  "distrito capital": "D.C.",
+  bolivar: "BOL",
+  bolívar: "BOL",
+  boyaca: "BOY",
+  boyacá: "BOY",
+  caldas: "CAL",
+  caqueta: "CAQ",
+  caquetá: "CAQ",
+  cauca: "CAU",
+  cesar: "CES",
+  cordoba: "COR",
+  córdoba: "COR",
+  cundinamarca: "CUN",
+  choco: "CHO",
+  chocó: "CHO",
+  huila: "HUI",
+  "la guajira": "LAG",
+  guajira: "LAG",
+  magdalena: "MAG",
+  meta: "MET",
+  narino: "NAR",
+  nariño: "NAR",
+  "norte de santander": "NSA",
+  quindio: "QUI",
+  quindío: "QUI",
+  risaralda: "RIS",
+  santander: "SAN",
+  sucre: "SUC",
+  tolima: "TOL",
+  "valle del cauca": "VAL",
+  arauca: "ARA",
+  casanare: "CAS",
+  putumayo: "PUT",
+  "san andres": "SAP",
+  "san andrés": "SAP",
+  amazonas: "AMA",
+  guainia: "GUA",
+  guainía: "GUA",
+  guaviare: "GUV",
+  vaupes: "VAU",
+  vaupés: "VAU",
+  vichada: "VID",
+};
+
+/**
+ * Convierte el nombre o código de una subdivisión (departamento/región/capital)
+ * a su sigla o abreviatura en mayúsculas (ej: Antioquia -> ANT, Valle del Cauca -> VAL).
+ */
+export function formatRegionCode(
+  subdivision?: string,
+  code?: string,
+): string | null {
+  if (code) {
+    const parts = code.split("-");
+    const suffix =
+      parts.length > 1
+        ? parts[1].trim().toUpperCase()
+        : parts[0].trim().toUpperCase();
+    if (suffix && suffix.length <= 4) {
+      if (suffix === "DC") return "D.C.";
+      if (suffix === "VAC") return "VAL";
+      return suffix;
+    }
+  }
+  if (!subdivision) return null;
+  const normalized = subdivision.trim().toLowerCase();
+  if (COLOMBIA_SUBDIVISIONS[normalized]) {
+    return COLOMBIA_SUBDIVISIONS[normalized];
+  }
+  const words = subdivision
+    .trim()
+    .split(/\s+/)
+    .filter(
+      (w) => !["de", "del", "la", "los", "las", "el"].includes(w.toLowerCase()),
+    );
+  if (words.length > 1 && words.length <= 3) {
+    return words.map((w) => w[0].toUpperCase()).join("");
+  }
+  if (subdivision.length > 4) {
+    return subdivision.slice(0, 3).toUpperCase();
+  }
+  return subdivision.toUpperCase();
+}
+
+/**
+ * Formatea el rótulo de ubicación con el nombre de la ciudad/municipio/sitio
+ * y la sigla de la región/departamento/capital en iniciales mayúsculas (ej: "Rionegro, ANT").
+ */
+export function formatLocationLabel(
+  city?: string,
+  subdivision?: string,
+  code?: string,
+): string | null {
+  if (!city && !subdivision) return null;
+  const regCode = formatRegionCode(subdivision, code);
+  if (city && regCode && city.toLowerCase() !== subdivision?.toLowerCase()) {
+    return `${city}, ${regCode}`;
+  }
+  if (city) {
+    return regCode && !city.includes(regCode) ? `${city}, ${regCode}` : city;
+  }
+  return regCode || subdivision || null;
+}
+
 /**
  * Obtiene el nombre del municipio/ciudad y departamento correspondiente
  * a unas coordenadas geográficas dadas (geocodificación inversa).
@@ -35,14 +147,16 @@ export async function reverseGeocode(
         city?: string;
         locality?: string;
         principalSubdivision?: string;
+        principalSubdivisionCode?: string;
         countryName?: string;
       };
       const city = data.city || data.locality || data.principalSubdivision;
-      const state = data.principalSubdivision;
-      if (city && state && city !== state) {
-        return `${city}, ${state}`;
-      }
-      if (city) return city;
+      const formatted = formatLocationLabel(
+        city,
+        data.principalSubdivision,
+        data.principalSubdivisionCode,
+      );
+      if (formatted) return formatted;
     }
   } catch {
     // Si falla o timeout, continúa al respaldo
@@ -75,11 +189,8 @@ export async function reverseGeocode(
         addr.village ||
         addr.municipality ||
         addr.county;
-      const state = addr.state;
-      if (city && state && city !== state) {
-        return `${city}, ${state}`;
-      }
-      if (city) return city;
+      const formatted = formatLocationLabel(city, addr.state);
+      if (formatted) return formatted;
     }
   } catch {
     // Si ambos fallan, retornará null
@@ -132,9 +243,8 @@ export async function geocodeQuery(
       };
       if (data.results && data.results.length > 0) {
         const item = data.results[0];
-        const fullName = item.admin1
-          ? `${item.name}, ${item.admin1}`
-          : item.name;
+        const fullName =
+          formatLocationLabel(item.name, item.admin1) || item.name;
         return {
           lat: item.latitude,
           lon: item.longitude,
@@ -166,9 +276,7 @@ export async function fetchWeatherData(
 
     const locationName =
       resolvedName ||
-      (isFallback
-        ? "Medellín, Antioquia"
-        : `${lat.toFixed(3)}, ${lon.toFixed(3)}`);
+      (isFallback ? "Medellín, ANT" : `${lat.toFixed(3)}, ${lon.toFixed(3)}`);
 
     return {
       ...openMeteoData,
@@ -186,7 +294,7 @@ export async function fetchWeatherData(
       windSpeed: 5,
       locationName:
         providedLocationName ||
-        (isFallback ? "Medellín, Antioquia" : "Ubicación actual"),
+        (isFallback ? "Medellín, ANT" : "Ubicación actual"),
       source: "Offline Fallback",
       isFallback: true,
     };
