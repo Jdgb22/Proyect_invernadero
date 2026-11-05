@@ -187,106 +187,110 @@ const ultimaFecha = registros
     </div>
 
     <!-- Panel de widgets debajo del mapa -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    <!-- Panel de barras ambientales debajo del mapa -->
+    <div class="flex flex-col gap-3 mt-4">
       
-      <!-- Widget del Clima -->
-      <div id="weather-widget" class="bg-green-50 dark:bg-stone-800/50 border border-green-100 dark:border-[#166534] rounded-xl p-4 flex flex-col gap-3 justify-between">
-        <div class="flex items-center justify-between w-full">
-          <div class="flex items-center gap-3">
-            <div class="p-2 bg-[#f4fce3] dark:bg-stone-700 rounded-lg shadow-sm border border-green-100 dark:border-stone-600">
-              <span id="weather-icon" class="text-xl">☀️</span>
-            </div>
-            <div class="flex flex-col">
-              <div class="flex items-center gap-2">
-                <span id="weather-title" class="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-stone-400">
-                  Clima Local
-                </span>
-                <span id="weather-source-badge" class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                  Detectando...
-                </span>
-              </div>
-              <div class="flex items-center gap-1 mt-0.5" title="Sitio geográfico detectado por GPS">
-                <span class="text-xs text-emerald-600 dark:text-emerald-400">📍</span>
-                <span id="weather-location-name" class="text-xs font-semibold text-stone-800 dark:text-stone-200 truncate max-w-[150px] sm:max-w-[210px]">
-                  Buscando GPS...
-                </span>
-              </div>
-            </div>
+      <!-- 1. Barra de Clima -->
+      <div id="weather-widget" class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <!-- Lado izquierdo: Identificación y ubicación -->
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="p-2.5 bg-[#f4fce3] dark:bg-stone-700 rounded-xl shadow-xs border border-green-100 dark:border-stone-600 shrink-0">
+            <span id="weather-icon" class="text-2xl leading-none">☀️</span>
           </div>
-          <div class="flex flex-col items-end gap-1">
-            <div class="flex items-end gap-1">
-              <span id="weather-temp" class="text-2xl font-black tracking-tighter text-green-900 dark:text-stone-300">--</span>
-              <span class="text-xs font-medium text-green-600 dark:text-stone-400 mb-0.5">°C</span>
+          <div class="flex flex-col min-w-0">
+            <div class="flex items-center gap-2">
+              <span id="weather-title" class="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-stone-300">
+                Clima Local
+              </span>
+              <span id="weather-source-badge" class="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                Detectando...
+              </span>
             </div>
-            <button
-              id="weather-gps-btn"
-              type="button"
-              class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-200 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800 transition-colors"
-              title="Actualizar o reactivar ubicación GPS actual"
-            >
-              <span id="weather-gps-icon">🎯</span>
-              <span id="weather-gps-label">Mi GPS</span>
-            </button>
+            <div class="flex items-center gap-1 mt-0.5" title="Sitio geográfico detectado por GPS">
+              <span class="text-xs text-emerald-600 dark:text-emerald-400">📍</span>
+              <span id="weather-location-name" class="text-xs font-semibold text-stone-800 dark:text-stone-200 truncate max-w-[200px] sm:max-w-[320px]">
+                Buscando GPS...
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- Aviso contextual de GPS si se bloquea permiso o hay timeout -->
-        <div id="weather-gps-notice" class="hidden text-[11px] px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 flex items-center justify-between gap-2">
+        <!-- Lado derecho: Temperatura y métricas en una sola fila -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3 self-stretch md:self-auto justify-between md:justify-end">
+          <!-- Temperatura -->
+          <div class="flex items-baseline gap-1 px-3 py-1.5 bg-white/70 dark:bg-stone-900/60 rounded-xl border border-green-100 dark:border-stone-700 shadow-xs">
+            <span id="weather-temp" class="text-2xl sm:text-3xl font-black tracking-tight text-green-950 dark:text-stone-100">--</span>
+            <span class="text-xs font-bold text-green-700 dark:text-stone-400">°C</span>
+          </div>
+
+          <!-- Métricas horizontales -->
+          <div class="flex items-center gap-1.5 sm:gap-2 grow md:grow-0 justify-end">
+            <!-- Humedad -->
+            <span id="weather-humidity" class="bg-blue-100/60 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-blue-200/50 dark:border-blue-900/40">
+              <span class="text-sm">💧</span><span class="value">--%</span>
+            </span>
+            <!-- Lluvia -->
+            <span id="weather-rain" class="bg-emerald-100/60 dark:bg-stone-900/60 text-emerald-800 dark:text-stone-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-emerald-200/50 dark:border-stone-700/50">
+              <span class="text-sm">🌧️</span><span class="value">--%</span>
+            </span>
+            <!-- Viento -->
+            <span id="weather-wind" class="bg-amber-100/60 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-amber-200/50 dark:border-amber-900/40">
+              <span class="text-sm">💨</span><span class="value">-- km/h</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Aviso contextual si se requiere -->
+        <div id="weather-gps-notice" class="hidden w-full text-[11px] px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 flex items-center justify-between gap-2">
           <span id="weather-gps-notice-text"></span>
           <button id="weather-gps-retry-btn" type="button" class="underline font-bold text-amber-900 dark:text-amber-200 hover:opacity-80">Reintentar</button>
         </div>
-
-        <div class="grid grid-cols-3 gap-2">
-          <span id="weather-humidity" class="bg-blue-100/50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">💧</span><span class="value">--%</span></span>
-          <span id="weather-rain" class="bg-green-100/50 dark:bg-stone-900/50 text-green-700 dark:text-stone-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">🌧️</span><span class="value">--%</span></span>
-          <span id="weather-wind" class="bg-yellow-100/50 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 px-2 py-2 rounded-md text-xs font-bold text-center flex flex-col items-center gap-1"><span class="text-lg">💨</span><span class="value">-- km/h</span></span>
-        </div>
       </div>
 
-      <!-- Widget Calidad Ambiental (Plantas) -->
-      <div class="bg-green-50 dark:bg-stone-800/50 border border-green-100 dark:border-[#166534] rounded-xl p-4 flex flex-col justify-between gap-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="p-2 bg-lime-100 dark:bg-lime-900/30 rounded-lg shadow-sm border border-lime-200 dark:border-lime-800/50">
-              <span class="text-xl">🌿</span>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-xs font-bold uppercase tracking-widest text-lime-700 dark:text-lime-400">
-                Calidad Ambiental
-              </span>
-              <span class="text-[10px] text-green-600 dark:text-stone-400">
-                Fotosíntesis y Transpiración
-              </span>
-            </div>
+      <!-- 2. Barra de Calidad Ambiental -->
+      <div class="bg-green-50/90 dark:bg-stone-800/80 border border-green-100 dark:border-[#166534] rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <!-- Lado izquierdo: Identificación -->
+        <div class="flex items-center gap-3 shrink-0">
+          <div class="p-2.5 bg-lime-100 dark:bg-lime-900/30 rounded-xl shadow-xs border border-lime-200 dark:border-lime-800/50">
+            <span class="text-2xl leading-none">🌿</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-xs font-bold uppercase tracking-wider text-lime-700 dark:text-lime-400">
+              Calidad Ambiental
+            </span>
+            <span class="text-[11px] text-green-700 dark:text-stone-400 font-medium">
+              Fotosíntesis, Transpiración y Polución
+            </span>
           </div>
         </div>
-        
-        <div class="grid grid-cols-2 gap-2 mt-1">
+
+        <!-- Lado derecho: CO2, DPV y AQI en una sola fila compacta -->
+        <div class="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 grow md:grow-0 justify-end">
           <!-- CO2 -->
-          <div class="bg-[#f4fce3] dark:bg-stone-800 p-2 rounded-lg border border-green-100 dark:border-[#166534] shadow-sm flex flex-col justify-between">
-             <span class="text-[9px] font-bold text-green-600 dark:text-stone-400 uppercase">CO₂ (PPM)</span>
-             <div class="flex items-end justify-between mt-1">
-               <span class="text-lg font-black tracking-tight text-green-900 dark:text-stone-300">420</span>
-               <span class="text-[8px] bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-400 px-1.5 py-0.5 rounded-full font-bold">ÓPTIMO</span>
-             </div>
+          <div class="bg-white/70 dark:bg-stone-900/60 px-3 py-1.5 rounded-xl border border-green-100 dark:border-stone-700 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span class="text-[9px] font-bold text-green-700 dark:text-stone-400 uppercase">CO₂</span>
+            <div class="flex items-center gap-1">
+              <span class="text-sm sm:text-base font-black tracking-tight text-green-950 dark:text-stone-100">420</span>
+              <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.5 rounded-md font-bold">ÓPTIMO</span>
+            </div>
           </div>
-          
+
           <!-- DPV -->
-          <div class="bg-[#f4fce3] dark:bg-stone-800 p-2 rounded-lg border border-green-100 dark:border-[#166534] shadow-sm flex flex-col justify-between">
-             <span class="text-[9px] font-bold text-green-600 dark:text-stone-400 uppercase">DPV (kPa)</span>
-             <div class="flex items-end justify-between mt-1">
-               <span class="text-lg font-black tracking-tight text-green-900 dark:text-stone-300">0.8</span>
-               <span class="text-[8px] bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-400 px-1.5 py-0.5 rounded-full font-bold">IDEAL</span>
-             </div>
+          <div class="bg-white/70 dark:bg-stone-900/60 px-3 py-1.5 rounded-xl border border-green-100 dark:border-stone-700 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span class="text-[9px] font-bold text-green-700 dark:text-stone-400 uppercase">DPV</span>
+            <div class="flex items-center gap-1">
+              <span class="text-sm sm:text-base font-black tracking-tight text-green-950 dark:text-stone-100">0.8</span>
+              <span class="text-[8px] bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 px-1 py-0.5 rounded-md font-bold">IDEAL</span>
+            </div>
           </div>
-          
-          <!-- Ozono/Contaminantes externos (WAQI) -->
-          <div class="col-span-2 bg-[#f4fce3] dark:bg-stone-800 p-2 rounded-lg border border-green-100 dark:border-[#166534] shadow-sm flex items-center justify-between">
-             <div class="flex flex-col">
-               <span class="text-[9px] font-bold text-green-600 dark:text-stone-400 uppercase">Polución Externa (AQI)</span>
-               <span id="aqi-value" class="text-lg font-black tracking-tight text-green-900 dark:text-stone-300">--</span>
-             </div>
-             <span id="aqi-status" class="text-[9px] uppercase px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-stone-700 dark:text-stone-300 font-bold">Cargando</span>
+
+          <!-- AQI (Polución Externa) -->
+          <div class="bg-white/70 dark:bg-stone-900/60 px-3 py-1.5 rounded-xl border border-green-100 dark:border-stone-700 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span class="text-[9px] font-bold text-green-700 dark:text-stone-400 uppercase">AQI</span>
+            <div class="flex items-center gap-1.5">
+              <span id="aqi-value" class="text-sm sm:text-base font-black tracking-tight text-green-950 dark:text-stone-100">--</span>
+              <span id="aqi-status" class="text-[8px] uppercase px-1.5 py-0.5 rounded-md bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300 font-bold">Cargando</span>
+            </div>
           </div>
         </div>
       </div>
@@ -743,24 +747,6 @@ const ultimaFecha = registros
       if (noticeEl) noticeEl.classList.add("hidden");
     }
 
-    function setGpsButtonLoading(isLoading: boolean) {
-      const btn = document.getElementById("weather-gps-btn");
-      const icon = document.getElementById("weather-gps-icon");
-      const label = document.getElementById("weather-gps-label");
-      if (!btn) return;
-      if (isLoading) {
-        btn.setAttribute("disabled", "true");
-        btn.classList.add("opacity-70");
-        if (icon) icon.textContent = "⌛";
-        if (label) label.textContent = "Ubicando...";
-      } else {
-        btn.removeAttribute("disabled");
-        btn.classList.remove("opacity-70");
-        if (icon) icon.textContent = "🎯";
-        if (label) label.textContent = "Mi GPS";
-      }
-    }
-
     async function fallbackToFincaOrDefault(reasonMessage?: string) {
       if (reasonMessage) {
         showGpsNotice(reasonMessage, true);
@@ -814,13 +800,11 @@ const ultimaFecha = registros
         return;
       }
 
-      setGpsButtonLoading(true);
       const locNameEl = document.getElementById("weather-location-name");
       if (locNameEl) locNameEl.textContent = "Detectando señal GPS...";
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setGpsButtonLoading(false);
           hideGpsNotice();
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
@@ -842,7 +826,6 @@ const ultimaFecha = registros
             return;
           }
 
-          setGpsButtonLoading(false);
           let msg = "No se pudo obtener el GPS.";
           if (error.code === error.PERMISSION_DENIED) {
             msg = "Permiso de GPS no concedido en el navegador.";
@@ -887,10 +870,7 @@ const ultimaFecha = registros
       requestGpsLocation(true);
     }
 
-    // Botones interactivos para reintentar o reactivar GPS
-    document
-      .getElementById("weather-gps-btn")
-      ?.addEventListener("click", () => requestGpsLocation(true));
+    // Botón de reintento si el aviso de GPS está visible
     document
       .getElementById("weather-gps-retry-btn")
       ?.addEventListener("click", () => requestGpsLocation(true));
