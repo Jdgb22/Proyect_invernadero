@@ -4,16 +4,16 @@
 // Integrado al diseño del Invernadero Macollo.
 ---
 
-<!-- Botón Flotante / Acceso Rápido para Abrir Escáner -->
+<!-- Botón Flotante Circular para Detección de Trips -->
 <div class="fixed bottom-6 right-6 z-40">
   <button
     id="open-trips-scanner-btn"
     type="button"
-    class="flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 hover:from-emerald-700 hover:to-lime-700 text-white rounded-full shadow-xl shadow-green-900/30 font-bold text-sm transform hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-white/20"
-    title="Escanear Trips con Cámara y BioCLIP 2.5"
+    class="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center bg-gradient-to-tr from-emerald-600 via-green-600 to-lime-500 hover:from-emerald-700 hover:to-lime-600 text-white shadow-2xl shadow-green-950/40 text-2xl sm:text-3xl transform hover:scale-110 active:scale-95 transition-all duration-200 border-2 border-white/30 cursor-pointer group"
+    title="Detección de Trips con Cámara y BioCLIP 2.5"
+    aria-label="Detección de Trips"
   >
-    <span class="text-xl">📸</span>
-    <span>Escanear Trips</span>
+    <span class="transform group-hover:rotate-6 transition-transform select-none">📸</span>
   </button>
 </div>
 

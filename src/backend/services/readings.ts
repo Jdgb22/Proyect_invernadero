@@ -6,6 +6,20 @@ import { pool } from "../../db/client";
 import type { MetricRecord } from "../../shared/plantMatrix";
 import { avatarColorFor } from "../../shared/avatar";
 
+let hasCheckedResponsableCol = false;
+async function ensureResponsableColumn() {
+  if (hasCheckedResponsableCol) return;
+  try {
+    await pool.query(
+      "ALTER TABLE lecturas ADD COLUMN IF NOT EXISTS responsable TEXT;",
+    );
+    hasCheckedResponsableCol = true;
+  } catch (err) {
+    // Si la tabla no existe aún o no hay permisos DDL, no romper la app
+    hasCheckedResponsableCol = true;
+  }
+}
+
 interface LecturaRow {
   id: string | number;
   finca_nombre: string;
@@ -37,7 +51,7 @@ function rowToRecord(row: LecturaRow): MetricRecord {
   const fecha = toISODate(row.fecha);
   const hora = row.hora || "";
   const n = Number(row.plant_id.replace(/\D/g, "")) || 0;
-  const responsable = row.responsable || "Equipo de Campo";
+  const responsable = (row.responsable || "").trim() || "Sin registrar";
   return {
     id: `LEC-${row.id}`,
     invernadero: row.finca_nombre,
@@ -61,7 +75,7 @@ function rowToRecord(row: LecturaRow): MetricRecord {
       (row.productividad as MetricRecord["productividad"]) || "Media",
     sanidad: (row.sanidad as MetricRecord["sanidad"]) || "Saludable",
     responsable,
-    responsableRol: "Registro de campo",
+    responsableRol: "",
     avatarColor: avatarColorFor(responsable),
     observaciones: row.observaciones || undefined,
   };
@@ -71,11 +85,13 @@ function rowToRecord(row: LecturaRow): MetricRecord {
 export async function getLecturasByFinca(
   fincaId: number,
 ): Promise<MetricRecord[]> {
+  await ensureResponsableColumn();
   const res = await pool.query(
     `SELECT l.id, f.nombre AS finca_nombre, p.fila, p.columna, p.plant_id,
             l.fecha, l.hora, l.ph_suelo, l.temp_interna, l.temp_externa, l.temp_suelo,
             l.humedad, l.altura_cm, l.crecimiento, l.fase, l.productividad, l.sanidad,
-            l.observaciones, u.name AS responsable
+            l.observaciones,
+            COALESCE(NULLIF(TRIM(l.responsable), ''), u.name, 'Sin registrar') AS responsable
      FROM lecturas l
      JOIN plantas p ON p.id = l.planta_id
      JOIN fincas f ON f.id = l.finca_id
@@ -109,6 +125,7 @@ export async function insertLecturas(
   records: MetricRecord[],
   responsableId: number | null,
 ): Promise<number> {
+  await ensureResponsableColumn();
   const plantaMap = await getPlantaMap(fincaId);
   const client = await pool.connect();
   let escritas = 0;
@@ -119,12 +136,14 @@ export async function insertLecturas(
       const plantaId = plantaMap.get(`${r.fila}|${r.columna}`);
       if (!plantaId) continue;
 
+      const respText = (r.responsable || "").trim() || null;
+
       await client.query(
         `INSERT INTO lecturas
            (finca_id, planta_id, fecha, hora, ph_suelo, temp_interna, temp_externa,
             temp_suelo, humedad, altura_cm, crecimiento, fase, productividad, sanidad,
-            responsable_id, observaciones)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+            responsable, responsable_id, observaciones)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
          ON CONFLICT (finca_id, planta_id, fecha, hora) DO UPDATE SET
            ph_suelo = EXCLUDED.ph_suelo,
            temp_interna = EXCLUDED.temp_interna,
@@ -136,6 +155,8 @@ export async function insertLecturas(
            fase = EXCLUDED.fase,
            productividad = EXCLUDED.productividad,
            sanidad = EXCLUDED.sanidad,
+           responsable = COALESCE(EXCLUDED.responsable, lecturas.responsable),
+           responsable_id = COALESCE(EXCLUDED.responsable_id, lecturas.responsable_id),
            observaciones = EXCLUDED.observaciones`,
         [
           fincaId,
@@ -152,6 +173,7 @@ export async function insertLecturas(
           r.faseCrecimiento || null,
           r.productividad || null,
           r.sanidad || null,
+          respText,
           responsableId,
           r.observaciones || null,
         ],

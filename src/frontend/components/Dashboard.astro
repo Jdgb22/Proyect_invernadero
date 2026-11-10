@@ -32,26 +32,38 @@ const ultimaFecha = registros
         <h2 class="text-xl sm:text-2xl font-bold text-green-950 dark:text-white mb-0.5">Dashboard Principal</h2>
         <p class="text-green-700 dark:text-stone-300 text-xs sm:text-sm">Monitoreo de cultivos reales y simulación ambiental del invernadero.</p>
       </div>
-      <div
-        id="dashboard-sync-indicator"
-        class:list={[
-          "inline-flex max-w-full items-center justify-center text-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shrink-0",
-          tieneRegistros
-            ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800"
-            : "bg-stone-100 dark:bg-stone-900/60 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700",
-        ]}
-      >
-        <span
+      <div class="flex items-center gap-2 flex-wrap">
+        <button
+          id="btn-refresh-dashboard"
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 hover:from-emerald-700 hover:to-lime-700 shadow-sm transition-all cursor-pointer transform hover:scale-105 active:scale-95 shrink-0"
+          title="Actualizar datos y mediciones del tablero"
+        >
+          <span id="dashboard-refresh-icon" class="inline-block transition-transform">🔄</span>
+          <span id="dashboard-refresh-text">Actualizar Datos</span>
+        </button>
+
+        <div
+          id="dashboard-sync-indicator"
           class:list={[
-            "w-2 h-2 rounded-full",
-            tieneRegistros ? "bg-emerald-500 animate-pulse" : "bg-stone-400",
+            "inline-flex max-w-full items-center justify-center text-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shrink-0",
+            tieneRegistros
+              ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800"
+              : "bg-stone-100 dark:bg-stone-900/60 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700",
           ]}
-        ></span>
-        <span id="dashboard-sync-text">
-          {tieneRegistros
-            ? `Datos en Vivo (${ultimaFecha}) • ${registros.length} tomas reales`
-            : "Sin mediciones registradas"}
-        </span>
+        >
+          <span
+            class:list={[
+              "w-2 h-2 rounded-full",
+              tieneRegistros ? "bg-emerald-500 animate-pulse" : "bg-stone-400",
+            ]}
+          ></span>
+          <span id="dashboard-sync-text">
+            {tieneRegistros
+              ? `Datos en Vivo (${ultimaFecha}) • ${registros.length} tomas reales`
+              : "Sin mediciones registradas"}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -138,7 +150,7 @@ const ultimaFecha = registros
               data-growth={growth}
               data-prod={hasData ? m.productividad : 'Sin datos'}
               data-health={hasData ? m.sanidad : 'Sin datos'}
-              data-resp={hasData ? m.responsable : 'Equipo de Campo'}
+              data-resp={hasData ? (m.responsable || 'Sin registrar') : 'Sin registrar'}
             >
               <div class="flex justify-between items-start mb-0.5">
                 <div class="flex items-center gap-1">
@@ -365,7 +377,7 @@ const ultimaFecha = registros
       </div>
       <div class="bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
         <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70 mb-1">Responsable</div>
-        <div id="modal-plant-resp" class="text-xs font-bold text-emerald-900 dark:text-emerald-100 truncate">Equipo de Campo</div>
+        <div id="modal-plant-resp" class="text-xs font-bold text-emerald-900 dark:text-emerald-100 truncate">Sin registrar</div>
       </div>
     </div>
   </div>
@@ -391,6 +403,8 @@ const ultimaFecha = registros
     mergeRecords,
     purgeMockStorage,
     readStoredRecords,
+    sheetsUrlStorageKey,
+    writeStoredRecords,
   } from "../../shared/clientStorage";
   import type { MetricRecord } from "../../shared/plantMatrix";
   import {
@@ -884,7 +898,7 @@ const ultimaFecha = registros
         if (grEl) grEl.textContent = t.dataset.growth || '--';
         if (prEl) prEl.textContent = t.dataset.prod || '--';
         if (heEl) heEl.textContent = t.dataset.health || '--';
-        if (reEl) reEl.textContent = t.dataset.resp || 'Equipo de Campo';
+        if (reEl) reEl.textContent = t.dataset.resp || 'Sin registrar';
 
         openModal();
         applyTempUnitToDocument();
@@ -979,7 +993,7 @@ const ultimaFecha = registros
         card.dataset.growth = growth;
         card.dataset.prod = latest.productividad;
         card.dataset.health = latest.sanidad;
-        card.dataset.resp = latest.responsable || 'Equipo de Campo';
+        card.dataset.resp = latest.responsable || 'Sin registrar';
 
         const iconEl = card.querySelector('.plant-icon-display');
         if (iconEl) iconEl.textContent = plantIcon;
@@ -1040,6 +1054,91 @@ const ultimaFecha = registros
     restartWeatherPolling?.();
     void refreshLecturasFromServer();
   }
+
+  const btnRefreshDashboard = document.getElementById('btn-refresh-dashboard');
+  const dashboardRefreshIcon = document.getElementById('dashboard-refresh-icon');
+  const dashboardRefreshText = document.getElementById('dashboard-refresh-text');
+
+  btnRefreshDashboard?.addEventListener('click', async () => {
+    if (dashboardRefreshIcon) dashboardRefreshIcon.classList.add('animate-spin');
+    if (dashboardRefreshText) dashboardRefreshText.textContent = 'Sincronizando Google Sheets...';
+    if (btnRefreshDashboard) (btnRefreshDashboard as HTMLButtonElement).disabled = true;
+
+    const sileo = (window as any).sileo;
+
+    try {
+      let sheetUrl = localStorage.getItem(sheetsUrlStorageKey(FINCA_SCOPE));
+
+      // Si no está en localStorage, intentar obtenerlo de la base de datos de la finca
+      if (!sheetUrl) {
+        try {
+          const getRes = await fetch('/api/sync-sheets');
+          const getData = await getRes.json();
+          if (getData?.sheetsUrl) {
+            sheetUrl = getData.sheetsUrl;
+            localStorage.setItem(sheetsUrlStorageKey(FINCA_SCOPE), sheetUrl);
+          }
+        } catch {}
+      }
+
+      // Si aún no hay URL configurada, solicitársela al usuario
+      if (!sheetUrl) {
+        const inputUrl = window.prompt(
+          'Para actualizar los datos desde Google Sheets, ingresa el enlace de tu hoja o Google Drive (con permisos "Cualquier persona con el enlace puede ver"):'
+        );
+        if (!inputUrl || !inputUrl.trim()) {
+          if (sileo) sileo.info?.({ title: 'Operación cancelada', description: 'No se ingresó la URL de Google Sheets.' });
+          return;
+        }
+        sheetUrl = inputUrl.trim();
+      }
+
+      // Sincronizar directamente con Google Sheets a través del backend
+      const syncRes = await fetch('/api/sync-sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: sheetUrl }),
+      });
+      const syncData = await syncRes.json();
+
+      if (!syncData.success) {
+        throw new Error(syncData.error || 'Error al descargar datos de Google Sheets');
+      }
+
+      if (syncData.sheetsUrl) {
+        localStorage.setItem(sheetsUrlStorageKey(FINCA_SCOPE), syncData.sheetsUrl);
+      }
+      if (Array.isArray(syncData.records)) {
+        writeStoredRecords(FINCA_SCOPE, syncData.records);
+      }
+
+      // Recargar lecturas actualizadas en el cliente
+      await refreshLecturasFromServer();
+      restartWeatherPolling?.();
+
+      window.dispatchEvent(
+        new CustomEvent('aquasens:data-synced', {
+          detail: { records: syncData.records, url: sheetUrl },
+        })
+      );
+      window.dispatchEvent(new Event('storage'));
+
+      sileo?.success?.({
+        title: '¡Google Sheets sincronizado!',
+        description: `Se actualizaron exitosamente ${syncData.count} tomas reales del cultivo.`,
+      });
+    } catch (err) {
+      console.error('[Dashboard] Error al sincronizar Google Sheets:', err);
+      sileo?.error?.({
+        title: 'Error de sincronización',
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      if (dashboardRefreshIcon) dashboardRefreshIcon.classList.remove('animate-spin');
+      if (dashboardRefreshText) dashboardRefreshText.textContent = 'Actualizar Datos';
+      if (btnRefreshDashboard) (btnRefreshDashboard as HTMLButtonElement).disabled = false;
+    }
+  });
 
   applyDashboardRecords();
   void refreshLecturasFromServer();

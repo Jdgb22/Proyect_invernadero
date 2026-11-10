@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS fincas (
     nombre       VARCHAR(255) NOT NULL,
     descripcion  TEXT,
     ubicacion    TEXT,
+    sheets_url   TEXT,
     dueno_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     activa       BOOLEAN NOT NULL DEFAULT TRUE,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -72,6 +73,7 @@ CREATE TABLE IF NOT EXISTS fincas (
 );
 CREATE INDEX IF NOT EXISTS idx_fincas_dueno ON fincas(dueno_id);
 CREATE INDEX IF NOT EXISTS idx_fincas_activa ON fincas(activa);
+ALTER TABLE fincas ADD COLUMN IF NOT EXISTS sheets_url TEXT;
 
 -- 5. Membresías
 CREATE TABLE IF NOT EXISTS finca_miembros (
@@ -128,6 +130,7 @@ CREATE TABLE IF NOT EXISTS lecturas (
     fase            TEXT,
     productividad   TEXT,
     sanidad         TEXT,
+    responsable     TEXT,
     responsable_id  INTEGER REFERENCES users(id) ON DELETE SET NULL,
     observaciones   TEXT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -135,6 +138,7 @@ CREATE TABLE IF NOT EXISTS lecturas (
 );
 CREATE INDEX IF NOT EXISTS idx_lecturas_finca_fecha ON lecturas(finca_id, fecha);
 CREATE INDEX IF NOT EXISTS idx_lecturas_planta ON lecturas(planta_id);
+ALTER TABLE lecturas ADD COLUMN IF NOT EXISTS responsable TEXT;
 
 -- 9. Galería de fotos
 CREATE TABLE IF NOT EXISTS photos (

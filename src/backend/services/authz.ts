@@ -122,11 +122,10 @@ export function canWriteFincaData(access: FincaAccess): boolean {
 
 /**
  * Puede conectar y sincronizar Google Sheets en la finca.
- * Regla de negocio: SOLO el dueño (rol_finca = 'dueno'). Los miembros
- * (p. ej. un agronomo invitado) y el staff NO pueden hacerlo.
+ * Permite a dueños, staff (Superadmin/Admin) y miembros autorizados sincronizar.
  */
 export function canConnectSheets(access: FincaAccess): boolean {
-  return access === "dueno";
+  return access === "dueno" || access === "staff" || access === "miembro";
 }
 
 /** Parsea un id de ruta/parámetro a entero positivo o null. */

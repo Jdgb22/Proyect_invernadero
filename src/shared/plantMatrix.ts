@@ -180,7 +180,7 @@ function pendingMetric(
     productividad: "Media",
     sanidad: "Saludable",
     responsable: "Sin registrar",
-    responsableRol: "Sin registrar",
+    responsableRol: "",
     avatarColor: "bg-stone-500",
     observaciones:
       "Esperando sincronización de datos reales desde Google Sheets.",

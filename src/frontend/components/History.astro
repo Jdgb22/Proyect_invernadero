@@ -1220,6 +1220,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
   } from "../../shared/plantMatrix";
   import { avatarColorFor } from "../../shared/avatar";
   import { escapeHtml } from "../../shared/serialize";
+  import { buildRecordsFromRows } from "../../shared/recordsParser";
   import {
     deriveSanidad,
     extractDateAndHour,
@@ -2150,9 +2151,9 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           <td class="px-4 py-3 whitespace-nowrap text-green-800 dark:text-stone-300">
             <div class="flex items-center gap-1.5">
               <span class="w-5 h-5 rounded-full ${record.avatarColor || "bg-green-600"} text-white text-[9px] font-bold flex items-center justify-center">
-                ${escapeHtml(record.responsable.charAt(0))}
+                ${escapeHtml((record.responsable || "?").charAt(0).toUpperCase())}
               </span>
-              <span class="text-xs truncate max-w-[120px]" title="${escapeHtml(record.responsable)}">${escapeHtml(record.responsable)}</span>
+              <span class="text-xs truncate max-w-[120px]" title="${escapeHtml(record.responsable || "Sin registrar")}">${escapeHtml(record.responsable || "Sin registrar")}</span>
             </div>
           </td>
           <td class="px-4 py-3 whitespace-nowrap text-right">
@@ -2492,7 +2493,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       }
     });
 
-    // Parser local para archivos subidos por el usuario
+    // Parser local para archivos subidos por el usuario (compatible con Google Drive/Sheets)
     function processUploadedFile(file: File) {
       const reader = new FileReader();
       reader.onload = (evt) => {
@@ -2505,62 +2506,13 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           return;
         }
 
-        const parsed: MetricRecord[] = [];
-        const todayStr = new Date().toISOString().slice(0, 10);
-
-        for (let i = 1; i < rows.length; i++) {
-          const cols = rows[i];
-          if (cols.length < 3) continue;
-
-          const rawPlantId = cols[0];
-          if (!rawPlantId) continue;
-          const coords = resolvePlantCoordinates(rawPlantId);
-
-          const dateCell = extractDateAndHour(cols[1]);
-          const fecha = /^\d{4}-\d{2}-\d{2}$/.test(dateCell.fecha)
-            ? dateCell.fecha
-            : todayStr;
-          const hora = dateCell.hora;
-
-          const ph = parseCsvNumber(cols[2]) ?? 6.4;
-          const tin = isNullCell(cols[3]) ? null : parseCsvNumber(cols[3]);
-          const growth = parseInt(cols[4], 10) || 80;
-          const sanidad = deriveSanidad(cols[5] || "", ph);
-          const responsable = (cols[6] || "").trim() || "Operario de Archivo";
-          const observaciones =
-            (cols[7] || "").trim() || "Registro importado desde archivo local.";
-
-          parsed.push({
-            id: `MET-UPLOAD-${coords.code}-${fecha}-${i}`,
-            invernadero: "Invernadero Macollo",
-            fila: coords.fila,
-            columna: coords.columna,
-            plantId: coords.plantId,
-            code: coords.code,
-            fecha,
-            hora,
-            timestampTexto: hora ? `${fecha}, ${hora}` : fecha,
-            phSuelo: ph,
-            tempInterna: tin,
-            tempExterna: null,
-            tempSuelo: null,
-            crecimiento: growth,
-            faseCrecimiento: "Desarrollo Vegetativo",
-            productividad: "Alta",
-            sanidad,
-            responsable,
-            responsableRol: "Carga Manual",
-            avatarColor: avatarColorFor(responsable),
-            observaciones,
-          });
-        }
-
+        const parsed = buildRecordsFromRows(rows);
         if (parsed.length === 0) {
           showToast("No se pudieron interpretar las filas del archivo", "⚠️");
           return;
         }
 
-        state.pendingUploadRows = parsed as MetricRecord[];
+        state.pendingUploadRows = parsed;
 
         // Mostrar vista previa
         if (uploadPreviewContainer && uploadPreviewBody && uploadPreviewCount) {

@@ -186,14 +186,13 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
       </button>
 
       <button
-        id="btn-open-modal"
+        id="btn-refresh-metrics"
         type="button"
-        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-lime-600 to-teal-600 hover:from-lime-700 hover:to-teal-700 shadow-md shadow-lime-600/20 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 cursor-pointer transform hover:-translate-y-0.5"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-green-600/20 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 cursor-pointer transform hover:-translate-y-0.5"
+        title="Actualizar mediciones y métricas con los últimos datos registrados"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-        </svg>
-        <span>Nueva Medición</span>
+        <span id="refresh-metrics-icon" class="inline-block transition-transform">🔄</span>
+        <span id="refresh-metrics-text">Actualizar Métricas</span>
       </button>
 
       <button
@@ -1052,16 +1051,18 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
                 <!-- Columna J: Responsable -->
                 <td class="table-cell-resp py-3 px-4">
                   <div class="flex items-center gap-2">
-                    <div class={`w-7 h-7 rounded-full ${hasData ? m.avatarColor : 'bg-stone-400'} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0`}>
-                      {hasData ? m.responsable.split(" ").map(n => n[0]).slice(0, 2).join("") : "?"}
+                    <div class={`w-7 h-7 rounded-full ${hasData && m.responsable ? (m.avatarColor || 'bg-green-600') : 'bg-stone-400'} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0`}>
+                      {hasData && m.responsable && m.responsable !== 'Sin registrar' ? (m.responsable.split(" ").filter(Boolean).map(n => n[0]).slice(0, 2).join("").toUpperCase() || "?") : "?"}
                     </div>
                     <div>
                       <span class="font-bold text-green-950 dark:text-white text-xs block">
-                        {hasData ? m.responsable : 'Sin registrar'}
+                        {hasData && m.responsable ? m.responsable : 'Sin registrar'}
                       </span>
-                      <span class="text-[10px] text-green-600 dark:text-stone-400 block font-normal">
-                        {hasData ? m.responsableRol : 'Esperando datos de Google Sheets'}
-                      </span>
+                      {hasData && m.responsableRol && m.responsableRol !== 'Registro Google Sheets' && m.responsableRol !== 'Registro de campo' && m.responsableRol !== 'Carga Manual' && m.responsableRol !== 'Sin registrar' ? (
+                        <span class="text-[10px] text-green-600 dark:text-stone-400 block font-normal">
+                          {m.responsableRol}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </td>
@@ -1360,20 +1361,11 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
     </div>
 
     <!-- Botones del Modal -->
-    <div class="flex items-center justify-between pt-3 border-t border-green-100 dark:border-[#166534]">
-      <button
-        id="btn-measure-this-plant"
-        type="button"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-green-600 hover:bg-green-700 transition-colors shadow-xs cursor-pointer"
-      >
-        <span>✏️</span>
-        <span>Registrar Nueva Medición para Esta Planta</span>
-      </button>
-
+    <div class="flex items-center justify-end pt-3 border-t border-green-100 dark:border-[#166534]">
       <button
         id="btn-close-plant-modal-bottom"
         type="button"
-        class="px-4 py-2 rounded-xl text-xs font-bold text-green-800 hover:bg-green-100 dark:text-stone-300 dark:hover:bg-green-700 transition-colors cursor-pointer"
+        class="px-5 py-2.5 rounded-xl text-xs font-bold text-green-800 dark:text-stone-300 hover:bg-green-100 dark:hover:bg-green-900/40 border border-green-200 dark:border-stone-700 transition-colors cursor-pointer"
       >
         Cerrar
       </button>
@@ -1625,6 +1617,8 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
     mergeRecords,
     purgeMockStorage,
     readStoredRecords,
+    sheetsUrlStorageKey,
+    writeStoredRecords,
   } from "../../shared/clientStorage";
   import { escapeHtml } from "../../shared/serialize";
   import {
@@ -2989,8 +2983,14 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
 
           const cellResp = row.querySelector('.table-cell-resp');
           if (cellResp) {
-            const initials = m.responsable.split(' ').map((n: string) => n[0]).slice(0, 2).join('');
-            cellResp.innerHTML = `<div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full ${m.avatarColor || 'bg-green-600'} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0">${escapeHtml(initials)}</div><div><span class="font-bold text-green-950 dark:text-white text-xs block">${escapeHtml(m.responsable)}</span><span class="text-[10px] text-green-600 dark:text-stone-400 block font-normal">${escapeHtml(m.responsableRol || '')}</span></div></div>`;
+            const respName = m.responsable || 'Sin registrar';
+            const initials = respName !== 'Sin registrar'
+              ? respName.split(' ').filter(Boolean).map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || '?'
+              : '?';
+            const roleHtml = (m.responsableRol && m.responsableRol !== 'Registro Google Sheets' && m.responsableRol !== 'Registro de campo' && m.responsableRol !== 'Carga Manual' && m.responsableRol !== 'Sin registrar')
+              ? `<span class="text-[10px] text-green-600 dark:text-stone-400 block font-normal">${escapeHtml(m.responsableRol)}</span>`
+              : '';
+            cellResp.innerHTML = `<div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full ${m.avatarColor || 'bg-green-600'} text-white font-black text-[11px] flex items-center justify-center flex-shrink-0">${escapeHtml(initials)}</div><div><span class="font-bold text-green-950 dark:text-white text-xs block">${escapeHtml(respName)}</span>${roleHtml}</div></div>`;
           }
         }
       });
@@ -3033,6 +3033,90 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
     if (metricsSyncTimer) clearInterval(metricsSyncTimer);
     metricsSyncTimer = setInterval(refreshMetricsFromServer, getSyncIntervalMs());
   }
+
+  const btnRefreshMetrics = document.getElementById('btn-refresh-metrics');
+  const refreshMetricsIcon = document.getElementById('refresh-metrics-icon');
+  const refreshMetricsText = document.getElementById('refresh-metrics-text');
+
+  btnRefreshMetrics?.addEventListener('click', async () => {
+    if (refreshMetricsIcon) refreshMetricsIcon.classList.add('animate-spin');
+    if (refreshMetricsText) refreshMetricsText.textContent = 'Sincronizando Google Sheets...';
+    if (btnRefreshMetrics) (btnRefreshMetrics as HTMLButtonElement).disabled = true;
+
+    const sileo = (window as any).sileo;
+
+    try {
+      let sheetUrl = localStorage.getItem(sheetsUrlStorageKey(FINCA_SCOPE));
+
+      // Si no está en localStorage, intentar obtenerlo de la base de datos de la finca
+      if (!sheetUrl) {
+        try {
+          const getRes = await fetch('/api/sync-sheets');
+          const getData = await getRes.json();
+          if (getData?.sheetsUrl) {
+            sheetUrl = getData.sheetsUrl;
+            localStorage.setItem(sheetsUrlStorageKey(FINCA_SCOPE), sheetUrl);
+          }
+        } catch {}
+      }
+
+      // Si aún no hay URL configurada, solicitársela al usuario
+      if (!sheetUrl) {
+        const inputUrl = window.prompt(
+          'Para actualizar los datos desde Google Sheets, ingresa el enlace de tu hoja o Google Drive (con permisos "Cualquier persona con el enlace puede ver"):'
+        );
+        if (!inputUrl || !inputUrl.trim()) {
+          if (sileo) sileo.info?.({ title: 'Operación cancelada', description: 'No se ingresó la URL de Google Sheets.' });
+          return;
+        }
+        sheetUrl = inputUrl.trim();
+      }
+
+      // Sincronizar directamente con Google Sheets a través del backend
+      const syncRes = await fetch('/api/sync-sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: sheetUrl }),
+      });
+      const syncData = await syncRes.json();
+
+      if (!syncData.success) {
+        throw new Error(syncData.error || 'Error al descargar datos de Google Sheets');
+      }
+
+      if (syncData.sheetsUrl) {
+        localStorage.setItem(sheetsUrlStorageKey(FINCA_SCOPE), syncData.sheetsUrl);
+      }
+      if (Array.isArray(syncData.records)) {
+        writeStoredRecords(FINCA_SCOPE, syncData.records);
+      }
+
+      // Recargar lecturas en el cliente
+      await refreshMetricsFromServer();
+
+      window.dispatchEvent(
+        new CustomEvent('aquasens:data-synced', {
+          detail: { records: syncData.records, url: sheetUrl },
+        })
+      );
+      window.dispatchEvent(new Event('storage'));
+
+      sileo?.success?.({
+        title: '¡Métricas actualizadas desde Google Sheets!',
+        description: `Se sincronizaron exitosamente ${syncData.count} tomas reales del cultivo.`,
+      });
+    } catch (err) {
+      console.error('[Metrics] Error al sincronizar Google Sheets:', err);
+      sileo?.error?.({
+        title: 'Error de sincronización',
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      if (refreshMetricsIcon) refreshMetricsIcon.classList.remove('animate-spin');
+      if (refreshMetricsText) refreshMetricsText.textContent = 'Actualizar Métricas';
+      if (btnRefreshMetrics) (btnRefreshMetrics as HTMLButtonElement).disabled = false;
+    }
+  });
 
   // Inicializar sincronización en tiempo real
   syncMetricsWithRealRecords();
