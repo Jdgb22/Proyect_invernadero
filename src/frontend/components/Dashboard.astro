@@ -1076,7 +1076,7 @@ const ultimaFecha = registros
           const getData = await getRes.json();
           if (getData?.sheetsUrl) {
             sheetUrl = getData.sheetsUrl;
-            localStorage.setItem(sheetsUrlStorageKey(FINCA_SCOPE), sheetUrl);
+            localStorage.setItem(sheetsUrlStorageKey(FINCA_SCOPE), sheetUrl!);
           }
         } catch {}
       }

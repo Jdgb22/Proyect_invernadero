@@ -9,7 +9,7 @@ Plataforma web **multi-finca** para el **monitoreo agronómico**: matriz de **20
 - Mateo Herrera
 - Juan David Giraldo
 - Alejandro Florez
-- Victor Manuel Cordoba Larez
+- Victor Cordoba
 
 > 👤 **¿Eres usuario final?** Ve directo al [Manual de Usuario](./docs/USER_MANUAL.md). Este README es para desarrollo y despliegue.
 
@@ -111,12 +111,12 @@ Construido con SSR moderno. Detalle en [ARCHITECTURE.md](./ARCHITECTURE.md) y [d
    SMTP_FROM="Macollo <test@test.com>"
    SMTP_USER=test@test.com
    SMTP_PASS=abcdefghijklmnop
-   # API de detección de trips (macollo-trips-api). Ver sección "Diagnóstico de Trips".
-   ML_API_URL=http://127.0.0.1:8000
-   ML_API_KEY=tu_api_key
+   # API de detección de trips (macollo-trips-api en Google Cloud Run)
+   ML_API_URL=https://macollo-trips-api-961314735418.us-central1.run.app
+   ML_API_KEY=mk_tu_api_key
    ```
 
-   > **La API de ML es opcional para arrancar la web.** Si no defines `ML_API_URL`, los endpoints usan `http://127.0.0.1:8000` por defecto y el escáner mostrará "servidor de IA offline" hasta que la levantes.
+   > **La API de ML corre en Google Cloud Run.** Por defecto, los endpoints usan `https://macollo-trips-api-961314735418.us-central1.run.app`. Si deseas probar con un servidor local, puedes cambiar `ML_API_URL=http://127.0.0.1:8000`.
 
 3. **Base de datos:** crea la BD `invernadero` y ejecuta en orden:
    - `src/db/auth-schema.sql` (tablas `users`, cuentas OAuth, tokens de recuperación)
@@ -168,18 +168,17 @@ curl http://127.0.0.1:8000/api/health
 
 Define en `.env` (o en Vercel) las variables:
 
-| Variable     | Descripción                                                                                               | Ejemplo                 |
-| :----------- | :-------------------------------------------------------------------------------------------------------- | :---------------------- |
-| `ML_API_URL` | URL base del servicio ML. Desde el propio equipo usa `localhost`; desde otra máquina en la red usa su IP. | `http://127.0.0.1:8000` |
-| `ML_API_KEY` | Clave que se envía en la cabecera `X-API-Key` (debe coincidir con la configurada en el servicio ML).      | `mk_...`                |
+| Variable     | Descripción                                                                                          | Ejemplo                                                      |
+| :----------- | :--------------------------------------------------------------------------------------------------- | :----------------------------------------------------------- |
+| `ML_API_URL` | URL base del servicio ML en Google Cloud Run (o local para pruebas).                                 | `https://macollo-trips-api-961314735418.us-central1.run.app` |
+| `ML_API_KEY` | Clave que se envía en la cabecera `X-API-Key` (debe coincidir con la configurada en el servicio ML). | `mk_...`                                                     |
 
-La web no llama directamente al servicio: el endpoint `src/pages/api/trips-diagnosis.ts` reenvía la imagen a `${ML_API_URL}/api/predict`. Esto evita CORS y mantiene la API key en el servidor.
+La web no llama directamente al servicio: el endpoint `src/pages/api/trips-diagnosis.ts` reenvía la imagen a `${ML_API_URL}/api/predict`. Esto evita CORS y mantiene la API key en el servidor. Cuenta además con renovación automática de sesión para resiliencia ante reinicios en entornos serverless.
 
 #### 3. Probar desde el celular (misma Wi-Fi)
 
 ```bash
-# Terminal 1: API de ML en el puerto 8000 (ver punto 1)
-# Terminal 2: Macollo accesible en la red local
+# Macollo accesible en la red local (se conecta directamente a la API en Google Cloud)
 pnpm run dev:lan
 ```
 

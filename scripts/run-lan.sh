@@ -34,21 +34,21 @@ fi
 # Auth.js necesita confiar en el host cuando se entra por IP en vez de localhost
 export AUTH_TRUST_HOST="${AUTH_TRUST_HOST:-true}"
 
-# El servicio de ML vive en el mismo equipo, en el puerto 8000
-export ML_API_URL="${ML_API_URL:-http://127.0.0.1:8000}"
+# El servicio de ML corre en Google Cloud Run (o variable de entorno personalizada)
+export ML_API_URL="${ML_API_URL:-https://macollo-trips-api-961314735418.us-central1.run.app}"
 
 echo "=========================================================="
 echo "🌱 Macollo — Servidor de pruebas en red local"
 echo "=========================================================="
 echo "🖥️  Local:       http://localhost:${PORT}"
 echo "📱 Celular:     http://${LOCAL_IP}:${PORT}   <-- usa esta URL"
-echo "🤖 ML API:      ${ML_API_URL} (debe estar corriendo aparte)"
-echo "📚 Docs ML:     http://${LOCAL_IP}:8000/docs"
+echo "🤖 ML API:      ${ML_API_URL} (Google Cloud Run)"
+echo "📚 Docs ML:     ${ML_API_URL}/docs"
 echo "=========================================================="
 
 # Aviso rapido sobre el estado del servidor de ML (no bloquea el arranque)
 if command -v curl >/dev/null 2>&1; then
-  if curl -fsS --max-time 2 "${ML_API_URL}/api/health" >/dev/null 2>&1; then
+  if curl -fsS --max-time 6 "${ML_API_URL}/api/health" >/dev/null 2>&1; then
     echo "✅ ML API respondiendo."
   else
     echo "⚠️  ML API no responde en ${ML_API_URL}. Arrancala antes de probar el diagnostico."

@@ -104,8 +104,9 @@
       <!-- Spinner durante análisis -->
       <div id="trips-loading-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-xs flex flex-col items-center justify-center text-white hidden z-20">
         <div class="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin mb-3"></div>
-        <div class="text-xs font-bold text-emerald-300">BioCLIP 2.5 procesando inferencia...</div>
-        <div class="text-[10px] text-stone-400 mt-1">Discriminando taxonomía y estadio biológico</div>
+        <div class="text-xs font-bold text-emerald-300" id="trips-loading-title">BioCLIP 2.5 procesando inferencia...</div>
+        <div class="text-[10px] text-stone-400 mt-1" id="trips-loading-sub">Discriminando taxonomía y estadio biológico</div>
+        <div class="text-[10px] font-mono text-stone-500 mt-2" id="trips-loading-timer">0s</div>
       </div>
     </div>
 
@@ -251,6 +252,11 @@
     void modal.offsetWidth;
     modal.classList.remove("opacity-0");
     modalContent.classList.remove("scale-95");
+    warmupPolls = 0;
+    if (warmupPollTimer) {
+      clearTimeout(warmupPollTimer);
+      warmupPollTimer = null;
+    }
     checkMlHealth();
   }
 
@@ -401,23 +407,108 @@
     try {
       const res = await fetch("/api/trips-diagnosis");
       const data = await res.json();
-      if (data.status === "online" && data.ml_service?.model_loaded) {
-        if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-500";
-        if (text) text.textContent = "IA BioCLIP 2.5 Conectada y Lista";
-        if (device) device.textContent = `Dispositivo: ${String(data.ml_service.device).toUpperCase()}`;
+      if (data.status === "online") {
+        if (data.ml_service?.model_loaded) {
+          if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+          if (text) text.textContent = "IA BioCLIP 2.5 Conectada (Google Cloud)";
+          if (device) device.textContent = `Dispositivo: ${String(data.ml_service.device).toUpperCase()} (Cloud Run)`;
+        } else {
+          // El GET del proxy ya disparó el warm-up del modelo en Cloud Run.
+          if (dot) dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
+          if (text) text.textContent = "Calentando IA BioCLIP 2.5 (Cloud Run)...";
+          if (device) device.textContent = "Google Cloud Run";
+          scheduleWarmupPoll();
+        }
       } else {
-        throw new Error("Modelo no listo");
+        throw new Error(data.message || "Servicio no disponible");
       }
     } catch {
       if (dot) dot.className = "w-2 h-2 rounded-full bg-rose-500";
-      if (text) text.textContent = "Servidor IA offline (inicia Macollo ./run_server.sh)";
-      if (device) device.textContent = "Puerto 8000";
+      if (text) text.textContent = "Servidor IA offline (Google Cloud Run)";
+      if (device) device.textContent = "Cloud Run";
     }
+  }
+
+  // Mientras el modelo carga (cold start), reconsultar el estado cada 12s
+  // para avisar en verde apenas esté listo. El health check del proxy también
+  // mantiene vivo el despertar del servicio en Cloud Run.
+  let warmupPolls = 0;
+  let warmupPollTimer: ReturnType<typeof setTimeout> | null = null;
+  function scheduleWarmupPoll() {
+    if (warmupPollTimer || warmupPolls >= 12) return;
+    warmupPollTimer = setTimeout(() => {
+      warmupPollTimer = null;
+      warmupPolls++;
+      if (modal?.classList.contains("hidden")) return;
+      checkMlHealth();
+    }, 12000);
+  }
+
+  // Compresión en cliente para no subir fotos pesadas desde celulares.
+  // BioCLIP solo necesita 224px: 1024px sobra y sobra y reduce el tiempo de subida.
+  async function compressImageClient(file: Blob, maxDimension = 1024): Promise<Blob> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width <= maxDimension && height <= maxDimension) {
+          resolve(file);
+          return;
+        }
+        if (width > height) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        } else {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => resolve(blob || file), "image/jpeg", 0.82);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
+      img.src = url;
+    });
+  }
+
+  // Estado del overlay de carga
+  const loadingTitleEl = document.getElementById("trips-loading-title");
+  const loadingSubEl = document.getElementById("trips-loading-sub");
+  const loadingTimerEl = document.getElementById("trips-loading-timer");
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function setLoadingStatus(title: string, sub: string) {
+    if (loadingTitleEl) loadingTitleEl.textContent = title;
+    if (loadingSubEl) loadingSubEl.textContent = sub;
+  }
+
+  function startLoadingTimer(): () => void {
+    const startedAt = Date.now();
+    if (loadingTimerEl) loadingTimerEl.textContent = "0s";
+    const timer = setInterval(() => {
+      if (loadingTimerEl) {
+        loadingTimerEl.textContent = `${Math.round((Date.now() - startedAt) / 1000)}s`;
+      }
+    }, 1000);
+    return () => clearInterval(timer);
   }
 
   // Diagnóstico
   async function ejecutarDiagnostico(blob: Blob) {
     loadingOverlay?.classList.remove("hidden");
+    const stopTimer = startLoadingTimer();
     const resultsCard = document.getElementById("trips-results-card");
     resultsCard?.classList.add("hidden");
 
@@ -429,26 +520,78 @@
         : shownTemp
       : 22.0;
 
+    setLoadingStatus("Optimizando foto...", "Comprimiendo imagen para el análisis");
+    const compressedBlob = await compressImageClient(blob);
+
     const fd = new FormData();
-    fd.append("file", blob, "muestra.jpg");
+    fd.append("file", compressedBlob, "muestra.jpg");
     fd.append("temperature_c", tempC.toFixed(1));
     fd.append("crop", "gulupa");
+    fd.append("profile", "auto");
+
+    // Reintentos: el servicio en Cloud Run puede estar despertando o cargando
+    // el modelo (cold start). El proxy reintenta ~50s por su cuenta; si aún
+    // así falla con "warming", se reintenta aquí hasta ~90s más en total.
+    const MAX_ATTEMPTS = 10;
+    let lastError = "Error desconocido";
 
     try {
-      const res = await fetch("/api/trips-diagnosis", {
-        method: "POST",
-        body: fd,
-      });
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        setLoadingStatus(
+          attempt === 1
+            ? "BioCLIP 2.5 procesando inferencia..."
+            : `BioCLIP 2.5 procesando (intento ${attempt})...`,
+          "Discriminando taxonomía y estadio biológico",
+        );
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || `HTTP ${res.status}`);
+        let res: Response;
+        try {
+          res = await fetch("/api/trips-diagnosis", {
+            method: "POST",
+            body: fd,
+          });
+        } catch (err: any) {
+          // Fallo de red (función serverless reiniciada, etc.): reintentar.
+          lastError = err?.message || "Fallo de red";
+          if (attempt < MAX_ATTEMPTS) {
+            await sleep(5000);
+            continue;
+          }
+          break;
+        }
+
+        const data = await res.json().catch(() => ({} as any));
+
+        if (res.ok) {
+          renderResultados(data);
+          return;
+        }
+
+        lastError = data?.error || data?.detail || `HTTP ${res.status}`;
+        const isWarming = data?.status === "warming" || data?.retry === true;
+        const retryable = isWarming || res.status === 503 || res.status === 502 || res.status === 504;
+        if (!retryable || attempt >= MAX_ATTEMPTS) {
+          break;
+        }
+
+        const retryAfter = Number(data?.retry_after_seconds) || 6;
+        setLoadingStatus(
+          "Calentando modelo de IA en la nube...",
+          `Google Cloud Run está cargando BioCLIP 2.5 (intento ${attempt} de ${MAX_ATTEMPTS})`,
+        );
+        // Refrescar el estado del servidor mientras se espera.
+        checkMlHealth();
+        await sleep(Math.min(retryAfter * 1000, 10000));
       }
 
-      renderResultados(data);
-    } catch (err: any) {
-      alert("❌ " + err.message);
+      alert(
+        "❌ " +
+          (lastError.includes("Cloud Run") || lastError.includes("cargando")
+            ? `${lastError}\n\nEl modelo está despertando en la nube. Espera unos segundos y vuelve a capturar la muestra.`
+            : lastError),
+      );
     } finally {
+      stopTimer();
       loadingOverlay?.classList.add("hidden");
     }
   }
@@ -475,21 +618,24 @@
     if (!card || !banner || !title || !sub || !conf) return;
     card.classList.remove("hidden");
 
-    const confPct = (data.thrips_confidence * 100).toFixed(1);
+    const isPest = Boolean(data.detection ? data.detection.is_positive : data.is_thrips);
+    const targetName = data.detection?.target_name || data.detected_target || "Plaga";
+    const rawConf = data.detection ? data.detection.confidence : (data.is_thrips ? data.thrips_confidence : (1 - data.thrips_confidence));
+    const confPct = ((rawConf || 0) * 100).toFixed(1);
     conf.textContent = `${confPct}%`;
 
-    if (data.is_thrips) {
+    if (isPest) {
       banner.className = "p-4 rounded-2xl border mb-3 flex items-center justify-between bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-100";
-      title.textContent = "⚠️ TRIPS DETECTADO";
+      title.textContent = `⚠️ ${targetName.toUpperCase()} DETECTADO`;
       sub.textContent = `${data.detected_target} • Latencia: ${data.inference_time_ms} ms`;
 
-      if (stageName) stageName.textContent = data.detected_stage;
-      if (stageConf) stageConf.textContent = `Confianza de estadio: ${(data.stage_confidence * 100).toFixed(1)}%`;
+      if (stageName) stageName.textContent = data.detected_stage || "Estadio detectado";
+      if (stageConf) stageConf.textContent = data.stage_confidence ? `Confianza de estadio: ${(data.stage_confidence * 100).toFixed(1)}%` : `Objetivo confirmado: ${targetName}`;
 
       if (data.cycle_info) {
         if (urgencyBadge) {
           urgencyBadge.textContent = data.cycle_info.urgency_level;
-          urgencyBadge.className = data.cycle_info.urgency_level === "CRÍTICO"
+          urgencyBadge.className = (data.cycle_info.urgency_level === "CRÍTICO" || data.cycle_info.urgency_level === "ALTO")
             ? "px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wide bg-rose-200 text-rose-900 dark:bg-rose-900 dark:text-rose-200"
             : "px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wide bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200";
         }
@@ -506,18 +652,18 @@
       }
     } else {
       banner.className = "p-4 rounded-2xl border mb-3 flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-900 dark:text-emerald-100";
-      title.textContent = "✅ NO CORRESPONDE A TRIPS";
+      title.textContent = "✅ PLANTA SANA (SIN PLAGAS)";
       sub.textContent = `Clasificación: ${data.detected_target} • Latencia: ${data.inference_time_ms} ms`;
 
       if (stageName) stageName.textContent = "Sin infestación confirmada";
-      if (stageConf) stageConf.textContent = "La muestra no presenta morfología diagnóstica de Trips.";
+      if (stageConf) stageConf.textContent = `Muestra evaluada como ${targetName.toLowerCase()}. No se identificó infestación activa.`;
 
       if (urgencyBadge) {
         urgencyBadge.textContent = "MONITOREO";
         urgencyBadge.className = "px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wide bg-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-200";
       }
       if (daysToAdult) daysToAdult.textContent = "Cultivo Protegido";
-      if (urgencyRationale) urgencyRationale.textContent = "Mantén la inspección regular semanal con trampas cromotrópicas azules.";
+      if (urgencyRationale) urgencyRationale.textContent = "Mantén la inspección regular semanal en el lote con trampas cromotrópicas y muestreo de hojas tiernas.";
 
       if (mipSection) mipSection.classList.add("hidden");
     }
