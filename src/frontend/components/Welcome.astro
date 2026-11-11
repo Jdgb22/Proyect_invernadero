@@ -13,9 +13,10 @@ const today = new Date().toISOString().slice(0, 10);
     <!-- Video de bienvenida -->
     <video
       id="welcome-video"
-      src="/newwelcome.mp4"
+      src="/newwelcome.mp4#t=0.001"
       muted
       playsinline
+      webkit-playsinline
       preload="auto"
       class="absolute inset-0 w-full h-full object-cover object-center"
       style="z-index:1;"></video>
@@ -877,6 +878,11 @@ const today = new Date().toISOString().slice(0, 10);
   // Reproducir el video de bienvenida y esperar antes de redirigir
   async function playWelcomeVideo() {
     try {
+      const farmerPanel = document.getElementById("farmer-panel");
+      if (farmerPanel && window.innerWidth < 1024) {
+        farmerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
       if (welcomeVideo) {
         welcomeVideo.currentTime = 0;
         const playPromise = welcomeVideo.play();
