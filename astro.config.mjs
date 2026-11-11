@@ -9,6 +9,7 @@ import react from "@astrojs/react";
 
 // https://astro.build/config
 export default defineConfig({
+  site: process.env.SITE || "https://macollo.tech",
   security: { checkOrigin: true },
   output: "server",
   // maxDuration 60s: la función serverless que hace de proxy hacia Cloud Run
