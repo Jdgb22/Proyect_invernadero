@@ -14,18 +14,18 @@ const NO_DATA_HEALTH_BADGE =
   "bg-stone-50 text-stone-600 dark:bg-stone-900/40 dark:text-stone-400 border-stone-200 dark:border-stone-700";
 
 export function getPhBadge(ph: number): BadgeStyle {
-  if (ph >= 6.0 && ph <= 6.8) {
+  if (ph >= 5.5 && ph <= 7.5) {
     return {
       label: "Óptimo",
       class:
         "bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 border-lime-300",
     };
   }
-  if (ph >= 5.5 && ph <= 7.2) {
+  if ((ph >= 5.0 && ph < 5.5) || (ph > 7.5 && ph <= 8.0)) {
     return {
       label: "Atención",
       class:
-        "bg-green-100 text-green-800 dark:bg-stone-900/50 dark:text-stone-300 border-green-300",
+        "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-amber-300",
     };
   }
   return {
@@ -71,11 +71,11 @@ export function getHealthBadge(sanidad: string): HealthBadge {
 }
 
 export function getPhBadgeCompact(ph: number): string {
-  if (ph >= 6.0 && ph <= 6.8) {
+  if (ph >= 5.5 && ph <= 7.5) {
     return "bg-lime-100 text-lime-800 dark:bg-lime-950/60 dark:text-lime-300 border-lime-300";
   }
-  if (ph >= 5.5 && ph <= 7.2) {
-    return "bg-green-100 text-green-800 dark:bg-stone-950/60 dark:text-stone-300 border-green-300";
+  if ((ph >= 5.0 && ph < 5.5) || (ph > 7.5 && ph <= 8.0)) {
+    return "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300";
   }
   return "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300";
 }

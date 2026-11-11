@@ -8,8 +8,8 @@ export interface ReadingAlert {
   description: string;
 }
 
-const PH_MIN = 6;
-const PH_MAX = 6.8;
+const PH_MIN = 5.5;
+const PH_MAX = 7.5;
 const HUMEDAD_MIN = 30;
 const ALERT_PREFIX = "macollo-alert";
 

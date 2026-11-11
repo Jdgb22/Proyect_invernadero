@@ -94,7 +94,7 @@ const filaMayorCrecimiento = filaConMayor("avgGrowth");
 const phChartInfo =
   globalAvgPh === "--"
     ? "Aún no hay mediciones de pH para la finca activa."
-    : `El pH del suelo regula la absorción de nutrientes. Promedio general: ${globalAvgPh} (banda óptima 6.0 - 6.8).`;
+    : `El pH del suelo regula la absorción de nutrientes. Promedio general: ${globalAvgPh} (banda óptima 5.5 - 7.5).`;
 
 const tinChartInfo =
   globalAvgTin === null
@@ -374,7 +374,7 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
         <!-- GRÁFICO 1: pH del Suelo de todas las plantas -->
         <div class="chart-card-maximizable bg-green-50 dark:bg-[#062c16]/40 p-4 sm:p-5 rounded-2xl border border-green-200 dark:border-[#166534] shadow-xs flex flex-col justify-between cursor-pointer hover:border-green-400 dark:hover:border-green-500 hover:shadow-md transition-all group relative"
           data-chart-title="1. pH del Suelo (General Invernadero)"
-          data-chart-subtitle="Zona óptima (6.0 - 6.8 pH) y dispersión de las 20 plantas"
+          data-chart-subtitle="Zona óptima (5.5 - 7.5 pH) y dispersión de las 20 plantas"
           data-chart-icon="🧪"
           data-chart-badge={`${globalAvgPh} pH Promedio`}
           data-chart-info={phChartInfo}
@@ -384,7 +384,7 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
               <span class="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-base">🧪</span>
               <div>
                 <h4 class="font-extrabold text-green-950 dark:text-white text-sm">1. pH del Suelo (General)</h4>
-                <p class="text-[10px] text-green-600 dark:text-stone-400">Zona óptima (6.0 - 6.8 pH) y dispersión por fila</p>
+                <p class="text-[10px] text-green-600 dark:text-stone-400">Zona óptima (5.5 - 7.5 pH) y dispersión por fila</p>
               </div>
             </div>
             <div class="flex items-center gap-1.5">
@@ -398,8 +398,8 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
           <div class="w-full h-44 relative bg-[#f4fce3] dark:bg-stone-800/80 rounded-xl p-3 border border-green-100 dark:border-[#166534] flex items-center justify-center">
             <svg id="general-svg-ph" class="w-full h-full overflow-hidden" viewBox="0 0 460 130">
               <!-- Zona Óptima -->
-              <rect x="40" y="53" width="390" height="32" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
-              <text x="45" y="82" fill="#10B981" font-size="8.5" font-weight="bold">← Banda Óptima (6.0 - 6.8)</text>
+              <rect x="40" y="25" width="390" height="80" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
+              <text x="45" y="40" fill="#10B981" font-size="8.5" font-weight="bold">← Banda Óptima (5.5 - 7.5)</text>
 
               <!-- Guías -->
               <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
@@ -431,19 +431,19 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
                 <circle cx="58" cy="69" r="3" fill="#10B981"><title>t0 Col 1: 6.4 pH</title></circle>
                 <circle cx="64" cy="77" r="3" fill="#10B981"><title>t0 Col 2: 6.2 pH</title></circle>
                 <circle cx="70" cy="65" r="3" fill="#10B981"><title>t0 Col 3: 6.5 pH</title></circle>
-                <circle cx="76" cy="89" r="3" fill="#F59E0B"><title>t0 Col 4: 5.9 pH (Ácido)</title></circle>
+                <circle cx="76" cy="89" r="3" fill="#10B981"><title>t0 Col 4: 5.9 pH</title></circle>
                 <circle cx="82" cy="73" r="3" fill="#10B981"><title>t0 Col 5: 6.3 pH</title></circle>
                 <!-- t1 -->
                 <circle cx="158" cy="81" r="3" fill="#10B981"><title>t1 Col 1: 6.1 pH</title></circle>
                 <circle cx="164" cy="61" r="3" fill="#10B981"><title>t1 Col 2: 6.6 pH</title></circle>
-                <circle cx="170" cy="97" r="3" fill="#F59E0B"><title>t1 Col 3: 5.7 pH (Ácido)</title></circle>
+                <circle cx="170" cy="97" r="3" fill="#10B981"><title>t1 Col 3: 5.7 pH</title></circle>
                 <circle cx="176" cy="73" r="3" fill="#10B981"><title>t1 Col 4: 6.3 pH</title></circle>
                 <circle cx="182" cy="85" r="3" fill="#10B981"><title>t1 Col 5: 6.0 pH</title></circle>
                 <!-- t2 -->
-                <circle cx="258" cy="37" r="3" fill="#F59E0B"><title>t2 Col 1: 7.2 pH (Alcalino)</title></circle>
+                <circle cx="258" cy="37" r="3" fill="#10B981"><title>t2 Col 1: 7.2 pH</title></circle>
                 <circle cx="264" cy="65" r="3" fill="#10B981"><title>t2 Col 2: 6.5 pH</title></circle>
                 <circle cx="270" cy="69" r="3" fill="#10B981"><title>t2 Col 3: 6.4 pH</title></circle>
-                <circle cx="276" cy="109" r="3.5" fill="#EF4444"><title>t2 Col 4: 5.4 pH (Crítico)</title></circle>
+                <circle cx="276" cy="109" r="3.5" fill="#EF4444"><title>t2 Col 4: 5.4 pH (Ácido)</title></circle>
                 <circle cx="282" cy="77" r="3" fill="#10B981"><title>t2 Col 5: 6.2 pH</title></circle>
                 <!-- t3 -->
                 <circle cx="358" cy="69" r="3" fill="#10B981"><title>t3 Col 1: 6.4 pH</title></circle>
@@ -1195,7 +1195,7 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
               <span>🧪</span> Histórico de pH
             </span>
             <div class="flex items-center gap-1">
-              <span class="text-[9px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">6.0 - 6.8 Óptimo</span>
+              <span class="text-[9px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">5.5 - 7.5 Óptimo</span>
               <span class="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-green-100 dark:bg-stone-900/50 text-green-600 dark:text-stone-300 text-xs font-bold" title="Click para maximizar">⤢</span>
             </div>
           </div>
@@ -1687,8 +1687,8 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
   // Renderizar Gráfico 1: pH Individual (SVG)
   function renderSvgPh(history: any[]) {
     if (!modalSvgPh || !history || history.length === 0) return;
-    const minPh = 5.0;
-    const maxPh = 8.0;
+    const minPh = 4.5;
+    const maxPh = 8.5;
     const h = 100;
     const w = 280;
     const pad = 24;
@@ -1696,8 +1696,8 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
     const getY = (val: number) => h - pad - ((val - minPh) / (maxPh - minPh)) * (h - pad * 2);
     const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
 
-    const yOptTop = getY(6.8);
-    const yOptBottom = getY(6.0);
+    const yOptTop = getY(7.5);
+    const yOptBottom = getY(5.5);
     const optHeight = Math.abs(yOptBottom - yOptTop);
 
     let pathD = '';
@@ -1713,7 +1713,7 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
 
     let circlesSvg = '';
     points.forEach((pt) => {
-      const fillColor = pt.val >= 6.0 && pt.val <= 6.8 ? '#10B981' : pt.val >= 5.5 && pt.val <= 7.2 ? '#F59E0B' : '#EF4444';
+      const fillColor = pt.val >= 5.5 && pt.val <= 7.5 ? '#10B981' : pt.val >= 5.0 && pt.val <= 8.0 ? '#F59E0B' : '#EF4444';
       circlesSvg += `
         <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="${fillColor}" stroke="#ffffff" stroke-width="2">
           <title>${pt.val} pH</title>
@@ -1726,7 +1726,7 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
 
     modalSvgPh.innerHTML = `
       <rect x="${pad}" y="${yOptTop}" width="${w - pad * 2}" height="${optHeight}" fill="rgba(16, 185, 129, 0.15)" rx="3" />
-      <text x="${pad + 4}" y="${yOptTop + 8}" fill="#10B981" font-size="7" font-weight="bold">Óptimo (6.0 - 6.8)</text>
+      <text x="${pad + 4}" y="${yOptTop + 8}" fill="#10B981" font-size="7" font-weight="bold">Óptimo (5.5 - 7.5)</text>
       
       <line x1="${pad}" y1="${getY(7.5)}" x2="${w - pad}" y2="${getY(7.5)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
       <line x1="${pad}" y1="${getY(6.5)}" x2="${w - pad}" y2="${getY(6.5)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
@@ -2092,15 +2092,15 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
     // Poblar KPIs numéricos
     if (modalKpiPh) modalKpiPh.textContent = hasData ? m.phSuelo.toFixed(1) : 'N/D';
     if (modalKpiPhDesc) {
-      const isPhOpt = hasData && m.phSuelo >= 6.0 && m.phSuelo <= 6.8;
+      const isPhOpt = hasData && m.phSuelo >= 5.5 && m.phSuelo <= 7.5;
       modalKpiPhDesc.textContent = !hasData
         ? 'Sin datos'
         : isPhOpt
-          ? 'Óptimo (6.0-6.8)'
-          : m.phSuelo < 6.0
-            ? 'Ácido (<6.0)'
-            : 'Alcalino (>6.8)';
-      modalKpiPhDesc.className = `block text-[10px] font-bold mt-0.5 ${!hasData ? 'text-stone-500' : isPhOpt ? 'text-lime-600' : 'text-green-600'}`;
+          ? 'Óptimo (5.5-7.5)'
+          : m.phSuelo < 5.5
+            ? 'Ácido (<5.5)'
+            : 'Alcalino (>7.5)';
+      modalKpiPhDesc.className = `block text-[10px] font-bold mt-0.5 ${!hasData ? 'text-stone-500' : isPhOpt ? 'text-lime-600' : 'text-amber-600'}`;
     }
 
     if (modalKpiTin) {
@@ -2621,13 +2621,13 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
         const colNum = cMatch ? parseInt(cMatch[1], 10) : 3;
         const cx = 70 + fIdx * 100 + (colNum - 3) * 6;
         const cy = Math.max(15, Math.min(115, getYPh(phVal)));
-        const color = phVal >= 6.0 && phVal <= 6.8 ? '#10B981' : phVal >= 5.5 && phVal <= 7.2 ? '#F59E0B' : '#EF4444';
+        const color = phVal >= 5.5 && phVal <= 7.5 ? '#10B981' : phVal >= 5.0 && phVal <= 8.0 ? '#F59E0B' : '#EF4444';
         dotsSvg += `<circle cx="${cx}" cy="${cy}" r="3" fill="${color}"><title>${p.plantId} (${p.fila} ${p.columna}): ${phVal.toFixed(1)} pH</title></circle>`;
       });
 
       svgPh.innerHTML = `
-        <rect x="40" y="53" width="390" height="32" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
-        <text x="45" y="82" fill="#10B981" font-size="8.5" font-weight="bold">← Banda Óptima (6.0 - 6.8)</text>
+        <rect x="40" y="25" width="390" height="80" fill="rgba(16, 185, 129, 0.12)" rx="4"></rect>
+        <text x="45" y="40" fill="#10B981" font-size="8.5" font-weight="bold">← Banda Óptima (5.5 - 7.5)</text>
         <line x1="40" y1="25" x2="430" y2="25" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />
         <text x="15" y="28" class="fill-green-400 text-[9px] font-mono">7.5</text>
         <line x1="40" y1="65" x2="430" y2="65" stroke="currentColor" stroke-dasharray="3,3" class="text-green-300 dark:text-stone-800" stroke-width="1" />

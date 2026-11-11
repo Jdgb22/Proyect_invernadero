@@ -149,9 +149,9 @@ export function deriveSanidad(raw: string, phSuelo: number): Sanidad {
   )
     return "Excelente";
 
-  if (phSuelo < 5.2 || phSuelo > 7.8) return "Crítica";
-  if (phSuelo < 5.8 || phSuelo > 7.2) return "Vulnerable";
-  if (phSuelo >= 6.2 && phSuelo <= 6.7) return "Excelente";
+  if (phSuelo < 5.0 || phSuelo > 8.0) return "Crítica";
+  if (phSuelo < 5.5 || phSuelo > 7.5) return "Vulnerable";
+  if (phSuelo >= 6.0 && phSuelo <= 7.0) return "Excelente";
   return "Saludable";
 }
 

@@ -430,7 +430,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           id="kpi-ph-badge"
           class="text-[10px] font-bold text-lime-300 block mt-1"
         >
-          Óptimo (6.0 - 6.8)
+          Óptimo (5.5 - 7.5)
         </span>
       </div>
 
@@ -1636,14 +1636,14 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
 
       if (kpiPh) kpiPh.textContent = avgPh.toString();
       if (kpiPhBadge) {
-        if (avgPh >= 6.0 && avgPh <= 6.8) {
-          kpiPhBadge.textContent = "● Rango Óptimo (6.0 - 6.8)";
+        if (avgPh >= 5.5 && avgPh <= 7.5) {
+          kpiPhBadge.textContent = "● Rango Óptimo (5.5 - 7.5)";
           kpiPhBadge.className =
             "text-[10px] font-bold text-lime-300 block mt-1";
-        } else if (avgPh >= 5.5 && avgPh <= 7.2) {
+        } else if ((avgPh >= 5.0 && avgPh < 5.5) || (avgPh > 7.5 && avgPh <= 8.0)) {
           kpiPhBadge.textContent = "▲ Atención Nutricional";
           kpiPhBadge.className =
-            "text-[10px] font-bold text-green-300 block mt-1";
+            "text-[10px] font-bold text-amber-300 block mt-1";
         } else {
           kpiPhBadge.textContent = "■ Crítico Fuera de Rango";
           kpiPhBadge.className =
@@ -2099,10 +2099,10 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           "hover:bg-green-50/80 dark:hover:bg-green-700/40 transition-colors";
 
         const phBadgeColor =
-          record.phSuelo >= 6.0 && record.phSuelo <= 6.8
+          record.phSuelo >= 5.5 && record.phSuelo <= 7.5
             ? "bg-lime-100 text-lime-800 dark:bg-lime-950/60 dark:text-lime-300 border-lime-300"
-            : record.phSuelo >= 5.5 && record.phSuelo <= 7.2
-              ? "bg-green-100 text-green-800 dark:bg-stone-950/60 dark:text-stone-300 border-green-300"
+            : (record.phSuelo >= 5.0 && record.phSuelo <= 8.0)
+              ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300"
               : "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300";
 
         const sanidadBadge =
@@ -2260,14 +2260,14 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       }
 
       if (modalBadgePh) {
-        if (metric.phSuelo >= 6.0 && metric.phSuelo <= 6.8) {
-          modalBadgePh.textContent = "Óptimo (6.0 - 6.8)";
+        if (metric.phSuelo >= 5.5 && metric.phSuelo <= 7.5) {
+          modalBadgePh.textContent = "Óptimo (5.5 - 7.5)";
           modalBadgePh.className =
             "text-[9px] font-bold text-lime-600 dark:text-lime-400 block mt-0.5";
         } else {
           modalBadgePh.textContent = "Requiere Atención";
           modalBadgePh.className =
-            "text-[9px] font-bold text-green-600 dark:text-stone-400 block mt-0.5";
+            "text-[9px] font-bold text-amber-600 dark:text-amber-400 block mt-0.5";
         }
       }
 

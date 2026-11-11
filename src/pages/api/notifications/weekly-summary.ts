@@ -12,8 +12,8 @@ import { getOwnEmail } from "../../../backend/services/profile";
 import type { MetricRecord } from "../../../shared/plantMatrix";
 import { sendWeeklySummaryEmail } from "../../../backend/services/notifications";
 
-const PH_MIN = 6;
-const PH_MAX = 6.8;
+const PH_MIN = 5.5;
+const PH_MAX = 7.5;
 
 function latestByPlant(records: MetricRecord[]): MetricRecord[] {
   const latest = new Map<string, MetricRecord>();

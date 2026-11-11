@@ -559,8 +559,8 @@ export async function generateExcelBuffer(
   const refData = [
     [
       "pH del Suelo",
-      "6.0 a 6.8",
-      "< 5.8 (Ácido) o > 7.2 (Alcalino)",
+      "5.5 a 7.5",
+      "< 5.5 (Ácido) o > 7.5 (Alcalino)",
       "Escala pH",
       "Diaria",
       "Ajustar acidez de solución nutritiva o aplicar enmienda cálcica",
