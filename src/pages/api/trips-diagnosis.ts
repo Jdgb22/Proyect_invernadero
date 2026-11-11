@@ -96,121 +96,52 @@ async function safeJson(res: Response): Promise<any> {
 }
 
 export const POST: APIRoute = async ({ request }) => {
-  const startedAt = Date.now();
-  const deadline = startedAt + TOTAL_BUDGET_MS;
-
-  let file: Blob;
-  let formData: FormData;
   try {
-    formData = await request.formData();
-    file = formData.get("file") as Blob;
-  } catch (err: any) {
-    return jsonResponse(
-      { error: `No se pudo leer la imagen enviada: ${err.message}` },
-      400,
-    );
-  }
+    const formData = await request.formData();
+    const file = formData.get("file");
 
-  if (!file || !(file instanceof Blob) || file.size === 0) {
-    return jsonResponse(
-      { error: "No se proporcionó ningún archivo de imagen válido." },
-      400,
-    );
-  }
-
-  // Reenviar a la API FastAPI de BioCLIP 2.5
-  const apiFormData = new FormData();
-  apiFormData.append("file", file, (file as File).name || "muestra_gulupa.jpg");
-
-  const tempC = formData.get("temperature_c");
-  if (tempC) {
-    apiFormData.append("temperature_c", String(tempC));
-  }
-
-  const crop = formData.get("crop") || "gulupa";
-  apiFormData.append("crop", String(crop));
-
-  const profile = formData.get("profile") || "auto";
-  apiFormData.append("profile", String(profile));
-
-  let session = cachedSessionCookie;
-  let reauthenticated = false;
-  let lastWarmingRetryAfter = 5;
-  let attempts = 0;
-
-  // Bucle de reintentos: cubre el cold start de Cloud Run (503 "warming" con
-  // Retry-After), la re-autenticación tras 401 y la reconexión de red, sin
-  // exceder el presupuesto de la función serverless.
-  while (Date.now() < deadline) {
-    attempts++;
-    const remaining = deadline - Date.now();
-    const timeout = Math.max(5_000, Math.min(ATTEMPT_TIMEOUT_MS, remaining));
-
-    let mlResponse: Response;
-    try {
-      mlResponse = await fetch(`${ML_API_URL}/api/predict`, {
-        method: "POST",
-        headers: buildHeaders(session),
-        body: apiFormData,
-        signal: AbortSignal.timeout(timeout),
-      });
-    } catch (err: any) {
-      const timedOut =
-        err?.name === "TimeoutError" || err?.name === "AbortError";
-      if (Date.now() < deadline) {
-        // Cloud Run puede estar despertando el contenedor: reintentar pronto.
-        await sleep(timedOut ? 5_000 : 2_000);
-        continue;
-      }
+    if (!file || !(file instanceof Blob) || file.size === 0) {
       return jsonResponse(
-        {
-          status: "warming",
-          retry: true,
-          retry_after_seconds: 10,
-          error:
-            "El servidor de Machine Learning en Google Cloud Run está despertando. Intenta de nuevo en unos segundos.",
-        },
-        503,
-        { "Retry-After": "10" },
+        { error: "No se proporcionó ningún archivo de imagen válido." },
+        400,
       );
     }
 
-    // Si Cloud Run reinició contenedor o la API key fue revocada,
-    // auto-autenticarse con la sesión del panel y reintentar una sola vez.
-    if (mlResponse.status === 401 && !reauthenticated) {
-      reauthenticated = true;
-      session = await getOrRenewSession();
-      if (session) {
-        continue;
-      }
+    // Reenviar a la API FastAPI de BioCLIP 2.5
+    const apiFormData = new FormData();
+    apiFormData.append(
+      "file",
+      file,
+      (file as File).name || "muestra_gulupa.jpg",
+    );
+
+    const tempC = formData.get("temperature_c");
+    if (tempC) {
+      apiFormData.append("temperature_c", String(tempC));
     }
 
-    // Cold start del modelo: la API responde 503 {"status":"warming"} con
-    // Retry-After. Esperar y reintentar dentro del presupuesto.
-    if (mlResponse.status === 503) {
-      const body = await safeJson(mlResponse);
-      const isWarming =
-        body?.status === "warming" ||
-        String(body?.detail ?? "")
-          .toLowerCase()
-          .includes("cargando");
-      if (isWarming && Date.now() < deadline) {
-        lastWarmingRetryAfter = Number(body?.retry_after_seconds) || 5;
-        await sleep(Math.min(lastWarmingRetryAfter * 1000, 8_000));
-        continue;
-      }
-      if (isWarming) {
-        return jsonResponse(
-          {
-            status: "warming",
-            retry: true,
-            retry_after_seconds: lastWarmingRetryAfter,
-            error:
-              "El modelo BioCLIP sigue cargando en Cloud Run (arranque en frío). Vuelve a intentarlo en unos segundos.",
-          },
-          503,
-          { "Retry-After": String(lastWarmingRetryAfter) },
-        );
+    const crop = formData.get("crop") || "gulupa";
+    apiFormData.append("crop", String(crop));
+
+    const profile = formData.get("profile") || "auto";
+    apiFormData.append("profile", String(profile));
+
+    let session = cachedSessionCookie;
+    let mlResponse = await fetch(`${ML_API_URL}/api/predict`, {
+      method: "POST",
+      headers: buildHeaders(session),
+      body: apiFormData,
+    });
+
+    // Si Cloud Run reinició contenedor o la sesión expiró (401), auto-autenticarse y reintentar
+    if (mlResponse.status === 401) {
+      session = await getOrRenewSession();
+      if (session) {
+        mlResponse = await fetch(`${ML_API_URL}/api/predict`, {
+          method: "POST",
+          headers: buildHeaders(session),
+          body: apiFormData,
+        });
       }
     }
 
@@ -220,26 +151,25 @@ export const POST: APIRoute = async ({ request }) => {
         {
           error: `Error desde la API de Machine Learning (${mlResponse.status}): ${errText}`,
         },
-        mlResponse.status === 401 ? 502 : mlResponse.status,
+        mlResponse.status,
       );
     }
 
     const data = await mlResponse.json();
     return jsonResponse(data, 200);
+  } catch (err: any) {
+    const isConnRefused =
+      err?.cause?.code === "ECONNREFUSED" ||
+      err?.message?.includes("fetch failed");
+    return jsonResponse(
+      {
+        error: isConnRefused
+          ? `No se pudo conectar con el servidor de Machine Learning en Google Cloud Run (${ML_API_URL}). Verifica la conexión.`
+          : `Error interno al procesar diagnóstico: ${err.message}`,
+      },
+      502,
+    );
   }
-
-  // El presupuesto se agotó esperando el cold start del modelo.
-  return jsonResponse(
-    {
-      status: "warming",
-      retry: true,
-      retry_after_seconds: 10,
-      error:
-        "El modelo BioCLIP está calentando en Google Cloud Run. Reintenta en unos segundos para obtener el resultado.",
-    },
-    503,
-    { "Retry-After": "10" },
-  );
 };
 
 export const GET: APIRoute = async () => {

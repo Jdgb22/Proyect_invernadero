@@ -529,67 +529,26 @@
     fd.append("crop", "gulupa");
     fd.append("profile", "auto");
 
-    // Reintentos: el servicio en Cloud Run puede estar despertando o cargando
-    // el modelo (cold start). El proxy reintenta ~50s por su cuenta; si aún
-    // así falla con "warming", se reintenta aquí hasta ~90s más en total.
-    const MAX_ATTEMPTS = 10;
-    let lastError = "Error desconocido";
-
     try {
-      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-        setLoadingStatus(
-          attempt === 1
-            ? "BioCLIP 2.5 procesando inferencia..."
-            : `BioCLIP 2.5 procesando (intento ${attempt})...`,
-          "Discriminando taxonomía y estadio biológico",
-        );
+      setLoadingStatus(
+        "BioCLIP 2.5 procesando inferencia...",
+        "Discriminando taxonomía y estadio biológico",
+      );
 
-        let res: Response;
-        try {
-          res = await fetch("/api/trips-diagnosis", {
-            method: "POST",
-            body: fd,
-          });
-        } catch (err: any) {
-          // Fallo de red (función serverless reiniciada, etc.): reintentar.
-          lastError = err?.message || "Fallo de red";
-          if (attempt < MAX_ATTEMPTS) {
-            await sleep(5000);
-            continue;
-          }
-          break;
-        }
+      const res = await fetch("/api/trips-diagnosis", {
+        method: "POST",
+        body: fd,
+      });
 
-        const data = await res.json().catch(() => ({} as any));
+      const data = await res.json().catch(() => ({} as any));
 
-        if (res.ok) {
-          renderResultados(data);
-          return;
-        }
-
-        lastError = data?.error || data?.detail || `HTTP ${res.status}`;
-        const isWarming = data?.status === "warming" || data?.retry === true;
-        const retryable = isWarming || res.status === 503 || res.status === 502 || res.status === 504;
-        if (!retryable || attempt >= MAX_ATTEMPTS) {
-          break;
-        }
-
-        const retryAfter = Number(data?.retry_after_seconds) || 6;
-        setLoadingStatus(
-          "Calentando modelo de IA en la nube...",
-          `Google Cloud Run está cargando BioCLIP 2.5 (intento ${attempt} de ${MAX_ATTEMPTS})`,
-        );
-        // Refrescar el estado del servidor mientras se espera.
-        checkMlHealth();
-        await sleep(Math.min(retryAfter * 1000, 10000));
+      if (!res.ok) {
+        throw new Error(data.error || data.detail || `HTTP ${res.status}`);
       }
 
-      alert(
-        "❌ " +
-          (lastError.includes("Cloud Run") || lastError.includes("cargando")
-            ? `${lastError}\n\nEl modelo está despertando en la nube. Espera unos segundos y vuelve a capturar la muestra.`
-            : lastError),
-      );
+      renderResultados(data);
+    } catch (err: any) {
+      alert("❌ " + err.message);
     } finally {
       stopTimer();
       loadingOverlay?.classList.add("hidden");
