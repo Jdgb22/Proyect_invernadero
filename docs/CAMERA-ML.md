@@ -32,7 +32,7 @@ Celular / navegador
 Astro SSR — src/pages/api/trips-diagnosis.ts
         │  POST ${ML_API_URL}/api/predict  (header X-API-Key)
         ▼
-macollo-trips-api (FastAPI + BioCLIP 2.5) — puerto 8000
+macollo-trips-api (FastAPI + BioCLIP 2.5 en Google Cloud Run)
         │
         ▼
 JSON con diagnóstico (is_thrips, etapa, recomendaciones…)
@@ -44,10 +44,10 @@ Al capturar o subir una foto desde el modal, el navegador también hace `POST /a
 
 Variables en `.env` (o en el panel de Vercel):
 
-| Variable     | Obligatoria | Descripción                                                             | Default                                                       |
-| :----------- | :---------- | :---------------------------------------------------------------------- | :------------------------------------------------------------ |
-| `ML_API_URL` | No          | URL base del servicio ML.                                               | `http://127.0.0.1:8000` (o `PUBLIC_API_URL` si está definida) |
-| `ML_API_KEY` | Recomendada | Se envía como cabecera `X-API-Key`. Debe coincidir con la del servicio. | — (sin cabecera)                                              |
+| Variable     | Obligatoria  | Descripción                                                             | Default                                                      |
+| :----------- | :----------- | :---------------------------------------------------------------------- | :----------------------------------------------------------- |
+| `ML_API_URL` | No           | URL base del servicio ML en Google Cloud Run.                           | `https://macollo-trips-api-961314735418.us-central1.run.app` |
+| `ML_API_KEY` | Sí (en prod) | Se envía como cabecera `X-API-Key`. Debe coincidir con la del servicio. | `mk_...`                                                     |
 
 > El código también acepta los alias `PUBLIC_API_URL`, `API_KEY` y `ML_X_API_KEY`, pero lo recomendado es usar `ML_API_URL` y `ML_API_KEY`.
 
