@@ -266,6 +266,12 @@ const badge = roleBadge[role] || roleBadge.Campesino;
 
     // Logout function
     const handleLogout = async () => {
+      try {
+        sessionStorage.removeItem("macollo_active_session");
+      } catch (_) {}
+      try {
+        await fetch("/api/auth/signout-tab", { method: "POST", keepalive: true });
+      } catch (_) {}
       if (signOut) {
         signOut();
       } else {
@@ -284,7 +290,7 @@ const badge = roleBadge[role] || roleBadge.Campesino;
           document.body.appendChild(form);
           form.submit();
         } catch (err) {
-          window.location.href = '/api/auth/signout';
+          window.location.href = '/';
         }
       }
     };

@@ -225,7 +225,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     <div
       class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-green-100 dark:border-[#166534]/80"
     >
-      <!-- Selector de Fecha Calendario -->
+      <!-- Selector de Fecha Calendario y Dropdown de Fechas -->
       <div class="flex flex-wrap items-center gap-3">
         <label
           for="history-date-picker"
@@ -239,12 +239,30 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
             type="date"
             value={latestDate}
             class="px-4 py-2 text-xs sm:text-sm font-bold rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-950 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500 cursor-pointer shadow-xs transition-all"
+            title="Selecciona cualquier fecha en el calendario"
           />
+        </div>
+        <!-- Selector desplegable con todas las fechas disponibles -->
+        <div class="relative">
+          <select
+            id="history-date-select"
+            class="px-3 py-2 text-xs sm:text-sm font-bold rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-950 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500 cursor-pointer shadow-xs transition-all max-w-[230px] truncate"
+            title="Ver todas las fechas con registros"
+          >
+            <option value="all">🌐 Ver Todo el Historial</option>
+            {
+              uniqueDates.map((d) => (
+                <option value={d} selected={d === latestDate}>
+                  📅 {d} ({allRecords.filter((r) => r.fecha === d).length} lecturas)
+                </option>
+              ))
+            }
+          </select>
         </div>
         <span
           class="text-[11px] text-green-400 dark:text-stone-600 hidden sm:inline"
         >
-          (Escoge cualquier día para ver sus mediciones)
+          (Escoge cualquier día o busca fechas pasadas)
         </span>
       </div>
 
@@ -319,19 +337,19 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
         </select>
       </div>
 
-      <!-- Buscador de Texto Libre -->
+      <!-- Buscador de Texto Libre y Fechas -->
       <div>
         <label
           for="search-query"
           class="block text-[11px] font-bold uppercase tracking-wider text-green-600 dark:text-stone-400 mb-1"
         >
-          Búsqueda Rápida
+          Búsqueda de Fechas y Datos
         </label>
         <div class="relative">
           <input
             id="search-query"
             type="text"
-            placeholder="Responsable, nota o código..."
+            placeholder="Fecha (ej: 2024-05, nov), código, responsable..."
             class="w-full pl-8 pr-3 py-2 text-xs font-semibold rounded-xl border border-green-300 dark:border-stone-600 bg-green-50 dark:bg-[#062c16] text-green-900 dark:text-stone-300 focus:ring-2 focus:ring-green-500"
           />
           <span class="absolute left-2.5 top-2.5 text-green-400 text-xs"
@@ -1285,7 +1303,14 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     }
 
     function getAllCombinedRecords(): MetricRecord[] {
-      return mergeRecords(baseRecords, getStoredRecords());
+      const merged = mergeRecords(baseRecords, getStoredRecords());
+      return merged.map((r) => {
+        const norm = extractDateAndHour(r.fecha).fecha;
+        if (norm && norm !== r.fecha) {
+          return { ...r, fecha: norm };
+        }
+        return r;
+      });
     }
 
     // 3. ESTADO GLOBAL DE LA VISTA
@@ -1309,11 +1334,16 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       pendingUploadRows: [],
     };
 
-    // Obtener lista de fechas únicas ordenadas
-    function getAvailableDates() {
+    // Obtener lista de fechas únicas ordenadas cronológicamente (más reciente a más antigua)
+    function getAvailableDates(): string[] {
       const dates = Array.from(
-        new Set(state.allRecords.map((r) => r.fecha)),
-      ).filter(Boolean);
+        new Set(
+          state.allRecords.map((r) => {
+            const parsed = extractDateAndHour(r.fecha).fecha;
+            return parsed || r.fecha;
+          }),
+        ),
+      ).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d));
       return dates.sort((a, b) => b.localeCompare(a));
     }
 
@@ -1323,6 +1353,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
 
     // 4. ELEMENTOS DEL DOM
     const datePicker = byId<HTMLInputElement>("history-date-picker");
+    const dateSelect = byId<HTMLSelectElement>("history-date-select");
     const quickChipsContainer = byId("date-quick-chips");
     const filterFila = byId<HTMLSelectElement>("filter-fila");
     const filterPlanta = byId<HTMLSelectElement>("filter-planta");
@@ -1424,7 +1455,53 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       }, 4000);
     }
 
-    // 5. RENDERIZADO DE CHIPS RÁPIDOS DE FECHA
+    // 5. RENDERIZADO DEL SELECTOR DE TODAS LAS FECHAS
+    function renderDateSelect(dates: string[]) {
+      const select = byId<HTMLSelectElement>("history-date-select");
+      if (!select) return;
+      select.innerHTML = "";
+
+      const optAll = document.createElement("option");
+      optAll.value = "all";
+      optAll.textContent = `🌐 Ver Todo (${state.allRecords.length} lecturas)`;
+      if (state.selectedDate === "all") optAll.selected = true;
+      select.appendChild(optAll);
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      dates.forEach((d) => {
+        const count = state.allRecords.filter((r) => r.fecha === d).length;
+        const opt = document.createElement("option");
+        opt.value = d;
+
+        let label = d;
+        if (d === todayStr) {
+          label = `📍 Hoy (${d}) - ${count} lecturas`;
+        } else {
+          const parts = d.split("-");
+          if (parts.length === 3) {
+            const dateObj = new Date(
+              parseInt(parts[0]),
+              parseInt(parts[1]) - 1,
+              parseInt(parts[2]),
+            );
+            const dateFmt = dateObj.toLocaleDateString("es-CO", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            });
+            label = `📅 ${dateFmt} (${count} lecturas)`;
+          } else {
+            label = `📅 ${d} (${count} lecturas)`;
+          }
+        }
+        opt.textContent = label;
+        if (state.selectedDate === d) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    // 5.b RENDERIZADO DE CHIPS RÁPIDOS DE FECHA
     function renderQuickDateChips() {
       if (!quickChipsContainer) return;
       const dates = getAvailableDates();
@@ -1442,12 +1519,13 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
 
       const todayStr = new Date().toISOString().slice(0, 10);
 
-      dates.slice(0, 4).forEach((d, idx) => {
+      // Mostrar hasta los 5 días más recientes como chips rápidos
+      const topDates = dates.slice(0, 5);
+      topDates.forEach((d, idx) => {
         let label = d;
         if (d === todayStr) label = "📍 Hoy";
         else if (idx === 1 && dates[0] === todayStr) label = "Ayer";
         else {
-          // Formatear día y mes
           const parts = d.split("-");
           if (parts.length === 3) {
             const dateObj = new Date(
@@ -1474,10 +1552,41 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
         btn.addEventListener("click", () => {
           state.selectedDate = d;
           if (datePicker) datePicker.value = d;
+          const select = byId<HTMLSelectElement>("history-date-select");
+          if (select) select.value = d;
           updateAllViews();
         });
         quickChipsContainer.appendChild(btn);
       });
+
+      // Si la fecha seleccionada es una fecha histórica anterior (no en los top 5) y no es "all",
+      // renderizar un chip destacado para la fecha seleccionada
+      if (
+        state.selectedDate &&
+        state.selectedDate !== "all" &&
+        !topDates.includes(state.selectedDate)
+      ) {
+        const parts = state.selectedDate.split("-");
+        let label = state.selectedDate;
+        if (parts.length === 3) {
+          const dateObj = new Date(
+            parseInt(parts[0]),
+            parseInt(parts[1]) - 1,
+            parseInt(parts[2]),
+          );
+          label = `📅 ${dateObj.toLocaleDateString("es-CO", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}`;
+        }
+        const customBtn = document.createElement("button");
+        customBtn.type = "button";
+        customBtn.className =
+          "px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer bg-green-600 text-white shadow-xs";
+        customBtn.textContent = label;
+        quickChipsContainer.appendChild(customBtn);
+      }
 
       // Opción: Ver Todo el Historial (Modo General)
       const isAllSelected = state.selectedDate === "all";
@@ -1492,6 +1601,8 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       allBtn.addEventListener("click", () => {
         state.selectedDate = "all";
         if (datePicker) datePicker.value = "";
+        const select = byId<HTMLSelectElement>("history-date-select");
+        if (select) select.value = "all";
         updateAllViews();
       });
       quickChipsContainer.appendChild(allBtn);
@@ -1499,11 +1610,79 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
 
     // 6. FILTRAR REGISTROS
     function getFilteredRecords() {
+      const q = state.searchQuery.trim().toLowerCase();
+      const hasSearch = q.length > 0;
+
       return state.allRecords.filter((r) => {
-        // Fecha
-        if (state.selectedDate !== "all" && r.fecha !== state.selectedDate) {
+        // Normalización de fecha para búsqueda amplia
+        const fechaIso = (r.fecha || "").toLowerCase();
+        const fechaTexto = (r.timestampTexto || "").toLowerCase();
+        let fechaDmy = "";
+        let fechaHumana = "";
+        const parts = fechaIso.split("-");
+        if (parts.length === 3) {
+          fechaDmy = `${parts[2]}/${parts[1]}/${parts[0]}`;
+          try {
+            const dateObj = new Date(
+              parseInt(parts[0]),
+              parseInt(parts[1]) - 1,
+              parseInt(parts[2]),
+            );
+            fechaHumana = dateObj
+              .toLocaleDateString("es-CO", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })
+              .toLowerCase();
+          } catch {}
+        }
+
+        let queryMatchesDate = false;
+
+        // Búsqueda de texto (código, ID, responsable, notas, sanidad y fecha)
+        if (hasSearch) {
+          const matchId = (r.plantId || "").toLowerCase().includes(q);
+          const matchCode = (r.code || "").toLowerCase().includes(q);
+          const matchResp = (r.responsable || "").toLowerCase().includes(q);
+          const matchObs = (r.observaciones || "").toLowerCase().includes(q);
+          const matchFila = (r.fila || "").toLowerCase().includes(q);
+          const matchSanidad = (r.sanidad || "").toLowerCase().includes(q);
+          const matchFechaIso = fechaIso.includes(q);
+          const matchFechaDmy = fechaDmy.includes(q);
+          const matchFechaTexto = fechaTexto.includes(q);
+          const matchFechaHumana = fechaHumana.includes(q);
+
+          queryMatchesDate =
+            matchFechaIso ||
+            matchFechaDmy ||
+            matchFechaTexto ||
+            matchFechaHumana;
+
+          if (
+            !matchId &&
+            !matchCode &&
+            !matchResp &&
+            !matchObs &&
+            !matchFila &&
+            !matchSanidad &&
+            !queryMatchesDate
+          ) {
+            return false;
+          }
+        }
+
+        // Filtro por fecha seleccionada:
+        // Si el usuario escribe una búsqueda y coincide con fechas, permitimos verlas en el resultado
+        if (hasSearch && queryMatchesDate) {
+          // Coincide con la fecha buscada, no descartar
+        } else if (
+          state.selectedDate !== "all" &&
+          r.fecha !== state.selectedDate
+        ) {
           return false;
         }
+
         // Fila
         if (
           state.selectedFila !== "all" &&
@@ -1527,18 +1706,7 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
         ) {
           return false;
         }
-        // Búsqueda de texto
-        if (state.searchQuery.trim()) {
-          const q = state.searchQuery.toLowerCase();
-          const matchId = (r.plantId || "").toLowerCase().includes(q);
-          const matchCode = (r.code || "").toLowerCase().includes(q);
-          const matchResp = (r.responsable || "").toLowerCase().includes(q);
-          const matchObs = (r.observaciones || "").toLowerCase().includes(q);
-          const matchFila = (r.fila || "").toLowerCase().includes(q);
-          if (!matchId && !matchCode && !matchResp && !matchObs && !matchFila) {
-            return false;
-          }
-        }
+
         return true;
       });
     }
@@ -1589,12 +1757,26 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       const total = recordsForDate.length;
       if (total === 0) {
         if (summaryCoverageCount) summaryCoverageCount.textContent = "0/20";
+        if (summaryHealthSemaphore) {
+          summaryHealthSemaphore.className =
+            "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-stone-700/60 text-stone-300";
+          summaryHealthSemaphore.innerHTML = `<span>⚪</span><span>Sin mediciones</span>`;
+        }
         if (kpiPh) kpiPh.textContent = "--";
+        if (kpiPhBadge) {
+          kpiPhBadge.textContent = "Sin datos en este día";
+          kpiPhBadge.className =
+            "text-[10px] font-bold text-stone-400 block mt-1";
+        }
         if (kpiTin) kpiTin.textContent = "--";
         if (kpiTsoil) kpiTsoil.textContent = "--";
         if (kpiGrowth) kpiGrowth.textContent = "--";
         if (kpiHealth) kpiHealth.textContent = "--";
         if (kpiHealthPlants) kpiHealthPlants.textContent = "0/20";
+        if (summaryDateSubtitle) {
+          summaryDateSubtitle.textContent =
+            "No se encontraron mediciones tomadas en esta fecha. Selecciona otra fecha en el desplegable o haz clic en 'Ver Todo'.";
+        }
         return;
       }
 
@@ -2352,13 +2534,14 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     // 12. ACTUALIZAR TODAS LAS VISTAS
     function updateAllViews() {
       const dates = getAvailableDates();
-      if (datePicker && dates.length > 0) {
-        datePicker.min = dates[dates.length - 1];
-        datePicker.max = dates[0];
+      // NOTA: Eliminamos restricciones de min y max para que el usuario pueda navegar
+      // libremente a cualquier fecha histórica en el calendario nativo.
+      if (datePicker) {
         if (state.selectedDate && state.selectedDate !== "all") {
           datePicker.value = state.selectedDate;
         }
       }
+      renderDateSelect(dates);
       renderQuickDateChips();
       renderSummaryKPIs();
       renderPlantGrid();
@@ -2371,6 +2554,8 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     datePicker?.addEventListener("change", (e: any) => {
       if (e.target?.value) {
         state.selectedDate = e.target.value;
+        const select = byId<HTMLSelectElement>("history-date-select");
+        if (select) select.value = e.target.value;
         updateAllViews();
       }
     });
@@ -2378,6 +2563,17 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
     datePicker?.addEventListener("input", (e: any) => {
       if (e.target?.value) {
         state.selectedDate = e.target.value;
+        const select = byId<HTMLSelectElement>("history-date-select");
+        if (select) select.value = e.target.value;
+        updateAllViews();
+      }
+    });
+
+    dateSelect?.addEventListener("change", (e: any) => {
+      const val = e.target?.value;
+      if (val) {
+        state.selectedDate = val;
+        if (datePicker) datePicker.value = val === "all" ? "" : val;
         updateAllViews();
       }
     });
@@ -2399,6 +2595,27 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
 
     searchInput?.addEventListener("input", (e) => {
       state.searchQuery = (e.target as HTMLInputElement).value;
+      const q = state.searchQuery.trim().toLowerCase();
+
+      // Si el usuario escribe una fecha en formato YYYY-MM-DD o DD/MM/YYYY que coincide exactamente con una disponible:
+      const dates = getAvailableDates();
+      const directMatch = dates.find((d) => {
+        if (d === q) return true;
+        const parts = d.split("-");
+        if (parts.length === 3 && `${parts[2]}/${parts[1]}/${parts[0]}` === q) {
+          return true;
+        }
+        return false;
+      });
+      if (directMatch && state.selectedDate !== directMatch) {
+        state.selectedDate = directMatch;
+        if (datePicker) datePicker.value = directMatch;
+        const select = byId<HTMLSelectElement>("history-date-select");
+        if (select) select.value = directMatch;
+        updateAllViews();
+        return;
+      }
+
       renderTable();
     });
 
@@ -2407,11 +2624,15 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       state.selectedPlanta = "all";
       state.selectedSanidad = "all";
       state.searchQuery = "";
+      state.selectedDate = "all";
       if (filterFila) filterFila.value = "all";
       if (filterPlanta) filterPlanta.value = "all";
       if (filterSanidad) filterSanidad.value = "all";
       if (searchInput) searchInput.value = "";
-      renderTable();
+      if (datePicker) datePicker.value = "";
+      if (dateSelect) dateSelect.value = "all";
+      updateAllViews();
+      showToast("Filtros restablecidos. Viendo todo el historial.", "🔄");
     });
 
     // Cambiar métrica de la gráfica
@@ -2588,6 +2809,8 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
       const importedDate = rows[0]?.fecha || state.selectedDate;
       state.selectedDate = importedDate;
       if (datePicker) datePicker.value = importedDate;
+      const sel = byId<HTMLSelectElement>("history-date-select");
+      if (sel) sel.value = importedDate;
 
       modalUpload?.classList.add("hidden");
       updateAllViews();
@@ -2686,6 +2909,8 @@ const isOwner = ctx?.finca?.rol_finca === "dueno";
           if (lastRecordDate) {
             state.selectedDate = lastRecordDate;
             if (datePicker) datePicker.value = lastRecordDate;
+            const sel = byId<HTMLSelectElement>("history-date-select");
+            if (sel) sel.value = lastRecordDate;
           }
 
           updateAllViews();

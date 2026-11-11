@@ -312,7 +312,19 @@ export function buildRecordsFromRows(rows: string[][]): MetricRecord[] {
     if (!plantIdRaw) continue;
 
     const coords = resolvePlantCoordinates(plantIdRaw);
-    const { fecha, hora } = extractDateAndHour(cell(row, idx.fecha));
+    let { fecha, hora } = extractDateAndHour(cell(row, idx.fecha));
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      // Buscar en otras celdas de la fila que contengan una fecha válida
+      for (const val of row) {
+        if (!val) continue;
+        const candidate = extractDateAndHour(val);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(candidate.fecha)) {
+          fecha = candidate.fecha;
+          if (candidate.hora && !hora) hora = candidate.hora;
+          break;
+        }
+      }
+    }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) continue;
 
     const parsedPh = parseCsvNumber(cell(row, idx.ph));

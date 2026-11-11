@@ -94,7 +94,70 @@ export function extractDateAndHour(rawVal: string | undefined): {
     hora = `${String(hh).padStart(2, "0")}:${mm} ${ampm}`;
   }
 
-  const ymdMatch = raw.match(/\b(202\d)[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+  // 1. Fechas con nombre de mes en español o inglés (ej: 15-ene-2024, 15 de octubre de 2023, 15-nov-23)
+  const SPANISH_MONTHS: Record<string, string> = {
+    ene: "01",
+    enero: "01",
+    jan: "01",
+    january: "01",
+    feb: "02",
+    febrero: "02",
+    february: "02",
+    mar: "03",
+    marzo: "03",
+    march: "03",
+    abr: "04",
+    abril: "04",
+    apr: "04",
+    april: "04",
+    may: "05",
+    mayo: "05",
+    jun: "06",
+    junio: "06",
+    june: "06",
+    jul: "07",
+    julio: "07",
+    july: "07",
+    ago: "08",
+    agosto: "08",
+    aug: "08",
+    august: "08",
+    sep: "09",
+    sept: "09",
+    septiembre: "09",
+    september: "09",
+    oct: "10",
+    octubre: "10",
+    october: "10",
+    nov: "11",
+    noviembre: "11",
+    november: "11",
+    dic: "12",
+    diciembre: "12",
+    dec: "12",
+    december: "12",
+  };
+
+  const textMonthMatch = raw.match(
+    /(\d{1,2})\s*[-/. ]\s*(?:de\s+)?([a-zA-Zñáéíóú]+)\s*[-/. ]\s*(?:de\s+)?(\d{2,4})/i,
+  );
+  if (textMonthMatch) {
+    const d = textMonthMatch[1].padStart(2, "0");
+    const mStr = textMonthMatch[2]
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .slice(0, 3);
+    const m = SPANISH_MONTHS[mStr];
+    let y = textMonthMatch[3];
+    if (y.length === 2) y = "20" + y;
+    if (m) return { fecha: `${y}-${m}-${d}`, hora };
+  }
+
+  // 2. Formato ISO / YMD (YYYY-MM-DD o YYYY/MM/DD) con cualquier año de 4 dígitos
+  const ymdMatch = raw.match(
+    /\b((?:19|20)\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/,
+  );
   if (ymdMatch) {
     return {
       fecha: `${ymdMatch[1]}-${ymdMatch[2].padStart(2, "0")}-${ymdMatch[3].padStart(2, "0")}`,
@@ -102,16 +165,61 @@ export function extractDateAndHour(rawVal: string | undefined): {
     };
   }
 
-  const dmyMatch = raw.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](202\d)\b/);
+  // 3. Formato DMY o MDY con año de 4 dígitos (DD/MM/YYYY o MM/DD/YYYY)
+  const dmyMatch = raw.match(
+    /\b(\d{1,2})[-/.](\d{1,2})[-/.]((?:19|20)\d{2})\b/,
+  );
   if (dmyMatch) {
+    const p1 = parseInt(dmyMatch[1], 10);
+    const p2 = parseInt(dmyMatch[2], 10);
+    const y = dmyMatch[3];
+    if (p1 > 12) {
+      return {
+        fecha: `${y}-${String(p2).padStart(2, "0")}-${String(p1).padStart(2, "0")}`,
+        hora,
+      };
+    }
+    if (p2 > 12) {
+      return {
+        fecha: `${y}-${String(p1).padStart(2, "0")}-${String(p2).padStart(2, "0")}`,
+        hora,
+      };
+    }
+    // Por defecto en español / Colombia: DD/MM/YYYY
     return {
-      fecha: `${dmyMatch[3]}-${dmyMatch[2].padStart(2, "0")}-${dmyMatch[1].padStart(2, "0")}`,
+      fecha: `${y}-${String(p2).padStart(2, "0")}-${String(p1).padStart(2, "0")}`,
       hora,
     };
   }
 
+  // 4. Formato con año de 2 dígitos (ej: 15/05/23, 10/11/24, 5-1-24)
+  const dmy2Match = raw.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2})\b/);
+  if (dmy2Match) {
+    const p1 = parseInt(dmy2Match[1], 10);
+    const p2 = parseInt(dmy2Match[2], 10);
+    const yy = parseInt(dmy2Match[3], 10);
+    const y = String(yy < 50 ? 2000 + yy : 1900 + yy);
+    if (p1 > 12) {
+      return {
+        fecha: `${y}-${String(p2).padStart(2, "0")}-${String(p1).padStart(2, "0")}`,
+        hora,
+      };
+    }
+    if (p2 > 12) {
+      return {
+        fecha: `${y}-${String(p1).padStart(2, "0")}-${String(p2).padStart(2, "0")}`,
+        hora,
+      };
+    }
+    return {
+      fecha: `${y}-${String(p2).padStart(2, "0")}-${String(p1).padStart(2, "0")}`,
+      hora,
+    };
+  }
+
+  // 5. Serial numérico de Excel
   const numSerial = parseFloat(raw);
-  if (!isNaN(numSerial) && numSerial > 40000 && numSerial < 60000) {
+  if (!isNaN(numSerial) && numSerial > 30000 && numSerial < 70000) {
     const excelEpoch = new Date(1899, 11, 30);
     const dateObj = new Date(excelEpoch.getTime() + numSerial * 86400000);
     const y = dateObj.getFullYear();

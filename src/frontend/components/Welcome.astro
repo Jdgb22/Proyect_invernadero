@@ -636,6 +636,10 @@ const today = new Date().toISOString().slice(0, 10);
   const tabRegisterBtn = document.getElementById("tab-register-btn") as HTMLButtonElement;
   const authTabIndicator = document.getElementById("auth-tab-indicator")!;
   const TAB_BASE = "relative z-10 flex-1 py-2.5 px-4 text-sm rounded-xl transition-colors";
+  try {
+    sessionStorage.removeItem("macollo_active_session");
+  } catch (_) {}
+
   const linkToRegister = document.getElementById("link-to-register");
   const linkToLogin = document.getElementById("link-to-login");
   const forgotPasswordLink = document.getElementById("forgot-password-link");
@@ -875,8 +879,8 @@ const today = new Date().toISOString().slice(0, 10);
     if (btnForgotResetSpinner) btnForgotResetSpinner.classList.toggle("hidden", !on);
   }
 
-  // Reproducir el video de bienvenida y esperar antes de redirigir
-  async function playWelcomeVideo() {
+  // Reproducir el video de bienvenida en segundo plano sin retrasar el inicio de sesión
+  function playWelcomeVideo() {
     try {
       const farmerPanel = document.getElementById("farmer-panel");
       if (farmerPanel && window.innerWidth < 1024) {
@@ -893,26 +897,7 @@ const today = new Date().toISOString().slice(0, 10);
         }
       }
     } catch (vidErr) {
-      console.warn("No se pudo reiniciar el video:", vidErr);
-    }
-
-    try {
-      await new Promise<void>((resolve) => {
-        if (!welcomeVideo) return resolve();
-        const timeout = setTimeout(() => {
-          welcomeVideo.removeEventListener("ended", onEnded);
-          resolve();
-        }, 3500);
-
-        const onEnded = () => {
-          clearTimeout(timeout);
-          resolve();
-        };
-
-        welcomeVideo.addEventListener("ended", onEnded, { once: true });
-      });
-    } catch (waitErr) {
-      console.warn("Error esperando al video:", waitErr);
+      console.warn("No se pudo reproducir el video:", vidErr);
     }
   }
 
@@ -924,8 +909,10 @@ const today = new Date().toISOString().slice(0, 10);
         errorMsg.classList.add("hidden");
         regFeedbackMsg.classList.add("hidden");
 
-        // Reproducir video antes de redirigir a Google
-        try { await playWelcomeVideo(); } catch(e) {}
+        playWelcomeVideo();
+        try {
+          sessionStorage.setItem("macollo_active_session", "1");
+        } catch (_) {}
 
         await signIn("google", { callbackUrl: safeDesde } as any);
       } catch (err) {
@@ -955,12 +942,8 @@ const today = new Date().toISOString().slice(0, 10);
 
       setLoginLoading(true);
 
-      // Reproducir video de bienvenida
-      try {
-        await playWelcomeVideo();
-      } catch (vidErr: any) {
-        console.warn("Video no pudo reproducirse", vidErr);
-      }
+      // Reproducir video en segundo plano sin bloquear el login
+      playWelcomeVideo();
       
       let hasError = false;
 
@@ -1011,14 +994,16 @@ const today = new Date().toISOString().slice(0, 10);
         errorMsg.classList.remove("hidden");
         if (welcomeVideo) welcomeVideo.pause();
       } else {
+        try {
+          sessionStorage.setItem("macollo_active_session", "1");
+        } catch (_) {}
         window.location.href = safeDesde;
       }
     } catch (err: any) {
       console.error(err);
       setLoginLoading(false);
-      errorMsg.textContent = "Error inesperado al iniciar sesión. Intenta nuevamente. " + (err?.message || "");
+      errorMsg.textContent = "Error inesperado al iniciar sesión. Intenta nuevamente.";
       errorMsg.classList.remove("hidden");
-      alert("Error DETALLADO (Envíame esto por favor):\n" + (err?.message || String(err)) + "\n\n" + (err?.stack || ""));
       if (welcomeVideo) welcomeVideo.pause();
     }
   });
@@ -1160,10 +1145,12 @@ const today = new Date().toISOString().slice(0, 10);
       regFeedbackMsg.className = "p-3 rounded-lg bg-emerald-50 text-sm text-emerald-700 text-center border border-emerald-200 font-medium dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400";
       regFeedbackMsg.classList.remove("hidden");
 
-      // Reproducir video de bienvenida
-      await playWelcomeVideo();
-
       // Iniciar sesión automáticamente
+      playWelcomeVideo();
+      try {
+        sessionStorage.setItem("macollo_active_session", "1");
+      } catch (_) {}
+
       const loginIdentifier = email || phone || name;
       await signIn("credentials", {
         email: loginIdentifier,

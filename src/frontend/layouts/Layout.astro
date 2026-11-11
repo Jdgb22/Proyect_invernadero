@@ -1,14 +1,36 @@
 ---
 import "../styles/global.css";
 import SileoProvider from "../components/SileoProvider.tsx";
+import { getSession } from "auth-astro/server";
+
+const session = await getSession(Astro.request);
+const isAuthenticated = !!session;
 ---
 
 <!doctype html>
-<html lang="es-co">
+<html lang="es-co" data-authenticated={isAuthenticated ? "true" : "false"}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      (function () {
+        try {
+          var isAuth = document.documentElement.dataset.authenticated === "true";
+          if (isAuth) {
+            var active = sessionStorage.getItem("macollo_active_session");
+            if (!active) {
+              // Pestaña nueva, navegador reabierto o sesión no activa en esta pestaña:
+              // Ocultamos la vista inmediatamente para no mostrar datos protegidos y limpiamos la sesión.
+              document.documentElement.style.display = "none";
+              fetch("/api/auth/signout-tab", { method: "POST", keepalive: true }).finally(function () {
+                window.location.replace("/?motivo=sesion_cerrada");
+              });
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
     <style is:inline>
       html {
         background-color: #fafaf9;

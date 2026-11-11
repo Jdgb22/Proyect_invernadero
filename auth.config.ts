@@ -36,7 +36,7 @@ if (!authSecret) {
   );
 }
 
-// Duración de la sesión (por defecto 24 h). Se puede ajustar con
+// Duración máxima de la sesión (por defecto 8 h). Se puede ajustar con
 // SESSION_MAX_AGE_HOURS en .env. Al no refrescarse (updateAge === maxAge),
 // la sesión expira de forma absoluta aunque el usuario siga activo.
 const sessionMaxAgeHours = Number(process.env.SESSION_MAX_AGE_HOURS);
@@ -45,7 +45,7 @@ const sessionMaxAge = Math.max(
   Math.floor(
     (Number.isFinite(sessionMaxAgeHours) && sessionMaxAgeHours > 0
       ? sessionMaxAgeHours
-      : 24) *
+      : 8) *
       60 *
       60,
   ),

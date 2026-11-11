@@ -43,7 +43,12 @@ interface LecturaRow {
 }
 
 function toISODate(value: string | Date): string {
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (value instanceof Date) {
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, "0");
+    const d = String(value.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
   return String(value).slice(0, 10);
 }
 
@@ -88,7 +93,7 @@ export async function getLecturasByFinca(
   await ensureResponsableColumn();
   const res = await pool.query(
     `SELECT l.id, f.nombre AS finca_nombre, p.fila, p.columna, p.plant_id,
-            l.fecha, l.hora, l.ph_suelo, l.temp_interna, l.temp_externa, l.temp_suelo,
+            TO_CHAR(l.fecha, 'YYYY-MM-DD') AS fecha, l.hora, l.ph_suelo, l.temp_interna, l.temp_externa, l.temp_suelo,
             l.humedad, l.altura_cm, l.crecimiento, l.fase, l.productividad, l.sanidad,
             l.observaciones,
             COALESCE(NULLIF(TRIM(l.responsable), ''), u.name, 'Sin registrar') AS responsable

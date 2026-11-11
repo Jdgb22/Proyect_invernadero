@@ -73,6 +73,51 @@ function applySecurityHeaders(headers: Headers, isHttps: boolean): void {
   }
 }
 
+/**
+ * Convierte cookies de Auth.js en cookies de sesión estrictas (Session Cookies):
+ * Al eliminar Max-Age y Expires, el navegador las almacena solo en memoria volátil
+ * y las descarta por completo al cerrar el navegador o la sesión, sin persistir
+ * un archivo de cookie de 24 horas en disco.
+ */
+function makeSessionCookiesEphemeral(headers: Headers): void {
+  try {
+    const setCookies =
+      typeof (headers as any).getSetCookie === "function"
+        ? (headers as any).getSetCookie()
+        : headers.get("set-cookie")
+          ? [headers.get("set-cookie")!]
+          : [];
+
+    if (setCookies.length > 0) {
+      let modified = false;
+      const newCookies: string[] = [];
+      for (const cookieStr of setCookies) {
+        if (
+          cookieStr.includes("authjs.session-token") &&
+          (/Max-Age=/i.test(cookieStr) || /Expires=/i.test(cookieStr))
+        ) {
+          modified = true;
+          newCookies.push(
+            cookieStr
+              .replace(/;\s*Max-Age=[^;]+/gi, "")
+              .replace(/;\s*Expires=[^;]+/gi, ""),
+          );
+        } else {
+          newCookies.push(cookieStr);
+        }
+      }
+      if (modified) {
+        headers.delete("set-cookie");
+        for (const c of newCookies) {
+          headers.append("set-cookie", c);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[Middleware] Error normalizando cookies de sesión:", err);
+  }
+}
+
 export const onRequest = defineMiddleware(async (context, next) => {
   // Fix para que Auth.js funcione correctamente detrás de Cloudflare Tunnels u otros proxys
   const forwardedProto = context.request.headers.get("x-forwarded-proto");
@@ -159,6 +204,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const response = await next();
+  makeSessionCookiesEphemeral(response.headers);
   applySecurityHeaders(response.headers, isHttps);
   return response;
 });
