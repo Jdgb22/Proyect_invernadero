@@ -10,11 +10,10 @@ const today = new Date().toISOString().slice(0, 10);
     id="farmer-panel"
     class="w-full h-64 sm:h-72 lg:h-auto lg:min-h-dvh lg:w-1/2 relative bg-stone-950 dark:bg-black overflow-hidden flex items-center justify-center flex-shrink-0"
   >
-    <!-- Video de bienvenida -->
+    <!-- Video de bienvenida (se reproduce al iniciar sesión) -->
     <video
       id="welcome-video"
-      autoplay
-      loop
+      src="/newwelcome.mp4#t=0.001"
       muted
       playsinline
       webkit-playsinline
@@ -756,34 +755,6 @@ const today = new Date().toISOString().slice(0, 10);
     });
   }
 
-  function startWelcomeVideo() {
-    if (!welcomeVideo) return;
-    welcomeVideo.muted = true;
-    (welcomeVideo as any).defaultMuted = true;
-    welcomeVideo.playsInline = true;
-    welcomeVideo.loop = true;
-
-    const playPromise = welcomeVideo.play();
-    if (playPromise !== undefined) {
-      playPromise.catch((err) => {
-        console.warn("Autoplay inicial bloqueado o diferido:", err);
-        const playOnInteraction = () => {
-          if (welcomeVideo && welcomeVideo.paused) {
-            welcomeVideo.play().catch(() => {});
-          }
-        };
-        window.addEventListener("click", playOnInteraction, { once: true });
-        window.addEventListener("touchstart", playOnInteraction, { once: true });
-        window.addEventListener("keydown", playOnInteraction, { once: true });
-      });
-    }
-  }
-
-  startWelcomeVideo();
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", startWelcomeVideo, { once: true });
-  }
-
   if (audioToggleBtn && welcomeVideo && iconMuted && iconUnmuted) {
     audioToggleBtn.addEventListener("click", () => {
       welcomeVideo.muted = !welcomeVideo.muted;
@@ -793,9 +764,6 @@ const today = new Date().toISOString().slice(0, 10);
       } else {
         iconMuted.classList.add("hidden");
         iconUnmuted.classList.remove("hidden");
-      }
-      if (welcomeVideo.paused) {
-        welcomeVideo.play().catch(() => {});
       }
     });
   }
@@ -914,13 +882,45 @@ const today = new Date().toISOString().slice(0, 10);
     if (btnForgotResetSpinner) btnForgotResetSpinner.classList.toggle("hidden", !on);
   }
 
-  // Asegurar que el video de bienvenida se esté reproduciendo
-  function playWelcomeVideo() {
+  // Reproducir el video de bienvenida cuando se inicia sesión y esperar antes de redirigir
+  async function playWelcomeVideo(maxDurationMs = 3200) {
     try {
-      if (welcomeVideo && welcomeVideo.paused) {
-        welcomeVideo.play().catch(() => {});
+      const farmerPanel = document.getElementById("farmer-panel");
+      if (farmerPanel && window.innerWidth < 1024) {
+        farmerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    } catch (_) {}
+
+      if (welcomeVideo) {
+        welcomeVideo.currentTime = 0;
+        const playPromise = welcomeVideo.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn("El navegador bloqueó la reproducción del video:", err);
+          });
+        }
+      }
+    } catch (vidErr) {
+      console.warn("No se pudo iniciar el video:", vidErr);
+    }
+
+    try {
+      await new Promise<void>((resolve) => {
+        if (!welcomeVideo) return resolve();
+        const timeout = setTimeout(() => {
+          welcomeVideo.removeEventListener("ended", onEnded);
+          resolve();
+        }, maxDurationMs);
+
+        const onEnded = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+
+        welcomeVideo.addEventListener("ended", onEnded, { once: true });
+      });
+    } catch (waitErr) {
+      console.warn("Error esperando al video:", waitErr);
+    }
   }
 
   // Login con Google
@@ -931,15 +931,21 @@ const today = new Date().toISOString().slice(0, 10);
         errorMsg.classList.add("hidden");
         regFeedbackMsg.classList.add("hidden");
 
-        playWelcomeVideo();
         try {
           sessionStorage.setItem("macollo_active_session", "1");
         } catch (_) {}
+
+        // Reproducir video antes de redirigir a Google
+        try { await playWelcomeVideo(3200); } catch(e) {}
 
         await signIn("google", { callbackUrl: safeDesde } as any);
       } catch (err) {
         console.error(err);
         setLoginLoading(false);
+        if (welcomeVideo) {
+          welcomeVideo.pause();
+          welcomeVideo.currentTime = 0;
+        }
         errorMsg.textContent = "Error al conectar con Google. Intenta nuevamente.";
         errorMsg.classList.remove("hidden");
       }
@@ -963,8 +969,8 @@ const today = new Date().toISOString().slice(0, 10);
 
       setLoginLoading(true);
 
-      // Asegurar video en segundo plano sin bloquear el login
-      playWelcomeVideo();
+      // Reproducir video de bienvenida al iniciar sesión
+      const videoWaitPromise = playWelcomeVideo(3200);
       
       let hasError = false;
 
@@ -1011,9 +1017,18 @@ const today = new Date().toISOString().slice(0, 10);
 
       if (hasError) {
         setLoginLoading(false);
+        if (welcomeVideo) {
+          welcomeVideo.pause();
+          welcomeVideo.currentTime = 0;
+        }
         errorMsg.textContent = "Credenciales incorrectas. Verifica tus datos y contraseña.";
         errorMsg.classList.remove("hidden");
       } else {
+        // Esperar que termine la animación de bienvenida del video antes de navegar
+        try {
+          await videoWaitPromise;
+        } catch (_) {}
+
         try {
           sessionStorage.setItem("macollo_active_session", "1");
         } catch (_) {}
@@ -1022,6 +1037,10 @@ const today = new Date().toISOString().slice(0, 10);
     } catch (err: any) {
       console.error(err);
       setLoginLoading(false);
+      if (welcomeVideo) {
+        welcomeVideo.pause();
+        welcomeVideo.currentTime = 0;
+      }
       errorMsg.textContent = "Error inesperado al iniciar sesión. Intenta nuevamente.";
       errorMsg.classList.remove("hidden");
     }
@@ -1164,11 +1183,12 @@ const today = new Date().toISOString().slice(0, 10);
       regFeedbackMsg.className = "p-3 rounded-lg bg-emerald-50 text-sm text-emerald-700 text-center border border-emerald-200 font-medium dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400";
       regFeedbackMsg.classList.remove("hidden");
 
-      // Iniciar sesión automáticamente
-      playWelcomeVideo();
+      // Iniciar sesión automáticamente reproduciendo video de bienvenida
       try {
         sessionStorage.setItem("macollo_active_session", "1");
       } catch (_) {}
+
+      await playWelcomeVideo(3200);
 
       const loginIdentifier = email || phone || name;
       await signIn("credentials", {
@@ -1183,6 +1203,10 @@ const today = new Date().toISOString().slice(0, 10);
     } catch (err) {
       console.error(err);
       setRegisterLoading(false);
+      if (welcomeVideo) {
+        welcomeVideo.pause();
+        welcomeVideo.currentTime = 0;
+      }
       regFeedbackMsg.textContent = "Error inesperado al crear la cuenta. Intenta nuevamente.";
       regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
       regFeedbackMsg.classList.remove("hidden");
