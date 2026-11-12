@@ -1178,14 +1178,14 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
         <h4 class="text-xs font-bold uppercase tracking-wider text-green-600 dark:text-stone-400 flex items-center gap-1.5">
           <span>📈</span> Gráficos Individuales de Esta Planta (Histórico de Tomas)
         </h4>
-        <span class="text-[11px] text-green-400 font-mono">4 registros temporales</span>
+        <span id="modal-history-count" class="text-[11px] text-green-400 font-mono">4 registros temporales</span>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
         <!-- Gráfico 1: pH Individual -->
         <div class="chart-card-maximizable bg-green-50 dark:bg-[#062c16]/50 p-3.5 rounded-2xl border border-green-200 dark:border-[#166534] flex flex-col justify-between cursor-pointer hover:border-green-400 dark:hover:border-green-500 hover:shadow-md transition-all group"
           data-chart-title="Histórico de pH del Suelo"
-          data-chart-subtitle="Evolución de pH de la planta en los últimos 4 registros"
+          data-chart-subtitle="Evolución temporal del pH radicular de la planta"
           data-chart-icon="🧪"
           data-chart-badge="pH Suelo"
           data-chart-info="Muestra la estabilidad del pH radicular de esta planta. Las fluctuaciones bruscas pueden indicar acumulación de sales o desbalances en la fertirrigación."
@@ -1200,13 +1200,12 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
             </div>
           </div>
           <div class="w-full h-32 relative flex items-center justify-center">
-            <svg id="modal-svg-ph" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+            <svg id="modal-svg-ph" class="w-full h-full overflow-visible" viewBox="0 0 320 110"></svg>
           </div>
-          <div class="flex justify-between text-[9px] font-mono text-green-400 mt-1 px-1">
-            <span>Hace 3d</span>
-            <span>Hace 2d</span>
-            <span>Ayer</span>
-            <span class="text-green-600 dark:text-stone-400 font-bold">Hoy</span>
+          <div class="modal-card-timeline flex justify-between text-[9px] font-mono text-stone-500 dark:text-green-400/80 mt-1 px-1">
+            <span class="timeline-start">Inicio</span>
+            <span class="timeline-mid opacity-70"></span>
+            <span class="timeline-end text-green-600 dark:text-stone-300 font-bold">Hoy</span>
           </div>
         </div>
 
@@ -1228,13 +1227,12 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
             </div>
           </div>
           <div class="w-full h-32 relative flex items-center justify-center">
-            <svg id="modal-svg-tin" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+            <svg id="modal-svg-tin" class="w-full h-full overflow-visible" viewBox="0 0 320 110"></svg>
           </div>
-          <div class="flex justify-between text-[9px] font-mono text-green-400 mt-1 px-1">
-            <span>Hace 3d</span>
-            <span>Hace 2d</span>
-            <span>Ayer</span>
-            <span class="text-green-600 font-bold">Hoy</span>
+          <div class="modal-card-timeline flex justify-between text-[9px] font-mono text-stone-500 dark:text-green-400/80 mt-1 px-1">
+            <span class="timeline-start">Inicio</span>
+            <span class="timeline-mid opacity-70"></span>
+            <span class="timeline-end text-green-600 dark:text-stone-300 font-bold">Hoy</span>
           </div>
         </div>
 
@@ -1256,13 +1254,12 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
             </div>
           </div>
           <div class="w-full h-32 relative flex items-center justify-center">
-            <svg id="modal-svg-tout" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+            <svg id="modal-svg-tout" class="w-full h-full overflow-visible" viewBox="0 0 320 110"></svg>
           </div>
-          <div class="flex justify-between text-[9px] font-mono text-green-400 mt-1 px-1">
-            <span>Hace 3d</span>
-            <span>Hace 2d</span>
-            <span>Ayer</span>
-            <span class="text-sky-600 font-bold">Hoy</span>
+          <div class="modal-card-timeline flex justify-between text-[9px] font-mono text-stone-500 dark:text-green-400/80 mt-1 px-1">
+            <span class="timeline-start">Inicio</span>
+            <span class="timeline-mid opacity-70"></span>
+            <span class="timeline-end text-sky-600 dark:text-sky-300 font-bold">Hoy</span>
           </div>
         </div>
 
@@ -1284,13 +1281,12 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
             </div>
           </div>
           <div class="w-full h-32 relative flex items-center justify-center">
-            <svg id="modal-svg-tsoil" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+            <svg id="modal-svg-tsoil" class="w-full h-full overflow-visible" viewBox="0 0 320 110"></svg>
           </div>
-          <div class="flex justify-between text-[9px] font-mono text-green-400 mt-1 px-1">
-            <span>Hace 3d</span>
-            <span>Hace 2d</span>
-            <span>Ayer</span>
-            <span class="text-lime-600 font-bold">Hoy</span>
+          <div class="modal-card-timeline flex justify-between text-[9px] font-mono text-stone-500 dark:text-green-400/80 mt-1 px-1">
+            <span class="timeline-start">Inicio</span>
+            <span class="timeline-mid opacity-70"></span>
+            <span class="timeline-end text-lime-600 dark:text-lime-300 font-bold">Hoy</span>
           </div>
         </div>
 
@@ -1312,13 +1308,12 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
             </div>
           </div>
           <div class="w-full h-32 relative flex items-center justify-center">
-            <svg id="modal-svg-growth" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+            <svg id="modal-svg-growth" class="w-full h-full overflow-visible" viewBox="0 0 320 110"></svg>
           </div>
-          <div class="flex justify-between text-[9px] font-mono text-green-400 mt-1 px-1">
-            <span>Hace 3d</span>
-            <span>Hace 2d</span>
-            <span>Ayer</span>
-            <span class="text-teal-600 font-bold">Hoy</span>
+          <div class="modal-card-timeline flex justify-between text-[9px] font-mono text-stone-500 dark:text-green-400/80 mt-1 px-1">
+            <span class="timeline-start">Inicio</span>
+            <span class="timeline-mid opacity-70"></span>
+            <span class="timeline-end text-teal-600 dark:text-teal-300 font-bold">Hoy</span>
           </div>
         </div>
 
@@ -1340,13 +1335,12 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
             </div>
           </div>
           <div class="w-full h-32 relative flex items-center justify-center">
-            <svg id="modal-svg-health" class="w-full h-full overflow-visible" viewBox="0 0 280 100"></svg>
+            <svg id="modal-svg-health" class="w-full h-full overflow-visible" viewBox="0 0 320 110"></svg>
           </div>
-          <div class="flex justify-between text-[9px] font-mono text-green-400 mt-1 px-1">
-            <span>Hace 3d</span>
-            <span>Hace 2d</span>
-            <span>Ayer</span>
-            <span class="text-purple-600 font-bold">Hoy</span>
+          <div class="modal-card-timeline flex justify-between text-[9px] font-mono text-stone-500 dark:text-green-400/80 mt-1 px-1">
+            <span class="timeline-start">Inicio</span>
+            <span class="timeline-mid opacity-70"></span>
+            <span class="timeline-end text-purple-600 dark:text-purple-300 font-bold">Hoy</span>
           </div>
         </div>
       </div>
@@ -1684,256 +1678,367 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
   btnClosePlantModalBottom?.addEventListener('click', closePlantModal);
   plantModalBackdrop?.addEventListener('click', closePlantModal);
 
-  // Renderizar Gráfico 1: pH Individual (SVG)
-  function renderSvgPh(history: any[]) {
-    if (!modalSvgPh || !history || history.length === 0) return;
-    const minPh = 4.5;
-    const maxPh = 8.5;
-    const h = 100;
-    const w = 280;
-    const pad = 24;
+  // Helper unificado para renderizar gráficos de líneas vectoriales individuales con espaciado inteligente y cero solapamiento
+  interface MetricChartConfig {
+    unit: string;
+    strokeColor: string;
+    strokeDash?: string;
+    dotFill: (val: number) => string;
+    referenceBand?: {
+      min: number;
+      max: number;
+      fill: string;
+      label: string;
+      labelColor: string;
+    };
+    guides?: { val: number; label?: string }[];
+    defaultDomain: { min: number; max: number };
+    valFormatter: (val: number) => string;
+    labelClass?: string;
+  }
 
-    const getY = (val: number) => h - pad - ((val - minPh) / (maxPh - minPh)) * (h - pad * 2);
-    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
+  function renderLineMetricChart(
+    container: HTMLElement | null,
+    history: any[],
+    valueExtractor: (rec: any) => number | null,
+    config: MetricChartConfig
+  ) {
+    if (!container || !history || history.length === 0) return;
 
-    const yOptTop = getY(7.5);
-    const yOptBottom = getY(5.5);
-    const optHeight = Math.abs(yOptBottom - yOptTop);
+    const w = 320;
+    const h = 110;
+    const padX = 26;
+    const padTop = 18;
+    const padBottom = 22;
 
-    let pathD = '';
-    const points: any[] = [];
-
-    history.forEach((rec, idx) => {
-      const x = getX(idx);
-      const y = getY(rec.phSuelo);
-      points.push({ x, y, val: rec.phSuelo });
-      if (idx === 0) pathD += `M ${x},${y}`;
-      else pathD += ` L ${x},${y}`;
+    const numPoints = history.map((rec, idx) => {
+      const raw = valueExtractor(rec);
+      const isNull = raw === null || raw === undefined || isNaN(Number(raw));
+      return {
+        idx,
+        raw: isNull ? null : Number(raw),
+        isNull,
+        rec,
+      };
     });
 
+    const validVals = numPoints.filter(p => !p.isNull).map(p => p.raw as number);
+
+    let domainMin = config.defaultDomain.min;
+    let domainMax = config.defaultDomain.max;
+
+    if (validVals.length > 0) {
+      const minVal = Math.min(...validVals);
+      const maxVal = Math.max(...validVals);
+      if (config.referenceBand) {
+        domainMin = Math.min(config.referenceBand.min - 1, minVal - 1.2);
+        domainMax = Math.max(config.referenceBand.max + 1, maxVal + 1.2);
+      } else {
+        domainMin = Math.min(domainMin, minVal - 1.5);
+        domainMax = Math.max(domainMax, maxVal + 1.5);
+      }
+    }
+
+    if (domainMax <= domainMin) {
+      domainMax = domainMin + 2;
+    }
+
+    const getX = (idx: number) => padX + (idx / (history.length - 1 || 1)) * (w - padX * 2);
+    const getY = (val: number) => {
+      const clamped = Math.max(domainMin, Math.min(domainMax, val));
+      return (h - padBottom) - ((clamped - domainMin) / (domainMax - domainMin)) * (h - padTop - padBottom);
+    };
+
+    const points = numPoints.map((p) => {
+      const x = getX(p.idx);
+      if (p.isNull) {
+        const midY = (h - padBottom + padTop) / 2;
+        return {
+          x,
+          y: midY,
+          valStr: 'N/D',
+          numVal: null,
+          isNd: true,
+          rec: p.rec,
+        };
+      }
+      const y = getY(p.raw as number);
+      return {
+        x,
+        y,
+        valStr: config.valFormatter(p.raw as number),
+        numVal: p.raw as number,
+        isNd: false,
+        rec: p.rec,
+      };
+    });
+
+    // Construcción del path de la curva
+    let pathD = '';
+    let hasStarted = false;
+    points.forEach((pt) => {
+      if (!pt.isNd) {
+        if (!hasStarted) {
+          pathD += `M ${pt.x},${pt.y}`;
+          hasStarted = true;
+        } else {
+          pathD += ` L ${pt.x},${pt.y}`;
+        }
+      }
+    });
+
+    // Banda de referencia (con etiqueta en esquina superior derecha sin tapar los datos)
+    let bandSvg = '';
+    if (config.referenceBand) {
+      const yTop = getY(config.referenceBand.max);
+      const yBot = getY(config.referenceBand.min);
+      const bandH = Math.abs(yBot - yTop);
+      const topY = Math.min(yTop, yBot);
+      bandSvg = `
+        <rect x="${padX}" y="${topY}" width="${w - padX * 2}" height="${bandH}" fill="${config.referenceBand.fill}" rx="4" />
+        <rect x="${w - padX - 118}" y="${topY + 2}" width="114" height="11" rx="3" fill="rgba(6, 44, 22, 0.45)" />
+        <text x="${w - padX - 6}" y="${topY + 10}" text-anchor="end" fill="${config.referenceBand.labelColor}" font-size="6.5" font-weight="bold" opacity="0.95">
+          ${config.referenceBand.label}
+        </text>
+      `;
+    }
+
+    // Líneas guía sutiles con etiquetas a la izquierda fuera del área de datos
+    let guidesSvg = '';
+    if (config.guides) {
+      config.guides.forEach((g) => {
+        const yG = getY(g.val);
+        guidesSvg += `
+          <line x1="${padX}" y1="${yG}" x2="${w - padX}" y2="${yG}" stroke="rgba(156, 163, 175, 0.22)" stroke-dasharray="3,3" stroke-width="1" />
+          <text x="${padX - 4}" y="${yG + 2.5}" fill="rgba(156, 163, 175, 0.7)" font-size="6.5" text-anchor="end" font-family="monospace">
+            ${g.label || `${g.val}${config.unit}`}
+          </text>
+        `;
+      });
+    }
+
+    // Planificación de etiquetas: selección inteligente para evitar todo solapamiento horizontal
+    const validPoints = points.filter(p => !p.isNd && p.numVal !== null);
+
+    interface LabelItem {
+      pt: typeof points[0];
+      position: 'above' | 'below';
+      isKey: boolean;
+    }
+    const plannedLabels: LabelItem[] = [];
+
+    if (points.length <= 6) {
+      // Puntos escasos (amplio espacio entre puntos >= 50px)
+      points.forEach((pt) => {
+        if (pt.isNd) return;
+        const pos: 'above' | 'below' = pt.y < 35 ? 'below' : 'above';
+        plannedLabels.push({ pt, position: pos, isKey: false });
+      });
+    } else if (validPoints.length > 0) {
+      // Puntos densos (> 6): etiquetamos extremos (máx arriba, mín abajo), el punto actual y muestras intermedias
+      const maxPt = validPoints.reduce((best, cur) => (cur.numVal! > best.numVal! ? cur : best));
+      const minPt = validPoints.reduce((best, cur) => (cur.numVal! < best.numVal! ? cur : best));
+      const lastPt = points[points.length - 1];
+      const firstPt = points[0];
+
+      // Máximo siempre arriba
+      plannedLabels.push({ pt: maxPt, position: 'above', isKey: true });
+
+      // Mínimo siempre abajo (al estar abajo, nunca colisiona con el máximo arriba)
+      if (minPt !== maxPt) {
+        plannedLabels.push({ pt: minPt, position: 'below', isKey: true });
+      }
+
+      // Último punto (el más reciente / actual)
+      if (lastPt !== maxPt && lastPt !== minPt && !lastPt.isNd) {
+        const distToMax = Math.abs(lastPt.x - maxPt.x);
+        const distToMin = Math.abs(lastPt.x - minPt.x);
+        let pos: 'above' | 'below' = lastPt.y < 35 ? 'below' : 'above';
+        if (pos === 'above' && distToMax < 34) pos = 'below';
+        else if (pos === 'below' && distToMin < 34) pos = 'above';
+
+        const collides = (pos === 'above' && distToMax < 28) || (pos === 'below' && distToMin < 28);
+        if (!collides) {
+          plannedLabels.push({ pt: lastPt, position: pos, isKey: true });
+        }
+      }
+
+      // Primer punto (inicio), si hay espacio libre (>= 32px)
+      if (firstPt !== maxPt && firstPt !== minPt && firstPt !== lastPt && !firstPt.isNd) {
+        const aboveBlocked = plannedLabels.some(l => l.position === 'above' && Math.abs(l.pt.x - firstPt.x) < 32);
+        const belowBlocked = plannedLabels.some(l => l.position === 'below' && Math.abs(l.pt.x - firstPt.x) < 32);
+        if (!aboveBlocked && firstPt.y >= 35) {
+          plannedLabels.push({ pt: firstPt, position: 'above', isKey: false });
+        } else if (!belowBlocked) {
+          plannedLabels.push({ pt: firstPt, position: 'below', isKey: false });
+        }
+      }
+
+      // Si hay huecos mayores a 75px sin etiqueta, rellenamos con un hito intermedio
+      plannedLabels.sort((a, b) => a.pt.x - b.pt.x);
+      const fillers: LabelItem[] = [];
+      for (let i = 0; i < plannedLabels.length - 1; i++) {
+        const left = plannedLabels[i];
+        const right = plannedLabels[i + 1];
+        if (right.pt.x - left.pt.x > 75) {
+          const gapPts = validPoints.filter(p => p.x > left.pt.x + 32 && p.x < right.pt.x - 32);
+          if (gapPts.length > 0) {
+            const midPt = gapPts[Math.floor(gapPts.length / 2)];
+            const pos: 'above' | 'below' = midPt.y < 35 ? 'below' : 'above';
+            fillers.push({ pt: midPt, position: pos, isKey: false });
+          }
+        }
+      }
+      plannedLabels.push(...fillers);
+    }
+
+    // Renderizar círculos para cada punto (todos interactivos con tooltip)
     let circlesSvg = '';
     points.forEach((pt) => {
-      const fillColor = pt.val >= 5.5 && pt.val <= 7.5 ? '#10B981' : pt.val >= 5.0 && pt.val <= 8.0 ? '#F59E0B' : '#EF4444';
+      const isPlanned = plannedLabels.find(l => l.pt === pt);
+      const color = pt.isNd ? '#9CA3AF' : config.dotFill(pt.numVal!);
+      const r = isPlanned?.isKey ? 4.5 : (points.length > 15 ? 3 : 3.5);
+      const strokeW = isPlanned?.isKey ? 2 : 1.5;
+      const dateStr = pt.rec?.fecha ? `${pt.rec.fecha}${pt.rec.hora ? ` ${pt.rec.hora}` : ''}: ` : '';
+
       circlesSvg += `
-        <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="${fillColor}" stroke="#ffffff" stroke-width="2">
-          <title>${pt.val} pH</title>
+        <circle cx="${pt.x}" cy="${pt.y}" r="${r}" fill="${color}" stroke="#ffffff" stroke-width="${strokeW}" class="transition-transform hover:scale-125 cursor-pointer">
+          <title>${dateStr}${pt.valStr}${config.unit ? ` ${config.unit}` : ''}</title>
         </circle>
-        <text x="${pt.x}" y="${pt.y - 6}" fill="#374151" class="dark:fill-green-200" font-size="8.5" font-weight="bold" text-anchor="middle">
-          ${pt.val}
+      `;
+    });
+
+    // Renderizar etiquetas de texto aisladas con halo anti-solapamiento
+    let labelsSvg = '';
+    plannedLabels.forEach((item) => {
+      const pt = item.pt;
+      const isAbove = item.position === 'above';
+      const labelY = isAbove ? pt.y - 7 : pt.y + 13;
+      const isKey = item.isKey;
+
+      labelsSvg += `
+        <text x="${pt.x}" y="${labelY}" font-size="${isKey ? '8.5' : '7.5'}" font-weight="bold" text-anchor="middle" class="chart-point-label ${config.labelClass || ''}">
+          ${pt.valStr}${config.unit}
         </text>
       `;
     });
 
-    modalSvgPh.innerHTML = `
-      <rect x="${pad}" y="${yOptTop}" width="${w - pad * 2}" height="${optHeight}" fill="rgba(16, 185, 129, 0.15)" rx="3" />
-      <text x="${pad + 4}" y="${yOptTop + 8}" fill="#10B981" font-size="7" font-weight="bold">Óptimo (5.5 - 7.5)</text>
-      
-      <line x1="${pad}" y1="${getY(7.5)}" x2="${w - pad}" y2="${getY(7.5)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <line x1="${pad}" y1="${getY(6.5)}" x2="${w - pad}" y2="${getY(6.5)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <line x1="${pad}" y1="${getY(5.5)}" x2="${w - pad}" y2="${getY(5.5)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-
-      <path d="${pathD}" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+    container.innerHTML = `
+      ${bandSvg}
+      ${guidesSvg}
+      ${pathD ? `<path d="${pathD}" fill="none" stroke="${config.strokeColor}" stroke-width="2.5" ${config.strokeDash ? `stroke-dasharray="${config.strokeDash}"` : ''} stroke-linecap="round" stroke-linejoin="round" />` : ''}
       ${circlesSvg}
+      ${labelsSvg}
     `;
+  }
+
+  // Renderizar Gráfico 1: pH Individual (SVG)
+  function renderSvgPh(history: any[]) {
+    renderLineMetricChart(
+      modalSvgPh,
+      history,
+      (rec) => (rec.phSuelo !== null && rec.phSuelo !== undefined ? Number(rec.phSuelo) : null),
+      {
+        unit: ' pH',
+        strokeColor: '#3B82F6',
+        dotFill: (v) => (v >= 5.5 && v <= 7.5 ? '#10B981' : v >= 5.0 && v <= 8.0 ? '#F59E0B' : '#EF4444'),
+        referenceBand: {
+          min: 5.5,
+          max: 7.5,
+          fill: 'rgba(16, 185, 129, 0.15)',
+          label: 'Óptimo (5.5 - 7.5 pH)',
+          labelColor: '#10B981',
+        },
+        guides: [
+          { val: 7.5, label: '7.5' },
+          { val: 6.5, label: '6.5' },
+          { val: 5.5, label: '5.5' },
+        ],
+        defaultDomain: { min: 4.5, max: 8.5 },
+        valFormatter: (v) => v.toFixed(1),
+        labelClass: 'dark:fill-emerald-300 fill-emerald-800',
+      }
+    );
   }
 
   // Renderizar Gráfico 2: Temperatura Interna Individual
   function renderSvgTin(history: any[]) {
-    if (!modalSvgTin || !history || history.length === 0) return;
-    const minT = 20;
-    const maxT = 32;
-    const h = 100;
-    const w = 280;
-    const pad = 24;
-
-    const getY = (val: number) => h - pad - ((val - minT) / (maxT - minT)) * (h - pad * 2);
-    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
-
-    const yConfTop = getY(26);
-    const yConfBot = getY(23);
-    const confHeight = Math.abs(yConfBot - yConfTop);
-
-    let pathD = '';
-    const points: any[] = [];
-    let hasStarted = false;
-
-    history.forEach((rec, idx) => {
-      const x = getX(idx);
-      const isNull = rec.tempInterna === null || rec.tempInterna === undefined || isNaN(Number(rec.tempInterna));
-      if (!isNull) {
-        const val = Number(rec.tempInterna);
-        const y = getY(val);
-        points.push({ x, y, val: val.toFixed(1), isNd: false });
-        if (!hasStarted) {
-          pathD += `M ${x},${y}`;
-          hasStarted = true;
-        } else {
-          pathD += ` L ${x},${y}`;
-        }
-      } else {
-        points.push({ x, y: (yConfTop + yConfBot) / 2, val: 'N/D', isNd: true });
+    renderLineMetricChart(
+      modalSvgTin,
+      history,
+      (rec) => (rec.tempInterna !== null && rec.tempInterna !== undefined ? Number(rec.tempInterna) : null),
+      {
+        unit: '°',
+        strokeColor: '#F59E0B',
+        dotFill: (v) => (v >= 23 && v <= 26 ? '#10B981' : v >= 20 && v <= 29 ? '#F59E0B' : '#EF4444'),
+        referenceBand: {
+          min: 23,
+          max: 26,
+          fill: 'rgba(245, 158, 11, 0.15)',
+          label: 'Confort (23° - 26°C)',
+          labelColor: '#D97706',
+        },
+        guides: [
+          { val: 30, label: '30°' },
+          { val: 26, label: '26°' },
+          { val: 23, label: '23°' },
+        ],
+        defaultDomain: { min: 18, max: 32 },
+        valFormatter: (v) => v.toFixed(1),
+        labelClass: 'dark:fill-amber-300 fill-amber-800',
       }
-    });
-
-    let circlesSvg = '';
-    points.forEach((pt) => {
-      if (pt.isNd) {
-        circlesSvg += `
-          <circle cx="${pt.x}" cy="${pt.y}" r="3" fill="#9CA3AF" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="2,2">
-            <title>Sin registro de temperatura foliar (N/D)</title>
-          </circle>
-          <text x="${pt.x}" y="${pt.y - 6}" fill="#6B7280" class="dark:fill-stone-400" font-size="7.5" font-weight="bold" text-anchor="middle">
-            N/D
-          </text>
-        `;
-      } else {
-        circlesSvg += `
-          <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="#F59E0B" stroke="#ffffff" stroke-width="2">
-            <title>${pt.val}°C</title>
-          </circle>
-          <text x="${pt.x}" y="${pt.y - 6}" fill="#B45309" class="dark:fill-green-300" font-size="8.5" font-weight="bold" text-anchor="middle">
-            ${pt.val}°
-          </text>
-        `;
-      }
-    });
-
-    modalSvgTin.innerHTML = `
-      <rect x="${pad}" y="${yConfTop}" width="${w - pad * 2}" height="${confHeight}" fill="rgba(245, 158, 11, 0.12)" rx="3" />
-      <text x="${pad + 4}" y="${yConfBot - 3}" fill="#D97706" font-size="7" font-weight="bold">← Confort (23° - 26°C)</text>
-      
-      <line x1="${pad}" y1="${getY(30)}" x2="${w - pad}" y2="${getY(30)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <line x1="${pad}" y1="${getY(26)}" x2="${w - pad}" y2="${getY(26)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <line x1="${pad}" y1="${getY(22)}" x2="${w - pad}" y2="${getY(22)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-
-      ${pathD ? `<path d="${pathD}" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />` : ''}
-      ${circlesSvg}
-    `;
+    );
   }
 
   // Renderizar Gráfico 3: Temperatura Externa Individual
   function renderSvgTout(history: any[]) {
-    if (!modalSvgTout || !history || history.length === 0) return;
-    const minT = 16;
-    const maxT = 26;
-    const h = 100;
-    const w = 280;
-    const pad = 24;
-
-    const getY = (val: number) => h - pad - ((val - minT) / (maxT - minT)) * (h - pad * 2);
-    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
-
-    let pathD = '';
-    const points: any[] = [];
-
-    history.forEach((rec, idx) => {
-      const x = getX(idx);
-      const isNull = rec.tempExterna === null || rec.tempExterna === undefined || isNaN(Number(rec.tempExterna));
-      if (!isNull) {
-        const y = getY(Number(rec.tempExterna));
-        points.push({ x, y, val: Number(rec.tempExterna).toFixed(1), isNd: false });
-        if (pathD === '') pathD += `M ${x},${y}`;
-        else pathD += ` L ${x},${y}`;
-      } else {
-        points.push({ x, y: getY(21), val: 'N/D', isNd: true });
+    renderLineMetricChart(
+      modalSvgTout,
+      history,
+      (rec) => (rec.tempExterna !== null && rec.tempExterna !== undefined ? Number(rec.tempExterna) : null),
+      {
+        unit: '°',
+        strokeColor: '#0EA5E9',
+        strokeDash: '4,2',
+        dotFill: () => '#0EA5E9',
+        guides: [
+          { val: 24, label: '24°' },
+          { val: 20, label: '20°' },
+        ],
+        defaultDomain: { min: 14, max: 28 },
+        valFormatter: (v) => v.toFixed(1),
+        labelClass: 'dark:fill-sky-300 fill-sky-800',
       }
-    });
-
-    let circlesSvg = '';
-    points.forEach((pt) => {
-      if (pt.isNd) {
-        circlesSvg += `
-          <circle cx="${pt.x}" cy="${pt.y}" r="3" fill="#9CA3AF" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="2,2">
-            <title>Sin dato de temperatura externa (N/D)</title>
-          </circle>
-          <text x="${pt.x}" y="${pt.y - 6}" fill="#6B7280" font-size="7.5" font-weight="bold" text-anchor="middle">N/D</text>
-        `;
-      } else {
-        circlesSvg += `
-          <circle cx="${pt.x}" cy="${pt.y}" r="3.5" fill="#0EA5E9" stroke="#ffffff" stroke-width="2">
-            <title>${pt.val}°C</title>
-          </circle>
-          <text x="${pt.x}" y="${pt.y - 6}" fill="#0369A1" class="dark:fill-sky-300" font-size="8.5" font-weight="bold" text-anchor="middle">
-            ${pt.val}°
-          </text>
-        `;
-      }
-    });
-
-    modalSvgTout.innerHTML = `
-      <line x1="${pad}" y1="${getY(24)}" x2="${w - pad}" y2="${getY(24)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <line x1="${pad}" y1="${getY(20)}" x2="${w - pad}" y2="${getY(20)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-
-      ${pathD ? `<path d="${pathD}" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-dasharray="4,2" stroke-linecap="round" stroke-linejoin="round" />` : ''}
-      ${circlesSvg}
-    `;
+    );
   }
 
   // Renderizar Gráfico 4: Temperatura Suelo Individual
   function renderSvgTsoil(history: any[]) {
-    if (!modalSvgTsoil || !history || history.length === 0) return;
-    const minT = 16;
-    const maxT = 28;
-    const h = 100;
-    const w = 280;
-    const pad = 24;
-
-    const getY = (val: number) => h - pad - ((val - minT) / (maxT - minT)) * (h - pad * 2);
-    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
-
-    const yOptTop = getY(22);
-    const yOptBot = getY(19);
-    const optHeight = Math.abs(yOptBot - yOptTop);
-
-    let pathD = '';
-    const points: any[] = [];
-
-    history.forEach((rec, idx) => {
-      const x = getX(idx);
-      const isNull = rec.tempSuelo === null || rec.tempSuelo === undefined || isNaN(Number(rec.tempSuelo));
-      if (!isNull) {
-        const y = getY(Number(rec.tempSuelo));
-        points.push({ x, y, val: Number(rec.tempSuelo).toFixed(1), isNd: false });
-        if (pathD === '') pathD += `M ${x},${y}`;
-        else pathD += ` L ${x},${y}`;
-      } else {
-        points.push({ x, y: getY(20), val: 'N/D', isNd: true });
+    renderLineMetricChart(
+      modalSvgTsoil,
+      history,
+      (rec) => (rec.tempSuelo !== null && rec.tempSuelo !== undefined ? Number(rec.tempSuelo) : null),
+      {
+        unit: '°',
+        strokeColor: '#10B981',
+        dotFill: (v) => (v >= 19 && v <= 22.5 ? '#10B981' : '#EF4444'),
+        referenceBand: {
+          min: 19,
+          max: 22,
+          fill: 'rgba(16, 185, 129, 0.15)',
+          label: 'Óptimo (19° - 22°C)',
+          labelColor: '#10B981',
+        },
+        guides: [
+          { val: 26, label: '26°' },
+          { val: 22, label: '22°' },
+          { val: 19, label: '19°' },
+        ],
+        defaultDomain: { min: 16, max: 28 },
+        valFormatter: (v) => v.toFixed(1),
+        labelClass: 'dark:fill-lime-300 fill-lime-800',
       }
-    });
-
-    let circlesSvg = '';
-    points.forEach((pt) => {
-      if (pt.isNd) {
-        circlesSvg += `
-          <circle cx="${pt.x}" cy="${pt.y}" r="3" fill="#9CA3AF" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="2,2">
-            <title>Sin dato de temperatura de suelo (N/D)</title>
-          </circle>
-          <text x="${pt.x}" y="${pt.y - 6}" fill="#6B7280" font-size="7.5" font-weight="bold" text-anchor="middle">N/D</text>
-        `;
-      } else {
-        const isGood = Number(pt.val) >= 19 && Number(pt.val) <= 22.5;
-        circlesSvg += `
-          <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="${isGood ? '#10B981' : '#EF4444'}" stroke="#ffffff" stroke-width="2">
-            <title>${pt.val}°C</title>
-          </circle>
-          <text x="${pt.x}" y="${pt.y - 6}" fill="#047857" class="dark:fill-lime-300" font-size="8.5" font-weight="bold" text-anchor="middle">
-            ${pt.val}°
-          </text>
-        `;
-      }
-    });
-
-    modalSvgTsoil.innerHTML = `
-      <rect x="${pad}" y="${yOptTop}" width="${w - pad * 2}" height="${optHeight}" fill="rgba(16, 185, 129, 0.12)" rx="3" />
-      <text x="${pad + 4}" y="${yOptBot - 3}" fill="#10B981" font-size="7" font-weight="bold">← Radicular Óptimo (19° - 22°C)</text>
-
-      <line x1="${pad}" y1="${getY(26)}" x2="${w - pad}" y2="${getY(26)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <line x1="${pad}" y1="${getY(22)}" x2="${w - pad}" y2="${getY(22)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <line x1="${pad}" y1="${getY(18)}" x2="${w - pad}" y2="${getY(18)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-
-      ${pathD ? `<path d="${pathD}" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />` : ''}
-      ${circlesSvg}
-    `;
+    );
   }
 
   // Renderizar Gráfico 5: Crecimiento Individual
@@ -1941,38 +2046,55 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
     if (!modalSvgGrowth || !history || history.length === 0) return;
     const minG = 0;
     const maxG = 100;
-    const h = 100;
-    const w = 280;
-    const pad = 24;
+    const h = 110;
+    const w = 320;
+    const padX = 26;
+    const padTop = 18;
+    const padBottom = 22;
 
-    const getY = (val: number) => h - pad - ((val - minG) / (maxG - minG)) * (h - pad * 2);
-    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
+    const getY = (val: number) => (h - padBottom) - ((val - minG) / (maxG - minG)) * (h - padTop - padBottom);
+    const getX = (idx: number) => padX + (idx / (history.length - 1 || 1)) * (w - padX * 2);
 
     let pathLine = '';
     let pathArea = '';
 
     history.forEach((rec, idx) => {
       const x = getX(idx);
-      const y = getY(rec.crecimiento);
+      const val = rec.crecimiento != null ? Number(rec.crecimiento) : 0;
+      const y = getY(val);
 
       if (idx === 0) {
         pathLine += `M ${x},${y}`;
-        pathArea += `M ${x},${h - pad} L ${x},${y}`;
+        pathArea += `M ${x},${h - padBottom} L ${x},${y}`;
       } else {
         pathLine += ` L ${x},${y}`;
         pathArea += ` L ${x},${y}`;
       }
     });
 
-    const lastX = getX(history.length - 1);
-    pathArea += ` L ${lastX},${h - pad} Z`;
+    const lastIdx = history.length - 1;
+    const lastX = getX(lastIdx);
+    pathArea += ` L ${lastX},${h - padBottom} Z`;
 
-    const firstG = history[0].crecimiento;
-    const lastG = history[history.length - 1].crecimiento;
+    const firstG = history[0].crecimiento != null ? Number(history[0].crecimiento) : 0;
+    const lastG = history[lastIdx].crecimiento != null ? Number(history[lastIdx].crecimiento) : 0;
     const diff = lastG - firstG;
     if (modalGrowthGain) {
       modalGrowthGain.textContent = `${diff >= 0 ? '+' : ''}${diff}% este ciclo`;
     }
+
+    // Puntos intermedios sutiles
+    let dotsSvg = '';
+    history.forEach((rec, idx) => {
+      if (idx === 0 || idx === lastIdx) return;
+      const x = getX(idx);
+      const y = getY(rec.crecimiento != null ? Number(rec.crecimiento) : 0);
+      dotsSvg += `
+        <circle cx="${x}" cy="${y}" r="2.5" fill="#0D9488" opacity="0.6">
+          <title>${rec.fecha}: ${rec.crecimiento}%</title>
+        </circle>
+      `;
+    });
 
     modalSvgGrowth.innerHTML = `
       <defs>
@@ -1982,20 +2104,28 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
         </linearGradient>
       </defs>
 
-      <line x1="${pad}" y1="${getY(80)}" x2="${w - pad}" y2="${getY(80)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <text x="4" y="${getY(80) + 3}" fill="#9CA3AF" font-size="7.5">80%</text>
-      <line x1="${pad}" y1="${getY(50)}" x2="${w - pad}" y2="${getY(50)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <text x="4" y="${getY(50) + 3}" fill="#9CA3AF" font-size="7.5">50%</text>
-      <line x1="${pad}" y1="${getY(20)}" x2="${w - pad}" y2="${getY(20)}" stroke="#E5E7EB" stroke-dasharray="2,2" stroke-width="1" />
-      <text x="4" y="${getY(20) + 3}" fill="#9CA3AF" font-size="7.5">20%</text>
+      <line x1="${padX}" y1="${getY(80)}" x2="${w - padX}" y2="${getY(80)}" stroke="rgba(156, 163, 175, 0.22)" stroke-dasharray="3,3" stroke-width="1" />
+      <text x="${padX - 4}" y="${getY(80) + 2.5}" fill="rgba(156, 163, 175, 0.7)" font-size="6.5" text-anchor="end" font-family="monospace">80%</text>
+      <line x1="${padX}" y1="${getY(50)}" x2="${w - padX}" y2="${getY(50)}" stroke="rgba(156, 163, 175, 0.22)" stroke-dasharray="3,3" stroke-width="1" />
+      <text x="${padX - 4}" y="${getY(50) + 2.5}" fill="rgba(156, 163, 175, 0.7)" font-size="6.5" text-anchor="end" font-family="monospace">50%</text>
+      <line x1="${padX}" y1="${getY(20)}" x2="${w - padX}" y2="${getY(20)}" stroke="rgba(156, 163, 175, 0.22)" stroke-dasharray="3,3" stroke-width="1" />
+      <text x="${padX - 4}" y="${getY(20) + 2.5}" fill="rgba(156, 163, 175, 0.7)" font-size="6.5" text-anchor="end" font-family="monospace">20%</text>
 
       <path d="${pathArea}" fill="url(#modalGrowthGrad)" />
       <path d="${pathLine}" fill="none" stroke="#0D9488" stroke-width="2.5" stroke-linecap="round" />
+      ${dotsSvg}
+
+      <circle cx="${getX(0)}" cy="${getY(firstG)}" r="3.5" fill="#0D9488" stroke="#fff" stroke-width="1.5">
+        <title>Inicio: ${firstG}%</title>
+      </circle>
+      <text x="${getX(0)}" y="${getY(firstG) - 7}" font-size="7.5" font-weight="bold" text-anchor="middle" class="chart-point-label dark:fill-teal-300 fill-teal-800">
+        ${firstG}%
+      </text>
 
       <circle cx="${lastX}" cy="${getY(lastG)}" r="4.5" fill="#0D9488" stroke="#fff" stroke-width="2">
-        <title>Crecimiento actual: ${lastG}%</title>
+        <title>Actual: ${lastG}%</title>
       </circle>
-      <text x="${lastX}" y="${getY(lastG) - 6}" fill="#0D9488" font-size="8.5" font-weight="bold" text-anchor="middle">
+      <text x="${lastX}" y="${getY(lastG) - 7}" font-size="8.5" font-weight="bold" text-anchor="middle" class="chart-point-label dark:fill-teal-300 fill-teal-800">
         ${lastG}%
       </text>
     `;
@@ -2004,28 +2134,37 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
   // Renderizar Gráfico 6: Sanidad & Productividad Individual
   function renderSvgHealth(history: any[]) {
     if (!modalSvgHealth || !history || history.length === 0) return;
-    const h = 100;
-    const w = 280;
-    const pad = 24;
+    const h = 110;
+    const w = 320;
+    const padX = 26;
+    const padBottom = 22;
 
-    const getX = (idx: number) => pad + (idx / (history.length - 1 || 1)) * (w - pad * 2);
+    const availW = w - padX * 2;
+    const totalBars = history.length;
+    const slotW = availW / (totalBars || 1);
+    const barW = Math.max(4, Math.min(16, slotW * 0.65));
 
     let barsSvg = '';
     history.forEach((rec, idx) => {
-      const x = getX(idx);
+      const x = padX + idx * slotW + (slotW - barW) / 2;
       const isGood = rec.sanidad === 'Excelente' || rec.sanidad === 'Saludable';
       const isCrit = rec.sanidad === 'Crítica';
       const color = isCrit ? '#EF4444' : isGood ? '#10B981' : '#F59E0B';
-      const prodHeight = rec.productividad === 'Alta' ? 48 : rec.productividad === 'Media' ? 32 : 16;
-      const y = h - pad - prodHeight;
+      const prodHeight = rec.productividad === 'Alta' ? 52 : rec.productividad === 'Media' ? 34 : 18;
+      const y = h - padBottom - prodHeight;
+
+      // Mostrar texto encima de cada barra solo si hay suficiente espacio horizontal (slotW >= 28) o en la última
+      const showText = slotW >= 28 || idx === totalBars - 1;
 
       barsSvg += `
-        <rect x="${x - 9}" y="${y}" width="18" height="${prodHeight}" rx="4" fill="${color}" opacity="0.85">
+        <rect x="${x}" y="${y}" width="${barW}" height="${prodHeight}" rx="${Math.min(3, barW / 2)}" fill="${color}" opacity="0.88">
           <title>${rec.fecha}: ${rec.sanidad} • Prod ${rec.productividad}</title>
         </rect>
-        <text x="${x}" y="${y - 4}" fill="${color}" font-size="8" font-weight="bold" text-anchor="middle">
-          ${rec.productividad}
-        </text>
+        ${showText ? `
+          <text x="${x + barW / 2}" y="${y - 4}" fill="${color}" font-size="${slotW >= 28 ? '7.5' : '8'}" font-weight="bold" text-anchor="middle" class="chart-point-label">
+            ${rec.productividad}
+          </text>
+        ` : ''}
       `;
     });
 
@@ -2035,7 +2174,7 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
     }
 
     modalSvgHealth.innerHTML = `
-      <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#E5E7EB" stroke-width="1.5" />
+      <line x1="${padX}" y1="${h - padBottom}" x2="${w - padX}" y2="${h - padBottom}" stroke="rgba(156, 163, 175, 0.3)" stroke-width="1.5" />
       ${barsSvg}
     `;
   }
@@ -2113,6 +2252,26 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
     if (modalKpiGrowth) modalKpiGrowth.textContent = hasData ? `${m.crecimiento}%` : 'N/D';
     if (modalKpiGrowthBar) modalKpiGrowthBar.style.width = hasData ? `${m.crecimiento}%` : '0%';
     if (modalKpiProd) modalKpiProd.textContent = hasData ? m.productividad : 'N/D';
+
+    // Actualizar contador y líneas de tiempo con las fechas reales del historial de esta planta
+    const modalHistoryCount = document.getElementById('modal-history-count');
+    if (modalHistoryCount) {
+      modalHistoryCount.textContent = `${found.history.length} tomas registradas`;
+    }
+
+    const timelines = document.querySelectorAll<HTMLElement>('.modal-card-timeline');
+    if (found.history.length > 0) {
+      const first = found.history[0];
+      const last = found.history[found.history.length - 1];
+      timelines.forEach((tl) => {
+        const startSpan = tl.querySelector('.timeline-start');
+        const midSpan = tl.querySelector('.timeline-mid');
+        const endSpan = tl.querySelector('.timeline-end');
+        if (startSpan) startSpan.textContent = first.fecha || 'Inicio';
+        if (midSpan) midSpan.textContent = `${found.history.length} tomas`;
+        if (endSpan) endSpan.textContent = `${last.fecha || 'Hoy'} (Actual)`;
+      });
+    }
 
     // Mostrar modal
     plantModal?.classList.remove('hidden');
@@ -3129,3 +3288,17 @@ const humedadChartInfo = `Humedad relativa promedio: ${globalAvgHumedad}%. La zo
   window.addEventListener('storage', syncMetricsWithRealRecords);
   window.addEventListener('aquasens:data-synced', syncMetricsWithRealRecords);
 </script>
+
+<style>
+  :global(.chart-point-label) {
+    paint-order: stroke fill;
+    stroke: rgba(244, 252, 227, 0.95);
+    stroke-width: 3.5px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  :global(.dark .chart-point-label) {
+    stroke: #062c16;
+  }
+</style>
+

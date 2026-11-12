@@ -17,3 +17,16 @@
     }
   }
 }
+
+/* Halo aislante para etiquetas de gráficos vectoriales (evita solapamiento con líneas) */
+.chart-point-label {
+  paint-order: stroke fill;
+  stroke: rgba(244, 252, 227, 0.95);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+:root.dark .chart-point-label,
+.dark .chart-point-label {
+  stroke: #062c16;
+}
