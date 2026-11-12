@@ -883,7 +883,7 @@ const today = new Date().toISOString().slice(0, 10);
   }
 
   // Reproducir el video de bienvenida cuando se inicia sesión y esperar antes de redirigir
-  async function playWelcomeVideo(maxDurationMs = 3200) {
+  async function playWelcomeVideo(maxDurationMs = 6000) {
     try {
       const farmerPanel = document.getElementById("farmer-panel");
       if (farmerPanel && window.innerWidth < 1024) {
@@ -935,13 +935,16 @@ const today = new Date().toISOString().slice(0, 10);
           sessionStorage.setItem("macollo_active_session", "1");
         } catch (_) {}
 
-        // Reproducir video antes de redirigir a Google
-        try { await playWelcomeVideo(3200); } catch(e) {}
+        // Reproducir video antes de redirigir a Google (~6 segundos)
+        try { await playWelcomeVideo(6000); } catch(e) {}
 
         await signIn("google", { callbackUrl: safeDesde } as any);
       } catch (err) {
         console.error(err);
         setLoginLoading(false);
+        try {
+          sessionStorage.removeItem("macollo_active_session");
+        } catch (_) {}
         if (welcomeVideo) {
           welcomeVideo.pause();
           welcomeVideo.currentTime = 0;
@@ -969,9 +972,18 @@ const today = new Date().toISOString().slice(0, 10);
 
       setLoginLoading(true);
 
-      // Reproducir video de bienvenida al iniciar sesión
-      const videoWaitPromise = playWelcomeVideo(3200);
-      
+      // Guardamos la sesión activa en este tab
+      try {
+        sessionStorage.setItem("macollo_active_session", "1");
+      } catch (_) {}
+
+      // Reproducir video de bienvenida (~6 segundos para escuchar el mensaje completo)
+      try {
+        await playWelcomeVideo(6000);
+      } catch (vidErr: any) {
+        console.warn("Video no pudo reproducirse:", vidErr);
+      }
+
       let hasError = false;
 
       if (typeof signIn === 'function') {
@@ -1004,7 +1016,10 @@ const today = new Date().toISOString().slice(0, 10);
 
         const authRes = await fetch('/api/auth/callback/credentials', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Auth-Return-Redirect': '1',
+          },
           body: params
         });
 
@@ -1017,6 +1032,9 @@ const today = new Date().toISOString().slice(0, 10);
 
       if (hasError) {
         setLoginLoading(false);
+        try {
+          sessionStorage.removeItem("macollo_active_session");
+        } catch (_) {}
         if (welcomeVideo) {
           welcomeVideo.pause();
           welcomeVideo.currentTime = 0;
@@ -1024,19 +1042,14 @@ const today = new Date().toISOString().slice(0, 10);
         errorMsg.textContent = "Credenciales incorrectas. Verifica tus datos y contraseña.";
         errorMsg.classList.remove("hidden");
       } else {
-        // Esperar que termine la animación de bienvenida del video antes de navegar
-        try {
-          await videoWaitPromise;
-        } catch (_) {}
-
-        try {
-          sessionStorage.setItem("macollo_active_session", "1");
-        } catch (_) {}
         window.location.href = safeDesde;
       }
     } catch (err: any) {
       console.error(err);
       setLoginLoading(false);
+      try {
+        sessionStorage.removeItem("macollo_active_session");
+      } catch (_) {}
       if (welcomeVideo) {
         welcomeVideo.pause();
         welcomeVideo.currentTime = 0;
@@ -1188,7 +1201,7 @@ const today = new Date().toISOString().slice(0, 10);
         sessionStorage.setItem("macollo_active_session", "1");
       } catch (_) {}
 
-      await playWelcomeVideo(3200);
+      await playWelcomeVideo(6000);
 
       const loginIdentifier = email || phone || name;
       await signIn("credentials", {
