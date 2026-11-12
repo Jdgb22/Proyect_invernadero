@@ -13,13 +13,17 @@ const today = new Date().toISOString().slice(0, 10);
     <!-- Video de bienvenida -->
     <video
       id="welcome-video"
-      src="/newwelcome.mp4#t=0.001"
+      autoplay
+      loop
       muted
       playsinline
       webkit-playsinline
       preload="auto"
-      class="absolute inset-0 w-full h-full object-cover object-center"
-      style="z-index:1;"></video>
+      class="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+      style="z-index:1;"
+    >
+      <source src="/newwelcome.mp4" type="video/mp4" />
+    </video>
 
     <!-- Degradado inferior -->
     <div
@@ -752,6 +756,34 @@ const today = new Date().toISOString().slice(0, 10);
     });
   }
 
+  function startWelcomeVideo() {
+    if (!welcomeVideo) return;
+    welcomeVideo.muted = true;
+    (welcomeVideo as any).defaultMuted = true;
+    welcomeVideo.playsInline = true;
+    welcomeVideo.loop = true;
+
+    const playPromise = welcomeVideo.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        console.warn("Autoplay inicial bloqueado o diferido:", err);
+        const playOnInteraction = () => {
+          if (welcomeVideo && welcomeVideo.paused) {
+            welcomeVideo.play().catch(() => {});
+          }
+        };
+        window.addEventListener("click", playOnInteraction, { once: true });
+        window.addEventListener("touchstart", playOnInteraction, { once: true });
+        window.addEventListener("keydown", playOnInteraction, { once: true });
+      });
+    }
+  }
+
+  startWelcomeVideo();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startWelcomeVideo, { once: true });
+  }
+
   if (audioToggleBtn && welcomeVideo && iconMuted && iconUnmuted) {
     audioToggleBtn.addEventListener("click", () => {
       welcomeVideo.muted = !welcomeVideo.muted;
@@ -761,6 +793,9 @@ const today = new Date().toISOString().slice(0, 10);
       } else {
         iconMuted.classList.add("hidden");
         iconUnmuted.classList.remove("hidden");
+      }
+      if (welcomeVideo.paused) {
+        welcomeVideo.play().catch(() => {});
       }
     });
   }
@@ -879,26 +914,13 @@ const today = new Date().toISOString().slice(0, 10);
     if (btnForgotResetSpinner) btnForgotResetSpinner.classList.toggle("hidden", !on);
   }
 
-  // Reproducir el video de bienvenida en segundo plano sin retrasar el inicio de sesión
+  // Asegurar que el video de bienvenida se esté reproduciendo
   function playWelcomeVideo() {
     try {
-      const farmerPanel = document.getElementById("farmer-panel");
-      if (farmerPanel && window.innerWidth < 1024) {
-        farmerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (welcomeVideo && welcomeVideo.paused) {
+        welcomeVideo.play().catch(() => {});
       }
-
-      if (welcomeVideo) {
-        welcomeVideo.currentTime = 0;
-        const playPromise = welcomeVideo.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.warn("El navegador bloqueó el video:", err);
-          });
-        }
-      }
-    } catch (vidErr) {
-      console.warn("No se pudo reproducir el video:", vidErr);
-    }
+    } catch (_) {}
   }
 
   // Login con Google
@@ -920,7 +942,6 @@ const today = new Date().toISOString().slice(0, 10);
         setLoginLoading(false);
         errorMsg.textContent = "Error al conectar con Google. Intenta nuevamente.";
         errorMsg.classList.remove("hidden");
-        if (welcomeVideo) welcomeVideo.pause();
       }
     });
   }
@@ -942,7 +963,7 @@ const today = new Date().toISOString().slice(0, 10);
 
       setLoginLoading(true);
 
-      // Reproducir video en segundo plano sin bloquear el login
+      // Asegurar video en segundo plano sin bloquear el login
       playWelcomeVideo();
       
       let hasError = false;
@@ -992,7 +1013,6 @@ const today = new Date().toISOString().slice(0, 10);
         setLoginLoading(false);
         errorMsg.textContent = "Credenciales incorrectas. Verifica tus datos y contraseña.";
         errorMsg.classList.remove("hidden");
-        if (welcomeVideo) welcomeVideo.pause();
       } else {
         try {
           sessionStorage.setItem("macollo_active_session", "1");
@@ -1004,7 +1024,6 @@ const today = new Date().toISOString().slice(0, 10);
       setLoginLoading(false);
       errorMsg.textContent = "Error inesperado al iniciar sesión. Intenta nuevamente.";
       errorMsg.classList.remove("hidden");
-      if (welcomeVideo) welcomeVideo.pause();
     }
   });
 
@@ -1167,7 +1186,6 @@ const today = new Date().toISOString().slice(0, 10);
       regFeedbackMsg.textContent = "Error inesperado al crear la cuenta. Intenta nuevamente.";
       regFeedbackMsg.className = "p-3 rounded-lg bg-red-50 text-sm text-red-600 text-center border border-red-100 font-medium dark:bg-red-900/20 dark:border-red-800 dark:text-red-400";
       regFeedbackMsg.classList.remove("hidden");
-      if (welcomeVideo) welcomeVideo.pause();
     }
   });
 
