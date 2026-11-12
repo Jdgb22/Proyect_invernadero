@@ -639,9 +639,6 @@ const today = new Date().toISOString().slice(0, 10);
   const tabRegisterBtn = document.getElementById("tab-register-btn") as HTMLButtonElement;
   const authTabIndicator = document.getElementById("auth-tab-indicator")!;
   const TAB_BASE = "relative z-10 flex-1 py-2.5 px-4 text-sm rounded-xl transition-colors";
-  try {
-    sessionStorage.removeItem("macollo_active_session");
-  } catch (_) {}
 
   const linkToRegister = document.getElementById("link-to-register");
   const linkToLogin = document.getElementById("link-to-login");
