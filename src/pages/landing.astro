@@ -135,6 +135,25 @@ const equipo = [
   "Victor Cordoba",
 ];
 
+const tickerItems = [
+  "20 plantas por finca",
+  "Lecturas con fecha y hora",
+  "Semáforo agronómico",
+  "Diagnóstico de trips con IA",
+  "Machine learning para el campo",
+  "IA que explica el porqué",
+  "Visión por computador BioCLIP",
+  "Confianza por imagen",
+  "Alertas tempranas",
+  "Tendencias por planta",
+  "Umbrales por cultivo",
+  "Clima y calidad del aire",
+  "Historial trazable",
+  "Multi-finca y equipos",
+  "Sheets, CSV y Excel",
+  "Decisiones con evidencia",
+];
+
 const iconos: Record<string, string> = {
   sheet:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18M15 3v18"/></svg>',
@@ -334,22 +353,12 @@ const iconos: Record<string, string> = {
       <!-- TIRA DE CONFIANZA -->
       <div class="ticker" aria-label="Capacidades destacadas">
         <div class="ticker-track">
-          {
-            [
-              "20 plantas por finca",
-              "Lecturas con fecha y hora",
-              "Semáforo agronómico",
-              "Diagnóstico de trips con IA",
-              "Multi-finca y equipos",
-              "Sheets, CSV y Excel",
-              "Historial trazable",
-            ].map((item) => (
-              <span>
-                {item}
-                <b>✦</b>
-              </span>
-            ))
-          }
+          <div class="ticker-group">
+            {tickerItems.map((item) => (<span>{item}<b>✦</b></span>))}
+          </div>
+          <div class="ticker-group" aria-hidden="true">
+            {tickerItems.map((item) => (<span>{item}<b>✦</b></span>))}
+          </div>
         </div>
       </div>
 
@@ -1337,16 +1346,26 @@ const iconos: Record<string, string> = {
   .ticker-track {
     display: flex;
     width: max-content;
-    gap: 34px;
-    animation: ticker 34s linear infinite;
+    animation: ticker 62s linear infinite;
     font-size: 13px;
     font-weight: 700;
     color: var(--ink-soft);
   }
+  .ticker:hover .ticker-track {
+    animation-play-state: paused;
+  }
+  .ticker-group {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 34px;
+    padding-right: 34px;
+  }
   .ticker-track span {
     display: inline-flex;
     align-items: center;
-    gap: 34px;
+    gap: 14px;
+    white-space: nowrap;
   }
   .ticker-track b {
     color: var(--lime);
