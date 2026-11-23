@@ -1,5 +1,7 @@
 # ADR-003: Auth.js (Credentials + Google) con sesión JWT y rol
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](../README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **ADR-003**.
+
 ## Status
 
 Accepted
@@ -10,7 +12,7 @@ Accepted
 
 ## Context
 
-Se requiere login email/contraseña contra PG, registro con roles (Campesino/Agrónomo/Admin/Super admin), OAuth Google y recuperación de contraseña, funcionando tras proxy HTTPS (Vercel/Cloudflare) y en serverless sin sesiones pegajosas.
+Se requiere login email/celular y contraseña contra PG, registro con roles (`Campesino`/`Agropecuario`; la migración 001 normaliza `Agronomo`→`Agropecuario` y `Super admin`→`Superadmin`), OAuth Google y recuperación de contraseña, funcionando tras proxy HTTPS (Vercel/Cloudflare) y en serverless sin sesiones pegajosas.
 
 ## Decision
 
@@ -41,4 +43,10 @@ Auth.js vía `auth-astro` (`auth.config.ts`): proveedores Credentials (bcrypt co
 - Toda cuenta nace `Campesino` (el handler ignora el rol del formulario); promover con `UPDATE users`.
 - Cambio de rol exige re-login (el JWT no se refresca solo).
 - `AUTH_SECRET` obligatorio en prod; Google exige callback autorizado.
-- Brecha: `middleware.ts` solo guarda `/dashboard` (inexistente); endurecer según AUTH.md §7.
+- Corrección: la brecha histórica del guardián sobre `/dashboard` (inexistente) quedó resuelta; `middleware.ts` protege las rutas reales, incluida `/gallery` (ver AUTH §7 y SECURITY §2).
+
+## Trazabilidad
+
+| Tema     | Código / configuración                | Documento relacionado | Verificación                   |
+| :------- | :------------------------------------ | :-------------------- | :----------------------------- |
+| Decisión | `auth.config.ts`, `src/middleware.ts` | [AUTH](../AUTH.md)    | Estado y consecuencias del ADR |

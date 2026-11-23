@@ -1,5 +1,7 @@
 # 🌿 Macollo - Monitoreo Agronómico
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./docs/README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-01**.
+
 Plataforma web **multi-finca** para el **monitoreo agronómico**: matriz de **20 plantas (4 filas × 5 columnas)** por finca, métricas de suelo y ambiente (pH, temperaturas, humedad, crecimiento, sanidad, productividad), **historial por fecha** con importación/exportación Excel y sincronización con **Google Sheets**, más clima externo (**Open-Meteo** global; **SIATA** local latente). **Diagnóstico fitosanitario con IA para detección de trips usando la API [macollo-trips-api](https://github.com/VoctorMCL/macollo-trips-api) (BioCLIP 2.5)**, **galería de fotos por finca** con vista ampliable y almacenamiento por finca activa. Roles: `Superadmin`, `Admin`, `Agropecuario`, `Campesino`.
 
 **Autores:**
@@ -13,6 +15,8 @@ Plataforma web **multi-finca** para el **monitoreo agronómico**: matriz de **20
 
 > 👤 **¿Eres usuario final?** Ve directo al [Manual de Usuario](./docs/USER_MANUAL.md). Este README es para desarrollo y despliegue.
 
+> 🌐 **Landing:** la página pública se sirve en `/landing` en cualquier host (incluido `http://localhost:4321/landing`). El dominio de publicación está pendiente de definición; ver [LANDING](./docs/LANDING.md) y [ADR-008](./docs/decisions/ADR-008-landing-subdominio.md).
+
 ---
 
 ## ✨ Funcionalidades por módulo
@@ -21,7 +25,7 @@ Plataforma web **multi-finca** para el **monitoreo agronómico**: matriz de **20
 | :--------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Inicio** (`/`)                               | Dashboard con matriz 4×5 de plantas, semáforo 🟢 Óptimo / 🟡 Atención / 🔴 Crítico / ⚪ Sin datos, cards de humedad y temp. aire, modal de detalle por planta (pH, temp suelo/aire, crecimiento, productividad, sanidad). Para **Superadmin/Admin** sin finca elegida, el inicio es el panel de fincas (`/admin`). |
 | **Métricas** (`/metrics`)                      | Promedios globales y por fila, badges de pH (Óptimo 6.0–6.8 / Atención / Crítico), sanidad y productividad, tabla estilo Excel con modal y gráficos por planta.                                                                                                                                                    |
-| **Historial** (`/history`)                     | Consulta cronológica por fecha, **importación Excel/CSV**, **conexión Google Sheets** (URL pública → CSV, **solo el dueño de la finca**), **exportación `.xlsx`** con ExcelJS.                                                                                                                                     |
+| **Historial** (`/history`)                     | Consulta cronológica por fecha, **importación Excel/CSV**, **conexión Google Sheets** (URL pública → CSV; permitida a dueño, staff y miembro), **exportación `.xlsx`** con ExcelJS.                                                                                                                                |
 | **Configuración** (`/settings`)                | Perfil (nombre editable, correo solo lectura), tema Claro/Oscuro/Auto, frecuencia de sincronización IoT, notificaciones y zona de peligro.                                                                                                                                                                         |
 | **Fincas** (`/farms`, `/farms/[id]`, `/admin`) | Multi-tenant: crear finca o unirse por invitación (código 8 chars), cambiar finca activa, gestionar miembros e invitaciones. `/admin` es el panel del staff (fincas + **Entrar**; usuarios y hard-delete solo `Superadmin`).                                                                                       |
 | **Auth** (`/` → `/api/auth/*`)                 | Login email/celular+contraseña (bcrypt + PostgreSQL), registro con `accountType` (`Campesino`/`Agropecuario`), OAuth Google, recuperación por código (email/SMS, ~15 min). Sesión JWT con rol releído de BD. (`/signin` es alias a `/`.)                                                                           |
@@ -67,7 +71,8 @@ Construido con SSR moderno. Detalle en [ARCHITECTURE.md](./ARCHITECTURE.md) y [d
 ├── middleware.ts         # Guarda rutas privadas + security headers + rate-limit + fix proxy
 └── env.d.ts
 /auth.config.ts           # Credentials + Google, JWT con rol, PostgresAdapter
-/scripts                  # seed-admin.mjs, seed-demo.mjs, run-lan.sh (red local)
+/scripts                  # seed-admin.mjs, seed-demo.mjs, seed-production.mjs, migrate-neon.mjs,
+                          # run-lan.sh (red local), generador de documentación, generador de capturas
 /public/uploads/gallery   # Fotos subidas desde el escáner (runtime)
 ```
 
@@ -140,7 +145,7 @@ Construido con SSR moderno. Detalle en [ARCHITECTURE.md](./ARCHITECTURE.md) y [d
    - Ve a `/` → pestaña **Registrarse** → crea tu usuario eligiendo `Campesino` (te unes con un código) o `Agropecuario` (creas tu finca).
    - Las cuentas privilegiadas (`Admin`/`Superadmin`) se crean por script: `node scripts/seed-admin.mjs`.
    - Inicia sesión → entrarás al Dashboard `/` (o a `/admin` si eres staff sin finca elegida, o a `/farms` si aún no tienes finca activa).
-   - Si ves tarjetas grises (`--`/`N/D`), ve a `/history` e importa un Excel/CSV o conecta Google Sheets (solo el **dueño** de la finca).
+   - Si ves tarjetas grises (`--`/`N/D`), ve a `/history` e importa un Excel/CSV o conecta Google Sheets (según permisos de la finca: dueño, staff o miembro).
 
 ### 🔬 Diagnóstico de Trips (conexión con la API de Machine Learning)
 
@@ -173,7 +178,7 @@ Define en `.env` (o en Vercel) las variables:
 | `ML_API_URL` | URL base del servicio ML en Google Cloud Run (o local para pruebas).                                 | `https://macollo-trips-api-961314735418.us-central1.run.app` |
 | `ML_API_KEY` | Clave que se envía en la cabecera `X-API-Key` (debe coincidir con la configurada en el servicio ML). | `mk_...`                                                     |
 
-La web no llama directamente al servicio: el endpoint `src/pages/api/trips-diagnosis.ts` reenvía la imagen a `${ML_API_URL}/api/predict`. Esto evita CORS y mantiene la API key en el servidor. Cuenta además con renovación automática de sesión para resiliencia ante reinicios en entornos serverless.
+La web no llama directamente al servicio: el endpoint `src/pages/api/trips-diagnosis.ts` reenvía la imagen a `${ML_API_URL}/api/predict`. Esto evita CORS y mantiene la API key en el servidor. La inferencia es directa: el único reintento ocurre ante un `401` del panel, renovando la sesión; no hay reintentos artificiales por `503` (`4e977f5`).
 
 #### 3. Probar desde el celular (misma Wi-Fi)
 
@@ -227,17 +232,20 @@ Roles: `Superadmin` · `Admin` · `Agropecuario` · `Campesino`. El rol se guard
 
 - [👤 Manual de Usuario](./docs/USER_MANUAL.md) - Guía paso a paso (roles, dashboard 4×5 + 3D, métricas, historial, settings, FAQ).
 - [📑 Índice de docs](./docs/README.md) - Mapa de toda la documentación.
+- [📄 Documentación unificada (PDF)](./docs/UNIFIED/Macollo-Documentacion-Unificada.pdf) - Entregable formal: 47 documentos, 8 ADR y el anexo visual.
+- [📸 Capturas verificadas](./docs/CAPTURAS.md) - CAP-01…CAP-08 tomadas con Playwright, sin Astro Admin ni `/admin`.
 - [Arquitectura](./docs/ARCHITECTURE.md) - Estructura `src/`, flujos, decisiones (SSR, JWT, proxy SIATA, DB).
 - [Cámara y ML](./docs/CAMERA-ML.md) - Integración con [macollo-trips-api](https://github.com/VoctorMCL/macollo-trips-api), configuración y pruebas desde celular.
-- [Rutas](./docs/ROUTES.md) - Rutas reales (`/` login+portada, `/metrics`, `/history`, `/gallery`, `/settings`, `/admin` + API).
+- [Rutas](./docs/ROUTES.md) - Rutas reales (`/` login+portada, `/metrics`, `/history`, `/gallery`, `/settings`, `/admin`, `/landing` + API).
+- [Landing](./docs/LANDING.md) - Ruta `/landing` (visible en localhost), contenido, diseño, enlaces y validación de la landing pública.
 - [Endpoints](./docs/ENDPOINTS.md) - Referencia exacta de endpoints (auth, fincas, invitaciones, admin, datos, galería, ML) con bodies, códigos y `curl`.
 - [Auth](./docs/AUTH.md) - Credentials + Google, JWT con rol, recuperación 6 dígitos/15 min, brechas.
 - [Base de Datos](./docs/DATABASE.md) - Esquemas auth + agronómico multi-tenant (`fincas`, `plantas`, `lecturas`, `photos`), ER.
 - [Despliegue](./docs/DEPLOYMENT.md) - Vercel SSR, env vars, checklist y rollback.
-- [Decisiones (ADRs)](./docs/decisions/) - Los 7 porqués (SSR, PG, Auth.js, SIATA, Sheets, bcrypt, bypass SIATA).
+- [Decisiones (ADRs)](./docs/decisions/) - Los 8 porqués (SSR, PG, Auth.js, SIATA, Sheets, bcrypt, bypass SIATA, landing en `/landing`).
 - [Datos](./docs/DATA-DICTIONARY.md) + [Protocolo de campo](./docs/FIELD-PROTOCOL.md) + [Demo](./docs/DEMO-DATA.md) - Campos, cómo llenar la hoja y fixture CSV.
 - [Seguridad](./docs/SECURITY.md) + [Roadmap](./docs/ROADMAP.md) + [Changelog](./docs/CHANGELOG.md) - Política, plan y historial.
-- [Requisitos](./docs/REQUIREMENTS.md) - SRS v1.0 con trazabilidad RF→CU/US.
+- [Requisitos](./docs/REQUIREMENTS.md) - SRS v1.1 con trazabilidad RF→CU/US.
 - [UML](./docs/UML.md) - Clases, componentes, despliegue y estados.
 - [Testing](./docs/TESTING.md) - Plan, casos E2E/API y checklist release.
 - [Contribuir](./docs/CONTRIBUTING.md) - Flujo, commits, DoD y revisión de PR.
@@ -245,3 +253,9 @@ Roles: `Superadmin` · `Admin` · `Agropecuario` · `Campesino`. El rol se guard
 - [Casos de uso](./docs/USE_CASES.md) + [Historias](./docs/USER_STORIES.md) - Requisitos (lo no implementado va marcado ⚠️).
 - [Secuencia](./docs/SEQUENCE_DIAGRAMS.md) + [Actividades](./docs/ACTIVITIES.md) - Diagramas Mermaid verificados.
 - **JSDoc en código:** `src/backend/services/`, `src/middleware.ts` y `auth.config.ts` están documentados para autocompletado del editor.
+
+## Trazabilidad
+
+| Tema             | Código / configuración             | Documento relacionado                                                 | Verificación                           |
+| :--------------- | :--------------------------------- | :-------------------------------------------------------------------- | :------------------------------------- |
+| Stack y comandos | `package.json`, `astro.config.mjs` | [ARCHITECTURE](./ARCHITECTURE.md), [README de docs](./docs/README.md) | `pnpm build` y `pnpm exec astro check` |

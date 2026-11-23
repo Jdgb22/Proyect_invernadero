@@ -1,5 +1,7 @@
 # Changelog — Macollo
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-28**.
+
 > Reconstruido desde `git log` (oct-2026). En adelante: entrada por release según CONTRIBUTING.
 
 ## [Unreleased]
@@ -19,11 +21,13 @@
 - **Rol elegible al registrarse**: `accountType` ∈ {`Campesino` (def.), `Agropecuario`} (nuevas dependencias `nanoid` + `nanoid-dictionary`).
 - **Códigos de invitación reales**: 8 caracteres con `nanoid` + `nanoid-dictionary` (sin prefijo `FARM-`), tope de 5 fincas por usuario.
 - **Inicio por rol (staff → panel)**: `GET /` redirige a `/admin` si el usuario es `Superadmin`/`Admin` y no tiene finca activa; el panel añade la acción **Entrar** por finca (fija `finca_activa` y abre el tablero). Navbar del staff con `Panel` + (`Tablero`/`Métricas`/`Historial` solo con finca activa).
-- Helper `canConnectSheets(access)` en `authz.ts`: habilita Google Sheets **solo al dueño** de la finca.
+- Helper `canConnectSheets(access)` en `authz.ts`: habilita Google Sheets a **dueño, staff y miembro** de la finca (corrección documental 2026-11-23).
+- **Landing pública** en `src/pages/landing.astro`, disponible en `/landing` en cualquier host (incluido localhost): hero con mock de matriz 4×5, problema, solución, qué hacemos, por qué, para quién, stack, equipo y CTA; paleta del proyecto, animaciones con `prefers-reduced-motion` y responsive. Canonical derivado de la petición y CTA relativo a `/`.
+- Documentación [LANDING](./LANDING.md) (DOC-47) y [ADR-008](./decisions/ADR-008-landing-subdominio.md): contenido, diseño, validación y decisión de publicar primero en `/landing`, difiriendo el subdominio hasta definir el dominio real.
 
 ### Changed
 
-- `middleware.ts`: security headers + protección de páginas/APIs reales + rate-limit por IP.
+- `middleware.ts`: security headers + protección de páginas/APIs reales + rate-limit por IP (sin cambios para la landing: `/landing` es una ruta pública más).
 - `register`/`forgot`/`reset-password`: errores genéricos, contraseña mín. 8 en servidor y cliente.
 - `astro.config.mjs`: `security.checkOrigin: true`.
 - `siata`, `sync-sheets`, `export-excel`: ahora exigen sesión (y acceso a la finca activa).
@@ -45,13 +49,15 @@
 
 - Eliminados artefactos con datos (`test-db.js`, `cookies.txt`, `scratch.js`); `.gitignore` endurecido.
 - Autorización por handler (no solo middleware) en todas las rutas de datos.
-- Google Sheets **dueño-only**: ni miembros ni staff sincronizan el documento de una finca.
+- Google Sheets con control por finca: sincronizan dueño, staff y miembro (`canConnectSheets` en `authz.ts`); la corrección documental se registró en DOC-CONVENTIONS §5.
 
 ### Documentation
 
 - Documentación verificada contra `src/`: ARCHITECTURE, ROUTES, ENDPOINTS, AUTH, DATABASE, DEPLOYMENT, REQUIREMENTS (SRS), UML, TESTING, CONTRIBUTING, GLOSSARY, TROUBLESHOOTING, DATA-DICTIONARY, FIELD-PROTOCOL, DEMO-DATA (+ CSV demo), SECURITY, ROADMAP.
 - ADRs 001–007 (`docs/decisions/`); ADR-004 parcialmente superseded por ADR-007.
 - MANUAL_USUARIO ampliado (roles, matriz 4×5, 3D, clima/viento, Sheets, FAQ).
+- **Documentación unificada 2026-11-23:** 46 documentos (`DOC-00`…`DOC-46`) y 7 ADR en `docs/UNIFIED/Macollo-Documentacion-Unificada.pdf`, generados desde `manifest.json` por el generador de documentación (no incluido); índice canónico en `docs/README.md`, convenciones en `docs/DOC-CONVENTIONS.md` y matriz RF/CU/US → código → prueba en `docs/TRACEABILITY-MATRIX.md`.
+- **Anexo visual DOC-46:** el generador de capturas (no incluido) toma 8 capturas reales con Playwright (CAP-01…CAP-08, escritorio y móvil) en `docs/capturas/`, sin Astro Admin ni `/admin`; el generador las incrusta en el PDF.
 
 ### Changed (previo)
 
@@ -99,3 +105,9 @@
 ## 2026-09-24/29 — Marca y base
 
 - Rebrand AquaSens → Macollo + gulupa (`c16276c`, `0ed6232`, `54a581e`); schemas a `src/db/` (`ad813e6`).
+
+## Trazabilidad
+
+| Tema      | Código / configuración | Documento relacionado                                                      | Verificación  |
+| :-------- | :--------------------- | :------------------------------------------------------------------------- | :------------ |
+| Historial | `git log`              | [CONTRIBUTING](./CONTRIBUTING.md), [DOC-CONVENTIONS](./DOC-CONVENTIONS.md) | `git log -15` |

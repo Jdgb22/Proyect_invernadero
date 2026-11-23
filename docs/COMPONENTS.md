@@ -1,87 +1,137 @@
 # Componentes de frontend
 
-> Ubicación: `src/frontend/components/`. Astro (islas React cuando aplica). Estado a octubre 2026.
+> Verificado contra el código el 2026-11-23. Documento rector: docs/README.md. Parte de la documentación unificada (docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md). Identificador: **DOC-27**.
 
----
+## Convenciones y corrección de deriva
 
-## `BlobatarAvatar.tsx`
+Ubicación: `src/frontend/components/`. Doce componentes reales (10 `.astro` y 2 `.tsx`), más el layout `src/frontend/layouts/Layout.astro` y la hoja `src/frontend/styles/global.css`, descritos al final.
 
-Avatar generado proceduralmente con **Blobatar** (`@blobatar/react`) y seguimiento de mirada (`useGaze`) en dispositivos con puntero fino.
+**Corrección de deriva:** la versión anterior documentaba `TripsDiagnosticModal.tsx`. El archivo real es **`src/frontend/components/TripsDiagnosticModal.astro`** (`src/pages/index.astro:8`); no es una isla React y no acepta props. La tabla de «otros componentes» de esa versión omitía los contratos de props, estado, eventos y rutas: se sustituye íntegramente por las tablas y fichas siguientes.
 
-**Props:**
+Todos los componentes se renderizan en servidor en una ruta Astro SSR (`astro.config.mjs:14-20`, adaptador Vercel). Solo `BlobatarAvatar.tsx` y `SileoProvider.tsx` se hidratan explícitamente con `client:load`; el resto de la interactividad es JavaScript vanilla incluido en `<script>` de cada `.astro` (Astro lo empaqueta y ejecuta en el navegador). Donde se indica «estado cliente», se trata de variables del script o de `localStorage`, no de estado React.
 
-| Prop   | Tipo     | Por defecto | Descripción                                             |
-| :----- | :------- | :---------- | :------------------------------------------------------ |
-| `name` | `string` | —           | Nombre usado para generar el avatar / letra de fallback |
-| `size` | `number` | `40`        | Tamaño en px (cuadrado)                                 |
+## Inventario: props, estado cliente, eventos y rutas
 
-**Comportamiento:**
+| Componente                   | Tipo                  | Props / entrada                                                                                                | Estado cliente principal                                                                                                                                            | Eventos que publica                                                                                | Rutas que lo montan                                                                                      |
+| :--------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| `BlobatarAvatar.tsx`         | React (`client:load`) | `name: string` (obligatoria), `size?: number` = `40` (`BlobatarAvatar.tsx:7-15`)                               | `canHover`, `error` (`:16-17`); mirada con `useGaze` (`:18-31`)                                                                                                     | Ninguno                                                                                            | Isla dentro de `Navbar.astro:145,236` y `Settings.astro:94`                                              |
+| `SileoProvider.tsx`          | React (`client:load`) | Ninguna                                                                                                        | Expone `window.sileo` en `useEffect` (`SileoProvider.tsx:5-12`)                                                                                                     | Ninguno                                                                                            | `Layout.astro:3,65` → todas las páginas con Layout                                                       |
+| `TripsDiagnosticModal.astro` | Astro + `<script>`    | Ninguna                                                                                                        | `videoStream`, `activeImageBlob`, `warmupPolls`, `warmupPollTimer` (`TripsDiagnosticModal.astro:213-214, 435-436`)                                                  | Ninguno; escucha `macollo:weather-updated` y `macollo:preferences-changed` (`:243-245`)            | `/` autenticado (`src/pages/index.astro:37`)                                                             |
+| `Dashboard.astro`            | Astro + `<script>`    | Ninguna; resuelve finca con `resolveActiveFinca(Astro.request)` (`Dashboard.astro:11-18`)                      | `weatherLocation`, `weatherTimer`, `weatherTimer` de GPS en `localStorage`, `serverRecords`, `lecturasTimer`, escena Three.js (`Dashboard.astro:418-596, 909-1056`) | `macollo:weather-updated` (`:634-638`), `aquasens:data-synced` (`:1119-1123`), `storage` (`:1124`) | `/` con finca activa (`src/pages/index.astro:35`)                                                        |
+| `Gallery.astro`              | Astro, solo servidor  | Ninguna; usa cookie `finca_activa` (`Gallery.astro:7-25`)                                                      | Ninguno                                                                                                                                                             | Ninguno                                                                                            | `/gallery` (`src/pages/gallery/index.astro:3-9`)                                                         |
+| `GalleryDetail.astro`        | Astro + `<script>`    | `Astro.params.id`; redirige a `/gallery` si falta id o foto (`GalleryDetail.astro:7-13, 51-53`)                | Estado de zoom solo con clases CSS (`GalleryDetail.astro:268-285`)                                                                                                  | Ninguno                                                                                            | `/gallery/[id]` (`src/pages/gallery/[id].astro:3-9`)                                                     |
+| `History.astro`              | Astro + `<script>`    | `currentUserName?`, `currentUserRole?`, defaults «Administrador» / «Líder de Cultivo» (`History.astro:16-24`)  | `state` (fecha, filtros, gráfico activo, filas pendientes), `baseRecords`, `FINCA_SCOPE`, `historySyncTimer` (`History.astro:1252-1300, 2783-2817`)                 | `aquasens:data-synced` (`:2595-2599, 2701-2705`), `storage` (`:2600, 2706`)                        | `/history` (`src/pages/history.astro:34`)                                                                |
+| `Metrics.astro`              | Astro + `<script>`    | `currentUserName?`, `currentUserRole?`, mismos defaults (`Metrics.astro:21-26`)                                | `plantsState`, `serverRecords`, `currentOpenPlant`, `metricsSyncTimer`, modales y filtros (`Metrics.astro:1631-1676, 2191-2340, 3013-3035`)                         | `aquasens:data-synced` (`:3097-3101`), `storage` (`:3102`)                                         | `/metrics` (`src/pages/metrics.astro:34`)                                                                |
+| `Navbar.astro`               | Astro + `<script>`    | Ninguna; sesión, rol y fincas desde servidor (`Navbar.astro:8-30`)                                             | Importación dinámica de `signOut`; menú móvil por clases; selector de finca (`Navbar.astro:256-343`)                                                                | Ninguno (recarga con `location.reload()` tras cambiar de finca)                                    | `/`, `/metrics`, `/history`, `/settings`, `/farms`, `/farms/[id]`, `/admin`                              |
+| `NoFarm.astro`               | Astro, solo servidor  | `tieneFincas?: boolean` = `false` (`NoFarm.astro:2-6`)                                                         | Ninguno                                                                                                                                                             | Ninguno                                                                                            | `/` sin finca activa (`src/pages/index.astro:35`)                                                        |
+| `Settings.astro`             | Astro + `<script>`    | Ninguna; datos de sesión, fincas y permisos desde servidor (`Settings.astro:15-37`)                            | Pestañas activas, preferencias en `localStorage`, `fincaScope`, imagen redimensionada (`Settings.astro:356-440, 447-481`)                                           | Ninguno; usa `window.sileo` para toasts (`:392` en adelante)                                       | `/settings` autenticado (`src/pages/settings.astro:17`)                                                  |
+| `Welcome.astro`              | Astro + `<script>`    | Ninguna; `today` calculado en servidor (`Welcome.astro:1-3`); lee `?desde=` y `?code=` en cliente (`:833-838`) | `currentRegStep`, modo de autenticación, video/audio, validación de campos (`Welcome.astro:624-930`)                                                                | Ninguno; redirige con `window.location.href` (`:1014, 1175`)                                       | `/` anónimo, `/settings` anónimo, `/metrics` anónimo, `/history` anónimo; alias `/signin` redirige a `/` |
 
-- En dispositivos con `hover` y `pointer: fine`, el blob sigue el cursor (`lookAt("pointer")`).
-- Si Blobatar falla al cargar, se muestra un círculo degradado con la inicial del nombre.
-- Se usa en **Settings → Perfil de Usuario** cuando el usuario no tiene imagen cargada.
+### Dependencias y modo de ejecución
 
-**Uso (isla React):**
+| Componente                   | Dependencias verificables                                                                                                                                                                                                                                     | Servidor                                                                                                                 | Cliente                                                                                          |
+| :--------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- |
+| `BlobatarAvatar.tsx`         | `@blobatar/react`, `useGaze`, `blobatar/*.css` (`BlobatarAvatar.tsx:1-5`)                                                                                                                                                                                     | Render inicial del fallback/avatar                                                                                       | `matchMedia('(hover: hover) and (pointer: fine)')`, seguimiento de puntero, fallback con inicial |
+| `SileoProvider.tsx`          | `sileo`, `sileo/styles.css` (`SileoProvider.tsx:2-3`)                                                                                                                                                                                                         | Render de `<Toaster />`                                                                                                  | Asigna la instancia a `window.sileo` para scripts Astro                                          |
+| `TripsDiagnosticModal.astro` | `../../shared/preferences` (`TripsDiagnosticModal.astro:211`); APIs `/api/trips-diagnosis`, `/api/gallery/upload`                                                                                                                                             | Solo markup del modal                                                                                                    | Cámara, canvas, compresión, health, inferencia y render de resultados                            |
+| `Dashboard.astro`            | `three`, `../../backend/services/weather`, `../../shared/plantMatrix`, `../../shared/serialize`, `../../shared/clientStorage`, `../../shared/preferences`, `../../shared/alerts` (`Dashboard.astro:399-416`); backend `farms`/`readings` en servidor (`:8-9`) | Consulta finca + lecturas; serializa registros en `#dashboard-initial-records` (`:391-396`)                              | Escena 3D, clima/AQI, GPS, matriz reactiva, sincronización Sheets                                |
+| `Gallery.astro`              | `pg` pool, `authz`, `farms` (`Gallery.astro:2-5`)                                                                                                                                                                                                             | Consulta `photos` + `users` filtrada por finca (`:29-42`)                                                                | Ninguno                                                                                          |
+| `GalleryDetail.astro`        | `pg` pool, `authz`, `farms` (`GalleryDetail.astro:2-5`)                                                                                                                                                                                                       | Consulta foto por `id` **y** `finca_id`; calcula `isOwner` (`:31-72`)                                                    | Zoom, `navigator.share`, copiar URL                                                              |
+| `History.astro`              | `plantMatrix`, `serialize`, `farms`, `readings` + en cliente `csv`, `recordsParser`, `clientStorage`, `preferences`, `alerts` (`History.astro:6-14, 1217-1247`)                                                                                               | Serializa `allRecords`, expone `fincaId`/`isOwner` (`:47-54`)                                                            | Filtros, gráficos SVG, importación CSV, Sheets, exportación                                      |
+| `Metrics.astro`              | `plantMatrix`, `badges`, `serialize`, `farms`, `readings` + en cliente `badges`, `clientStorage`, `preferences`, `alerts` (`Metrics.astro:7-19, 1607-1629`)                                                                                                   | Calcula promedios globales y por fila; serializa `#plants-data-source` (`:28-135`)                                       | Gráficos SVG, modales, filtros, alta de lectura, Sheets                                          |
+| `Navbar.astro`               | `auth-astro/server`, `authz`, `farms`, `BlobatarAvatar` (`Navbar.astro:2-6`); `auth-astro/client` en cliente (`:261`)                                                                                                                                         | Sesión, lista de fincas, cookie validada, rol y enlaces (`:8-67`)                                                        | Logout con CSRF, cambio de finca, menú móvil                                                     |
+| `NoFarm.astro`               | Ninguna                                                                                                                                                                                                                                                       | Mensaje y enlace a `/farms` (`:9-29`)                                                                                    | Ninguno                                                                                          |
+| `Settings.astro`             | `auth-astro/server`, `authz`, `farms`, `BlobatarAvatar` + en cliente `preferences`, `clientStorage` (`Settings.astro:2-13, 338-354`)                                                                                                                          | Sesión, permisos `puedeExportar`/`puedeRestablecer` (`:23-29`), atributos `data-finca-id`/`data-finca-nombre` (`:40-42`) | Pestañas (`:362-390`), perfil/avatar, preferencias, invitaciones, zonas de peligro               |
+| `Welcome.astro`              | `auth-astro/client` dinámico (`Welcome.astro:626-632`)                                                                                                                                                                                                        | Calcula `today` y renderiza video + formularios (`:1-623`)                                                               | Login/registro/recuperación, video, validaciones                                                 |
 
-```astro
-<BlobatarAvatar client:load name={userName} size={80} />
-```
+El helper `src/backend/services/serverFetch.ts` envuelve `undici.fetch` con un `Agent` (`autoSelectFamilyAttemptTimeout: 2500`, líneas 1-14); `src/backend/services/server-fetch.ts` es solo un re-export. **No es dependencia directa de ningún componente**: lo consumen `src/pages/api/weather.ts:5,23,44` y `src/pages/api/aqi.ts:4,25`, que son los endpoints invocados por `Dashboard.astro:621,693`.
 
----
+## Publicación y suscripción de eventos
 
-## `SileoProvider.tsx`
+| Evento                                   | Publicado por                                                                                        | Suscriptores                                                                                                                                                 | Detalle / efecto                                                   |
+| :--------------------------------------- | :--------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------- |
+| `macollo:weather-updated`                | `Dashboard.astro:634-638`                                                                            | `TripsDiagnosticModal.astro:243`                                                                                                                             | `detail.temperatureC`; actualiza el campo de temperatura del modal |
+| `macollo:preferences-changed`            | `src/shared/preferences.ts:110-116` (lo emiten los setters de tema/unidad/frecuencia/notificaciones) | `TripsDiagnosticModal.astro:244`, `Layout.astro:81` vía `onPreferencesChanged`, `Dashboard.astro:1146`, `Metrics.astro:3125-3128`, `History.astro:2814-2817` | Reaplica unidad de temperatura y reprograma la sincronización      |
+| `aquasens:data-synced` (nombre heredado) | `Dashboard.astro:1119-1123`, `Metrics.astro:3097-3101`, `History.astro:2595-2599, 2701-2705`         | `Dashboard.astro:1148`, `Metrics.astro:3130`                                                                                                                 | Recarga registros en memoria tras Sheets o importación             |
+| `storage` (nativo)                       | `Dashboard.astro:1124`, `Metrics.astro:3102`, `History.astro:2600, 2706`                             | `Dashboard.astro:1147`, `Metrics.astro:3129`, `Layout.astro:52-54` (tema)                                                                                    | Sincroniza pestañas y preferencias                                 |
+| `keydown` (Escape)                       | —                                                                                                    | `GalleryDetail.astro:283-285`                                                                                                                                | Cierra el zoom                                                     |
 
-Proveedor de notificaciones toast con **Sileo** (`sileo`). Expone la instancia en `window.sileo` para que los scripts Vanilla JS de Astro (p. ej. `Settings.astro`) usen la misma instancia que renderiza el `<Toaster />`.
+Estado global compartido, distinto de los eventos: `window.__MACOLLO_WEATHER__` lo escribe `Dashboard.astro:625-633` y lo lee `TripsDiagnosticModal.astro:235`; `window.__MACOLLO_FINCA_ID__` lo definen `Dashboard.astro:386-390`, `Metrics.astro:135`, `History.astro:54`; `window.__MACOLLO_IS_OWNER__` lo define `History.astro:54`; `window.sileo` lo define `SileoProvider.tsx:9`.
 
-**Props:** ninguna.
+## Fichas por componente
 
-**Uso:** se monta en el layout (`Layout.astro`) para que todo el sitio disponga de toasts:
+### `Layout.astro` (layout)
 
-```astro
-<SileoProvider client:load />
-```
+Importa `global.css` y `SileoProvider`, fija `lang="es-co"`, icono `/gulupa.png`, `<title>Macollo</title>` y un script inline que aplica tema antes del pintado (`Layout.astro:1-58, 59-65`). El `<body>` contiene `<slot />`, el proveedor de toasts y un script que aplica tema y unidad de temperatura al documento (`:63-82`). **No declara `interface Props` y el título está fijo en la línea 61**: aunque `src/pages/gallery/index.astro:8` y otras páginas pasan `title="…"`, el atributo no se consume (deriva documentada, no funcionalidad implementada).
 
-**Ejemplo desde script de Astro:**
+### `global.css`
 
-```js
-const getSileo = () => (window as any).sileo;
-getSileo()?.success({ title: "Operación completada." });
-getSileo()?.error({ title: "No se pudo guardar." });
-getSileo()?.info({ title: "Preferencia guardada." });
-```
+Tailwind 4 (`@import "tailwindcss"`, línea 1) y la variante `@custom-variant dark` que respeta `.dark`, `.light` y `prefers-color-scheme` (líneas 3-19). Es la base de las clases `dark:` usadas por todos los componentes.
 
----
+### `Dashboard.astro`
 
-## `TripsDiagnosticModal.tsx`
+En servidor resuelve la finca activa, construye la matriz 4×5 desde `getLecturasByFinca()` y calcula `tieneRegistros`/`ultimaFecha` para el indicador de sincronización (`Dashboard.astro:11-25, 46-66`). Cada tarjeta lleva los datos en `data-*` (`:131-154`) para que el modal de planta los lea sin peticiones (`:868-906`).
 
-Modal de diagnóstico de plagas (trips) integrado con la API ML externa [`macollo-trips-api`](https://github.com/VoctorMCL/macollo-trips-api) (BioCLIP 2.5).
+En cliente tiene tres subsistemas:
 
-**Funcionalidad:**
+1. **Three.js:** cámara perspectiva 72°, renderer WebGL con antialias/alpha, suelo, invernadero translúcido, sol/luna y luz direccional; `updateSun()` calcula la órbita según la hora local y `animate()` usa `requestAnimationFrame` (`:420-584`). Si WebGL falla, registra `console.warn` y deja el contenedor vacío (`:582-584`). El resize usa `window` y `ResizeObserver` (`:441-453`).
+2. **Clima y geolocalización:** `initWeather()` usa cache GPS de `localStorage` (`macollo_gps_coords`, <24 h), si no ubicación de la finca y, como último recurso, Medellín (6.2442, -75.5812) (`:792-827`). En segundo plano pide `getCurrentPosition` con timeout 4 s (8 s si se fuerza) y `maximumAge` de 5 min (`:758-790`). `fetchWeather()` consulta `/api/weather?lat&lon&fallback&name`, publica `window.__MACOLLO_WEATHER__` y el evento `macollo:weather-updated`, y aplica la unidad de temperatura elegida (`:598-689`). `fetchAQI()` consulta `/api/aqi?lat&lon` y clasifica 0-50 / 51-100 / 101-150 / >150 (`:691-726`). El periodo de refresco es `getSyncIntervalMs()` (`:735-738`). El icono de ubicación fuerza GPS de alta precisión (`:829-834`).
+3. **Datos y sincronización:** combina registros del servidor con `localStorage` por finca (`mergeRecords`, `purgeMockStorage`), actualiza tarjetas y lanza alertas agronómicas (`:909-1026`). Consulta `GET /api/farms/:fincaId/readings` periódicamente (`:1030-1050`). El botón «Actualizar Datos» busca la URL de Sheets en `localStorage` → `GET /api/sync-sheets` → `window.prompt`, hace `POST /api/sync-sheets`, guarda registros y notifica con `window.sileo` (`:1058-1141`).
 
-- Acceso a cámara (soporta HTTP por IP abriendo la cámara nativa del móvil).
-- Captura o selección de imagen.
-- Reenvío a `${ML_API_URL}/api/predict` vía `POST /api/trips-diagnosis`.
-- Al guardar, sube la foto a la galería de la finca activa (`POST /api/gallery/upload`).
+### `TripsDiagnosticModal.astro`
 
-**Endpoints relacionados:**
+Detallado en `docs/CAMERA-ML.md`. Punto clave para frontend: **no es `.tsx`**, no recibe props y su `<script>` (`:210-632`) es el único propietario de la lógica de cámara e inferencia. Escucha los eventos de clima y preferencias, y guarda la foto en galería de forma independiente del resultado del diagnóstico (`:351-362`).
 
-- `GET  /api/trips-diagnosis` — health check hacia la ML API.
-- `POST /api/trips-diagnosis` — proxy de predicción (auth opcional).
+### `Gallery.astro` y `GalleryDetail.astro`
 
-Ver [CAMERA-ML](./CAMERA-ML.md) para variables de entorno (`ML_API_URL`, `ML_API_KEY`).
+`Gallery.astro` Solo servidor: resuelve finca activa con las mismas reglas de la navbar (Superadmin/Admin pueden usar cualquier cookie válida; los demás solo fincas activas propias), consulta `photos JOIN users` ordenado por `taken_at`/`uploaded_at` y pinta tarjetas con `object-contain`, autor, fecha, caption y tamaño (`:7-64, 97-152`). No hay paginación ni subida desde esta vista.
 
----
+`GalleryDetail.astro` recibe `id` por `Astro.params`, exige coincidencia con la finca activa y redirige a `/gallery` si no hay foto (`:7-53`). Pinta enlaces de descarga (`download={photo.filename}`; `:97, 217`) apuntando a `/api/gallery/:id/file`. En cliente añade zoom con cierre por Escape, `navigator.share` con fallback a `navigator.clipboard`, y botón para copiar URL (`:261-315`). Calcula `isOwner` en servidor (`:72`), pero el script no implementa borrado: no hay funcionalidad de eliminación en este componente.
 
-## Otros componentes (referencia rápida)
+### `Metrics.astro`
 
-| Componente            | Tipo  | Descripción                                                       |
-| :-------------------- | :---- | :---------------------------------------------------------------- |
-| `Dashboard.astro`     | Astro | Matriz 4×5 de plantas con promedios y badges agronómicos          |
-| `Gallery.astro`       | Astro | Grid de fotos de la finca activa (`object-contain`, autor, fecha) |
-| `GalleryDetail.astro` | Astro | Vista ampliada: zoom, descargar, compartir, metadatos             |
-| `History.astro`       | Astro | Historial cronológico + import/export Excel/CSV y Google Sheets   |
-| `Metrics.astro`       | Astro | Panel agronómico (promedios globales, resumen por fila)           |
-| `Navbar.astro`        | Astro | Navegación con selector de finca y badge de rol                   |
-| `NoFarm.astro`        | Astro | Pantalla sin finca activa (crear/unirse)                          |
-| `Settings.astro`      | Astro | Perfil, preferencias, fincas, notificaciones, zona de peligro     |
-| `Welcome.astro`       | Astro | Portada: login/registro (Auth.js Credentials + Google)            |
+Servidor: calcula promedios globales y por fila (pH, temperatura interna/externa/suelo, crecimiento, humedad) y textos interpretativos con bandas agronómicas (`:28-129`). Cliente: dibuja gráficos SVG propios (`renderSvgPh`, `renderSvgTin`, `renderSvgTout`, `renderSvgTsoil`, `renderSvgGrowth`, `renderSvgHealth`; `:1688-2043`), modal de planta con histórico y vista ampliada de gráficas (`:2044-2199`), tabla Excel filtrable (`:2191-2340`) y exportación a `/api/export-excel` (`:2352-2416`). El formulario «Nueva Medición» valida finca activa y hace `POST /api/farms/:fincaId/readings` con un único registro; si falla, muestra un toast de `window.sileo` y no actualiza la interfaz (`:2430-2537`). La sincronización con Sheets y el refresco periódico están en `:3013-3130`.
+
+### `History.astro`
+
+Servidor: obtiene todos los registros de la finca, deriva fechas únicas y calcula `isOwner = ctx.finca.rol_finca === "dueno"`; esa bandera restringe la conexión con Google Sheets a nivel de interfaz (`History.astro:26-54`). Cliente: estado centralizado de fecha/filtros/gráfico (`:1252-1300`), tarjetas cronológicas y gráficos SVG, selector de fila/planta/sanidad y búsqueda (`:1474-2450`). La importación acepta CSV arrastrado o seleccionado, lo parsea con `parseCSV` + `buildRecordsFromRows`, muestra vista previa de 10 filas y confirma con `POST /api/farms/:fincaId/readings`; si la persistencia falla, los registros quedan solo en `localStorage` y el aviso lo indica explícitamente (`:2451-2607`). Descarga una plantilla de 20 filas (`:2609-2635`), sincroniza Sheets mediante `POST /api/sync-sheets` (`:2637-2751`) y exporta con `/api/export-excel` (`:2776-2781`). Refresca desde `/api/farms/:fincaId/readings` según `getSyncIntervalMs()` (`:2783-2817`).
+
+### `Navbar.astro`
+
+Genera enlaces según rol: staff (`Superadmin`/`Admin`) ve «Panel» `/admin` y, solo con finca activa, Tablero/Métricas/Historial/Galería; los demás ven «Inicio» y las mismas secciones por finca (`:32-59`). Valida la cookie antes de usarla (`:15-27`) y muestra badge de rol (`:61-67`) y avatar React. En cliente, logout con `signOut()` de `auth-astro/client` y fallback CSRF a `/api/auth/signout` (`:256-290`), cambio de finca con `POST /api/farms/active` y recarga (`:300-326`), y menú móvil (`:328-342`).
+
+### `NoFarm.astro`
+
+Pantalla vacía de «No tienes una finca activa» con un prop booleano `tieneFincas`: cambia el texto y el CTA entre «Ir a mis fincas» y «Crear o unirme a una finca», siempre hacia `/farms` (`NoFarm.astro:2-6, 9-29`).
+
+### `Settings.astro`
+
+Servidor calcula `puedeExportar` y `puedeRestablecer` con `canViewFincaData`/`canManageFinca` sobre la finca activa (`:23-29`). Cliente organiza cinco pestañas `profile`, `system`, `fincas`, `notifications`, `danger` (`:60-72, 362-390`). Acciones verificables:
+
+| Acción                                                           | Implementación                                                                                                    |
+| :--------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------- |
+| Tema, unidad °C/°F, frecuencia de sincronización, notificaciones | Setters de `src/shared/preferences.ts` (`:412-436, 567-603`)                                                      |
+| Nombre y avatar                                                  | Recorte a 160 px en canvas y `PATCH /api/users/me` (`:447-541`)                                                   |
+| Resumen semanal                                                  | `POST /api/notifications/weekly-summary` (`:547-565`)                                                             |
+| Exportar CSV                                                     | Navegación a `/api/export-csv` (`:605-608`)                                                                       |
+| Restablecer datos                                                | `DELETE /api/farms/:fincaId/readings` + limpieza de `localStorage`, solo con confirmación y permisos (`:610-638`) |
+| Canjear invitación / salir de finca                              | `POST /api/invitations/use` y `POST /api/farms/leave` (`:669-708`)                                                |
+| Logout                                                           | `signOut()` con fallback CSRF, igual que Navbar (`:640-667`)                                                      |
+
+### `Welcome.astro`
+
+Página pública de autenticación con video de bienvenida y control de audio (`:8-45, 704-770`), tres modos (`login`, `register`, `forgot`) gestionados por `setAuthMode()` (`:774-830`), registro en dos pasos con selección de rol `Campesino`/`Agropecuario` y nombre de finca opcional (`:663-689, 1059-1096`). Flujos: Google con `signIn("google", { callbackUrl })`, credenciales con `signIn("credentials")` y fallback CSRF a `/api/auth/callback/credentials` (`:921-1014`), disponibilidad y registro vía `/api/auth/check-availability` y `/api/auth/register` (`:1070, 1131`), recuperación en dos pasos con `/api/auth/forgot-password` y `/api/auth/reset-password` (`:1188-1284`). El parámetro `desde` se sanea para aceptar solo rutas relativas que empiecen por `/` (`:833-838`). `/signin` es un alias obsoleto que solo redirige (`src/pages/signin.astro:4-25`).
+
+## Trazabilidad
+
+| Tema                                             | Archivo de código                                                                                                  | Doc relacionada                          | Verificación                                 |
+| :----------------------------------------------- | :----------------------------------------------------------------------------------------------------------------- | :--------------------------------------- | :------------------------------------------- |
+| Inventario real de componentes (12 + layout)     | `src/frontend/components/`, `src/frontend/layouts/Layout.astro`                                                    | `docs/README.md:30`                      | Listado de directorio y lectura (2026-11-23) |
+| Corrección `TripsDiagnosticModal.tsx` → `.astro` | `src/frontend/components/TripsDiagnosticModal.astro`; `src/pages/index.astro:8`                                    | `docs/CAMERA-ML.md`                      | Lectura directa (2026-11-23)                 |
+| Props y defaults de `History`/`Metrics`/`NoFarm` | `History.astro:16-24`, `Metrics.astro:21-26`, `NoFarm.astro:2-6`                                                   | `docs/ROUTES.md`                         | Lectura directa (2026-11-23)                 |
+| Eventos `macollo:*` y `aquasens:data-synced`     | `src/shared/preferences.ts:7,110-116`; `Dashboard.astro:634,1119`; `History.astro:2595,2701`; `Metrics.astro:3097` | `docs/ARCHITECTURE.md`                   | Búsqueda global en `src/` (2026-11-23)       |
+| Three.js, GPS y clima                            | `Dashboard.astro:398-842`; `/api/weather.ts`, `/api/aqi.ts`                                                        | `docs/CAMERA-ML.md`, `docs/ENDPOINTS.md` | Lectura directa (2026-11-23)                 |
+| Islas React y toasts                             | `BlobatarAvatar.tsx:1-54`, `SileoProvider.tsx:1-13`, `Layout.astro:2-82`                                           | `docs/ARCHITECTURE.md`                   | Lectura directa (2026-11-23)                 |
+| Galería por finca en componentes                 | `Gallery.astro:27-42`, `GalleryDetail.astro:31-53`                                                                 | `docs/CAMERA-ML.md`, `docs/DATABASE.md`  | Lectura directa (2026-11-23)                 |
+| Dependencias y modo SSR                          | `package.json:8-42`, `astro.config.mjs:11-26`                                                                      | `docs/ARCHITECTURE.md`                   | Lectura directa (2026-11-23)                 |
+| Helper HTTP del servidor                         | `src/backend/services/serverFetch.ts:1-14`, `server-fetch.ts:1`                                                    | `docs/ENDPOINTS.md`                      | Búsqueda de usos en `src/` (2026-11-23)      |

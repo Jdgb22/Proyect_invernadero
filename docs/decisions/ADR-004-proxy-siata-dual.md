@@ -1,5 +1,7 @@
 # ADR-004: Proxy interno `/api/siata` + estrategia dual SIATA/Open-Meteo
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](../README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **ADR-004**.
+
 ## Status
 
 Superseded (parcial, temporal) por ADR-007
@@ -42,3 +44,9 @@ El panel necesita temperatura local precisa en Medellín (red SIATA) y cobertura
 - `source` visible (`SIATA (Valle de Aburrá)` vs `Open-Meteo (Global)`): el usuario sabe de dónde viene el dato.
 - Ante caída de SIATA el panel sigue funcionando (500 controlado → fallback), nunca cuelga.
 - Clima con geolocalización + fallback Medellín y refresco 10 min en el Dashboard.
+
+## Trazabilidad
+
+| Tema     | Código / configuración                                      | Documento relacionado              | Verificación                   |
+| :------- | :---------------------------------------------------------- | :--------------------------------- | :----------------------------- |
+| Decisión | `src/pages/api/siata.ts`, `src/backend/services/weather.ts` | [INTEGRATIONS](../INTEGRATIONS.md) | Estado y consecuencias del ADR |

@@ -1,5 +1,7 @@
 # Diagramas de Secuencia
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-08**.
+
 ## SD-001: Flujo de Autenticación
 
 ```mermaid
@@ -92,3 +94,9 @@ sequenceDiagram
     Page-->>User: Dataset en memoria (Dashboard/Métricas)
     Note over Page,API: No persiste en PostgreSQL (brecha, ver DATABASE §5)
 ```
+
+## Trazabilidad
+
+| Tema          | Código / configuración                          | Documento relacionado                                    | Verificación        |
+| :------------ | :---------------------------------------------- | :------------------------------------------------------- | :------------------ |
+| SD-001…SD-004 | `src/pages/api/auth/*`, `src/pages/api/farms/*` | [USE_CASES](./USE_CASES.md), [ENDPOINTS](./ENDPOINTS.md) | Revisión de Mermaid |

@@ -1,5 +1,7 @@
 # ADR-002: PostgreSQL en la nube como base de datos
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](../README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **ADR-002**.
+
 ## Status
 
 Accepted
@@ -41,3 +43,9 @@ PostgreSQL 17 en la nube (Supabase/Neon/RDS) vía `pg.Pool` (`src/db/client.ts`,
 - Auth persiste en PG hoy; el dataset agronómico vive en memoria hasta migrar Sheets→PG (brecha documentada, no deuda oculta).
 - Pool `max: 20`, timeouts cortos; migraciones con `psql -f` (sin ORM).
 - Backup con `pg_dump` antes de cada jornada de campo.
+
+## Trazabilidad
+
+| Tema     | Código / configuración             | Documento relacionado      | Verificación                   |
+| :------- | :--------------------------------- | :------------------------- | :----------------------------- |
+| Decisión | `src/db/client.ts`, `src/db/*.sql` | [DATABASE](../DATABASE.md) | Estado y consecuencias del ADR |

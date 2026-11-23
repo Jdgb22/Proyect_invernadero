@@ -1,5 +1,7 @@
 # Diagramas de Actividad
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-09**.
+
 ## AD-001: Flujo de Login del Usuario
 
 ```mermaid
@@ -66,4 +68,10 @@ flowchart TD
     A -. no dueño .-> X[403 / botón oculto]
 ```
 
-> Dirección **Sheets → app** (nunca se escribe en Sheets). **Solo el dueño** de la finca activa puede sincronizar (ni miembros ni staff); los datos **persisten en `lecturas`** de la finca (ver DATABASE §5).
+> Dirección **Sheets → app** (nunca se escribe en Sheets). **Dueño, staff y miembro** de la finca activa pueden sincronizar (`canConnectSheets` en `authz.ts:127-129`); los datos **persisten en `lecturas`** de la finca (ver DATABASE §5).
+
+## Trazabilidad
+
+| Tema          | Código / configuración                      | Documento relacionado                                                    | Verificación                |
+| :------------ | :------------------------------------------ | :----------------------------------------------------------------------- | :-------------------------- |
+| AD-001…AD-004 | `src/pages/api/*`, `src/backend/services/*` | [USE_CASES](./USE_CASES.md), [SEQUENCE_DIAGRAMS](./SEQUENCE_DIAGRAMS.md) | Revisión de Mermaid y rutas |

@@ -1,5 +1,7 @@
 # Arquitectura del Sistema — Macollo
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./docs/README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-02**.
+
 > **Documento canónico:** [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) (verificado contra `src/`, octubre 2026).
 > Este archivo queda como resumen para no duplicar y evitar deriva.
 
@@ -10,3 +12,9 @@
 **Flujos y decisiones:** ver documento canónico (§3–§4): portada dual por sesión, registro con rol elegible `Campesino`/`Agropecuario`, recuperación 6 dígitos/15 min, datos agronómicos **persistidos en PG por finca** (`lecturas`), invitaciones por código nanoid, dual SIATA/Open-Meteo, proxy CORS con timeout 3 s.
 
 **Índice completo de docs:** [`docs/README.md`](./docs/README.md).
+
+## Trazabilidad
+
+| Tema                   | Código / configuración | Documento relacionado                           | Verificación       |
+| :--------------------- | :--------------------- | :---------------------------------------------- | :----------------- |
+| Resumen arquitectónico | `docs/ARCHITECTURE.md` | [Arquitectura canónica](./docs/ARCHITECTURE.md) | Diff contra `src/` |

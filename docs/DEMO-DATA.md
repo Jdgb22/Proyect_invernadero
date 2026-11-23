@@ -1,5 +1,7 @@
 # Datos Demo — Macollo
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-22**.
+
 > Para presentaciones, onboarding y pruebas (TEST-07) sin tocar datos reales.
 
 ## 1. Archivo
@@ -25,3 +27,9 @@ El archivo usa el mismo contrato de columnas que acepta el importador (`src/page
 - Solo para demo/test; **nunca** mezclar con hojas reales (contamina el conteo y el Excel).
 - Si necesitas otro escenario, duplica el archivo con otra fecha (el historial agrupa por `fecha`).
 - Las lecturas demo quedan asociadas a la finca con la que sincronizaste; para limpiarlas usa los datos de esa finca.
+
+## Trazabilidad
+
+| Tema               | Código / configuración                                         | Documento relacionado                                            | Verificación |
+| :----------------- | :------------------------------------------------------------- | :--------------------------------------------------------------- | :----------- |
+| Fixture 20 plantas | `docs/sample-readings-demo.csv`, `src/shared/recordsParser.ts` | [DATA-DICTIONARY](./DATA-DICTIONARY.md), [TESTING](./TESTING.md) | TEST-07      |

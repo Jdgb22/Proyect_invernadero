@@ -1,5 +1,7 @@
 # Glosario — Macollo
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-20**.
+
 ## Agronómico
 
 - **pH del suelo:** acidez/alcalinidad (0–14). Óptimo **6.0–6.8**; alerta 5.5–6.0/6.8–7.2; crítico fuera. Columna `Ph`.
@@ -32,3 +34,9 @@
 - **Finca / lectura:** cada finca tiene 20 plantas; una `lecturas` guarda una visita a una planta (pH, temperaturas, humedad, altura, fase, sanidad…).
 - **AQI:** índice de calidad del aire (waqi.info) mostrado en el Dashboard.
 - **MACOLLO:** marca y nombre del proyecto (logo `gulupa.svg`).
+
+## Trazabilidad
+
+| Tema                | Código / configuración                              | Documento relacionado                                                      | Verificación         |
+| :------------------ | :-------------------------------------------------- | :------------------------------------------------------------------------- | :------------------- |
+| Términos de dominio | `src/shared/badges.ts`, `src/shared/plantMatrix.ts` | [DOMAIN-MODEL](./DOMAIN-MODEL.md), [DATA-DICTIONARY](./DATA-DICTIONARY.md) | Revisión de umbrales |

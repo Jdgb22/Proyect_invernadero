@@ -1,5 +1,7 @@
 # ADR-007: Bypass temporal de SIATA (Open-Meteo directo + fallback offline)
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](../README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **ADR-007**.
+
 ## Status
 
 Accepted (temporal — revisitar al volver SIATA)
@@ -41,3 +43,9 @@ El servicio SIATA (`siata.gov.co:8089`) quedó fuera de línea o con timeouts. C
 - Widget con **viento (km/h)** en vez de irradiación; `source` siempre `Open-Meteo (Global)` u `Offline Fallback`.
 - ADR-004 pasa a **Superseded (parcial, temporal)** por este ADR; reactivar = nuevo ADR + revert de `efed143` en `weather.ts` + TEST-14 contra SIATA.
 - `isValleDeAburra` sin uso: no borrar (la usa la reactivación); el linter puede marcarla — aceptado conscientemente.
+
+## Trazabilidad
+
+| Tema     | Código / configuración                                      | Documento relacionado            | Verificación                   |
+| :------- | :---------------------------------------------------------- | :------------------------------- | :----------------------------- |
+| Decisión | `src/backend/services/weather.ts`, `src/pages/api/siata.ts` | [PERFORMANCE](../PERFORMANCE.md) | Estado y consecuencias del ADR |

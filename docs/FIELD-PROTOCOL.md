@@ -1,5 +1,7 @@
 # Protocolo de Campo — Toma de Datos (para operarios)
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-21**.
+
 > Cómo llenar la hoja para que el sistema la entienda a la primera. Referencia técnica: [DATA-DICTIONARY](./DATA-DICTIONARY.md). Guía de la app: [USER_MANUAL](./USER_MANUAL.md).
 
 ## 1. Antes de salir
@@ -46,3 +48,9 @@ Si un sensor falló ese día, escribe **`N/D`** (no inventes números: el sistem
 | Plantas en fila equivocada | IDs como `T1-P1` escritos como `TP1`; usa el formato exacto.             |
 | Todo sale `N/D`            | Decimales con espacios o texto (`veinte`); usa números o `N/D`.          |
 | La app dice 422            | La hoja no es pública: revisa el paso 2 del §4.                          |
+
+## Trazabilidad
+
+| Tema                     | Código / configuración                                              | Documento relacionado                                                | Verificación            |
+| :----------------------- | :------------------------------------------------------------------ | :------------------------------------------------------------------- | :---------------------- |
+| Columnas y normalización | `src/shared/recordsParser.ts`, `src/backend/services/sheetsSync.ts` | [DATA-DICTIONARY](./DATA-DICTIONARY.md), [DEMO-DATA](./DEMO-DATA.md) | Importar CSV de ejemplo |

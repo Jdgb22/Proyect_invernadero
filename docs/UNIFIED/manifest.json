@@ -1,0 +1,285 @@
+{
+  "$schema": "orden canónico de la documentación unificada de Macollo",
+  "generatedDocumentId": "DOC-29",
+  "generatedTitle": "Documentación Unificada de Macollo",
+  "date": "2026-11-23",
+  "note": "Toda ruta .md bajo docs/ o docs/decisions/ debe aparecer aquí. Los archivos bajo docs/UNIFIED/ son artefactos derivados y se excluyen de la comprobación.",
+  "documents": [
+    {
+      "id": "DOC-00",
+      "path": "docs/README.md",
+      "part": "I. Gobierno y puerta de entrada"
+    },
+    {
+      "id": "DOC-01",
+      "path": "README.md",
+      "part": "I. Gobierno y puerta de entrada"
+    },
+    {
+      "id": "DOC-02",
+      "path": "ARCHITECTURE.md",
+      "part": "I. Gobierno y puerta de entrada"
+    },
+    {
+      "id": "DOC-03",
+      "path": "docs/ARCHITECTURE.md",
+      "part": "I. Gobierno y puerta de entrada"
+    },
+    {
+      "id": "DOC-30",
+      "path": "docs/EXECUTIVE-SUMMARY.md",
+      "part": "I. Gobierno y puerta de entrada"
+    },
+    {
+      "id": "DOC-43",
+      "path": "docs/DOC-CONVENTIONS.md",
+      "part": "I. Gobierno y puerta de entrada"
+    },
+
+    {
+      "id": "DOC-31",
+      "path": "docs/SYSTEM-CONTEXT.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+    {
+      "id": "DOC-32",
+      "path": "docs/DOMAIN-MODEL.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+    {
+      "id": "DOC-04",
+      "path": "docs/REQUIREMENTS.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+    {
+      "id": "DOC-05",
+      "path": "docs/USE_CASES.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+    {
+      "id": "DOC-06",
+      "path": "docs/USER_STORIES.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+    {
+      "id": "DOC-07",
+      "path": "docs/UML.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+    {
+      "id": "DOC-08",
+      "path": "docs/SEQUENCE_DIAGRAMS.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+    {
+      "id": "DOC-09",
+      "path": "docs/ACTIVITIES.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+    {
+      "id": "DOC-10",
+      "path": "docs/USER_MANUAL.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+    {
+      "id": "DOC-45",
+      "path": "docs/FAQ.md",
+      "part": "II. Contexto, dominio y producto"
+    },
+
+    {
+      "id": "DOC-11",
+      "path": "docs/ROUTES.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-47",
+      "path": "docs/LANDING.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-12",
+      "path": "docs/ENDPOINTS.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-13",
+      "path": "docs/AUTH.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-24",
+      "path": "docs/SECURITY.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-26",
+      "path": "docs/CAMERA-ML.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-27",
+      "path": "docs/COMPONENTS.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-14",
+      "path": "docs/DATABASE.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-15",
+      "path": "docs/DATA-DICTIONARY.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-21",
+      "path": "docs/FIELD-PROTOCOL.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-22",
+      "path": "docs/DEMO-DATA.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-33",
+      "path": "docs/DATA-FLOW.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-34",
+      "path": "docs/INTEGRATIONS.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-35",
+      "path": "docs/ERROR-CATALOG.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+    {
+      "id": "DOC-44",
+      "path": "docs/MIGRATIONS.md",
+      "part": "III. Arquitectura de ejecución e integraciones"
+    },
+
+    {
+      "id": "DOC-16",
+      "path": "docs/DEPLOYMENT.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-17",
+      "path": "docs/TESTING.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-18",
+      "path": "docs/CONTRIBUTING.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-19",
+      "path": "docs/TROUBLESHOOTING.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-20",
+      "path": "docs/GLOSSARY.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-23",
+      "path": "docs/ROADMAP.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-25",
+      "path": "docs/SCRIPTS.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-28",
+      "path": "docs/CHANGELOG.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-36",
+      "path": "docs/THREAT-MODEL.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-37",
+      "path": "docs/QUALITY-ATTRIBUTES.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-38",
+      "path": "docs/PERFORMANCE.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-39",
+      "path": "docs/ACCESSIBILITY.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-40",
+      "path": "docs/OPERATIONS-RUNBOOK.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+    {
+      "id": "DOC-41",
+      "path": "docs/ONBOARDING.md",
+      "part": "IV. Calidad, seguridad y operación"
+    },
+
+    {
+      "id": "DOC-42",
+      "path": "docs/TRACEABILITY-MATRIX.md",
+      "part": "V. Cierre y trazabilidad"
+    },
+    { "id": "DOC-46", "path": "docs/CAPTURAS.md", "part": "VI. Anexo visual" },
+
+    {
+      "id": "ADR-001",
+      "path": "docs/decisions/ADR-001-astro-ssr-vercel.md",
+      "part": "Apéndice A. Decisiones arquitectónicas"
+    },
+    {
+      "id": "ADR-002",
+      "path": "docs/decisions/ADR-002-postgres-cloud.md",
+      "part": "Apéndice A. Decisiones arquitectónicas"
+    },
+    {
+      "id": "ADR-003",
+      "path": "docs/decisions/ADR-003-authjs-jwt.md",
+      "part": "Apéndice A. Decisiones arquitectónicas"
+    },
+    {
+      "id": "ADR-004",
+      "path": "docs/decisions/ADR-004-proxy-siata-dual.md",
+      "part": "Apéndice A. Decisiones arquitectónicas"
+    },
+    {
+      "id": "ADR-005",
+      "path": "docs/decisions/ADR-005-sheets-csv.md",
+      "part": "Apéndice A. Decisiones arquitectónicas"
+    },
+    {
+      "id": "ADR-006",
+      "path": "docs/decisions/ADR-006-bcrypt-recovery.md",
+      "part": "Apéndice A. Decisiones arquitectónicas"
+    },
+    {
+      "id": "ADR-007",
+      "path": "docs/decisions/ADR-007-bypass-siata.md",
+      "part": "Apéndice A. Decisiones arquitectónicas"
+    },
+    {
+      "id": "ADR-008",
+      "path": "docs/decisions/ADR-008-landing-subdominio.md",
+      "part": "Apéndice A. Decisiones arquitectónicas"
+    }
+  ]
+}

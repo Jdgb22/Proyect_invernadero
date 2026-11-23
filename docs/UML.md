@@ -1,5 +1,7 @@
 # Diagramas UML — Macollo
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-07**.
+
 > Mermaid, derivado del código (oct-2026). ER detallado en [DATABASE](./DATABASE.md) §4; secuencias/actividades en sus docs.
 
 ## 1. Diagrama de clases (dominio agronómico + auth)
@@ -82,7 +84,7 @@ flowchart TB
         APIFarms[API farms: CRUD, miembros, invitaciones, lecturas]
         APIProxy[API siata: proxy timeout 3s]
         Svc[Servicios: plantMatrix, sheetsSync, excelExport, weather, siata, notifications]
-        MW[middleware: fix proxy + guarda /dashboard]
+        MW[middleware: fix proxy + guarda rutas reales]
     end
     subgraph Ext[Externos]
         PG[(PostgreSQL: auth activo)]
@@ -139,3 +141,9 @@ stateDiagram-v2
     Critico --> Atencion: nueva toma Vulnerable
     Critico --> Optimo: nueva toma Saludable+
 ```
+
+## Trazabilidad
+
+| Tema                 | Código / configuración                      | Documento relacionado                                        | Verificación |
+| :------------------- | :------------------------------------------ | :----------------------------------------------------------- | :----------- |
+| Clases y componentes | `src/db/*.sql`, `src/shared/plantMatrix.ts` | [DOMAIN-MODEL](./DOMAIN-MODEL.md), [DATABASE](./DATABASE.md) | ER Mermaid   |

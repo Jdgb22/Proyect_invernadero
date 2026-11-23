@@ -1,5 +1,7 @@
 # Arquitectura del Sistema — Macollo
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-03**.
+
 > Fuente de verdad verificada contra `src/` (octubre 2026). Diagramas académicos en [SEQUENCE_DIAGRAMS](./SEQUENCE_DIAGRAMS.md) y [ACTIVITIES](./ACTIVITIES.md).
 
 ## 1. Visión general
@@ -58,7 +60,7 @@ astro.config.mjs      # output server + @astrojs/vercel + auth() + react()
 
 **Datos agronómicos:** Historial → importar Excel/CSV o `POST /api/sync-sheets` (normaliza URL → CSV → `resolvePlantCoordinates` + defaults → `records`) → **`insertLecturas` persiste en `lecturas` de la finca activa** (`INSERT … ON CONFLICT` por finca+planta+fecha+hora). `getLecturasByFinca` alimenta Dashboard/Métricas/Historial scopeados por `finca_activa`; `export-excel` genera `.xlsx` por finca.
 
-**Clima externo (desde `efed143`):** el Dashboard pide **geolocalización** (`navigator.geolocation`, timeout 10 s; fallback Medellín 6.2442, -75.5812) y llama `fetchWeatherData(lat, lon)` → **Open-Meteo directo** (`temperature_2m, relative_humidity_2m, weather_code, wind_speed_10m` + `precipitation_probability` hora actual, `timezone=auto`). Sin red responde **fallback offline** (22 °C, 60 %, lluvia 0, viento 5 km/h, `source: 'Offline Fallback'`). El widget muestra **viento (km/h)**, no irradiación. `getWeatherEmoji` mapea WMO → icono. Refresco cada **10 min** (`setInterval 600000`). Además consulta **AQI** a `api.waqi.info` (token demo en cliente). La escena 3D anima el **ciclo sol (6:00–18:00) / luna** con sombras `PCFSoftShadowMap` según la hora real.
+**Clima externo (desde `efed143`):** el Dashboard pide **geolocalización** (`navigator.geolocation`, timeout 10 s; fallback Medellín 6.2442, -75.5812) y llama `fetchWeatherData(lat, lon)` → **Open-Meteo directo** (`temperature_2m, relative_humidity_2m, weather_code, wind_speed_10m` + `precipitation_probability` hora actual, `timezone=auto`). Sin red responde **fallback offline** (22 °C, 60 %, lluvia 0, viento 5 km/h, `source: 'Offline Fallback'`). El widget muestra **viento (km/h)**, no irradiación. `getWeatherEmoji` mapea WMO → icono. Refresco cada **10 min** (`setInterval 600000`). Además consulta **AQI** a `api.waqi.info` a través de `/api/aqi` (token en servidor con valor por defecto; rotar antes de producción, R-02). La escena 3D anima el **ciclo sol (6:00–18:00) / luna** con sombras `PCFSoftShadowMap` según la hora real.
 
 > ⚠️ SIATA está **temporalmente bypasseado** (fuera de línea; evitaba 3 s de espera): `/api/siata` sigue vivo pero sin consumidores internos. `isValleDeAburra` y `fetchSiataPredictions()` quedan como código latente. Ver ADR-007.
 
@@ -89,3 +91,9 @@ Agronómico: `fincas`, `finca_miembros`, `finca_invitaciones`, `plantas` (por fi
 - **IoT real (ESP32/Arduino):** WebSocket/MQTT para ingesta continua → escribir en `lecturas`; la frecuencia de Settings (`1 min`…) hoy es preferencia de refresco, no ingesta.
 - **Auth endurecida** en middleware + handlers (hecho, [AUTH](./AUTH.md) §7); revisar etiquetas de rol en páginas si aparece deriva (`'admin'` vs `'Admin'`).
 - **Tests:** no hay suite (`*.test.*` inexistente); candidatos: `resolvePlantCoordinates`, `normalizeGoogleSheetUrl`/`parseCSV`, validadores de `register`, `extractDateAndHour`.
+
+## Trazabilidad
+
+| Tema        | Código / configuración                  | Documento relacionado                              | Verificación           |
+| :---------- | :-------------------------------------- | :------------------------------------------------- | :--------------------- |
+| SSR y capas | `astro.config.mjs`, `src/middleware.ts` | [ROUTES](./ROUTES.md), [DATA-FLOW](./DATA-FLOW.md) | `grep -R` sobre `src/` |

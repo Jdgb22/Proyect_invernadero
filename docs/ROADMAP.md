@@ -1,5 +1,7 @@
 # Roadmap — Macollo
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-23**.
+
 > Origen: RF-20…22, SEC-01…06, brechas de AUTH/DATABASE. Actualizar al cerrar cada item (mover a CHANGELOG).
 
 ## v1.1 — Endurecimiento y persistencia (completado)
@@ -23,3 +25,9 @@
 - [ ] **RF-22**: ingesta ESP32/Arduino (WebSocket/MQTT → `lecturas`); reevaluar Firebase si hay streaming real.
 - [ ] Multi-invernadero (`invernadero` deja de ser constante).
 - [ ] Roles granulares en UI (Sheets ya es **dueño-only**; pendiente pulir permisos de finca en la interfaz).
+
+## Trazabilidad
+
+| Tema       | Código / configuración              | Documento relacionado                                                | Verificación                |
+| :--------- | :---------------------------------- | :------------------------------------------------------------------- | :-------------------------- |
+| Pendientes | `docs/TESTING.md`, `src/pages/api/` | [REQUIREMENTS](./REQUIREMENTS.md), [ARCHITECTURE](./ARCHITECTURE.md) | Marcar como no implementado |

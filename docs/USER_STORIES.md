@@ -1,5 +1,7 @@
 # User Stories
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-06**.
+
 ## Authenticated Users
 
 ### US-001: Iniciar sesión
@@ -88,7 +90,7 @@
 - **Descripción:** El usuario restablece su contraseña con un código de 6 dígitos válido 15 minutos, enviado por email (SMTP) o SMS.
 - **Flujo principal:**
   1. El usuario indica su email o celular (`POST /api/auth/forgot-password`).
-  2. El sistema guarda el código en `verification_token` y lo envía (destino enmascarado en la respuesta).
+  2. El sistema guarda el código en `verification_token` y lo envía; el mensaje enmascara el destino, pero la respuesta JSON expone `identifier` sin enmascarar (R-08).
   3. El usuario ingresa código + nueva contraseña (`POST /api/auth/reset-password`).
   4. El sistema actualiza el hash bcrypt e invalida el código.
 - **Resultado esperado:** Contraseña actualizada y lista para login.
@@ -114,3 +116,9 @@
 - **Usuario:** Superadmin / Admin
 - **Descripción:** El staff aterriza en el panel `/admin` (lista de todas las fincas). Con **Entrar** fija la `finca_activa` (cookie) y abre su tablero/métricas/history como si fuera un miembro; puede archivar/restaurar. Solo Superadmin gestiona usuarios y elimina fincas.
 - **Resultado esperado:** El staff opera cualquier finca sin ser miembro; el navbar muestra `Panel` y, con finca activa, `Tablero`/`Métricas`/`Historial`.
+
+## Trazabilidad
+
+| Tema          | Código / configuración                | Documento relacionado                                          | Verificación           |
+| :------------ | :------------------------------------ | :------------------------------------------------------------- | :--------------------- |
+| US-001…US-011 | `src/pages/`, `src/backend/services/` | [REQUIREMENTS](./REQUIREMENTS.md), [USE_CASES](./USE_CASES.md) | Matriz de trazabilidad |

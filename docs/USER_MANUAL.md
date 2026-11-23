@@ -1,5 +1,7 @@
 # 📖 Manual de Usuario - Macollo
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-10**.
+
 ¡Bienvenido a **Macollo**! Plataforma web para el **monitoreo agronómico de un invernadero real**: 20 plantas organizadas en matriz (4 filas × 5 columnas), métricas de suelo y ambiente, historial por fecha e integración con clima externo (SIATA / Open-Meteo) y Google Sheets.
 
 > **Rutas principales:** `Inicio (/)` · `Métricas (/metrics)` · `Historial (/history)` · `Galería (/gallery)` · `Configuración (/settings)` · `Fincas (/farms)` · `Panel staff (/admin)`. El acceso (login/registro) está en `/` (la antigua `/signin` redirige a `/`).
@@ -82,7 +84,7 @@ Tu nombre y rol se muestran en el encabezado del Historial y Métricas como `Ses
 
 Haz clic en **Cerrar Sesión** en la barra superior (versión escritorio) o en el menú hamburguesa → **Cerrar Sesión** (versión móvil). La sesión JWT se invalida y vuelves a la pantalla de bienvenida.
 
-> Si intentas abrir una ruta privada sin sesión (`/dashboard`, etc.), el middleware te redirige forzosamente a `/`.
+> Si intentas abrir una ruta privada sin sesión (`/metrics`, `/history`, `/gallery`, etc.), el middleware te redirige forzosamente a `/`.
 
 ---
 
@@ -240,9 +242,9 @@ Las fechas disponibles vienen de las mediciones reales cargadas (`REAL_DATES` en
 3. El sistema valida y previsualiza. Confirma para guardar en PostgreSQL.
 4. Vuelve al Dashboard/Métricas: las tarjetas grises ahora mostrarán datos.
 
-### 6.3. Conectar Google Sheets (solo el dueño de la finca)
+### 6.3. Conectar Google Sheets (dueño, staff o miembro)
 
-1. Haz clic en **Conectar Google Sheets** (`btn-open-sheets-modal`). Si no eres dueño de la finca activa, **el botón no aparece** (la API responde `403`).
+1. Haz clic en **Conectar Google Sheets** (`btn-open-sheets-modal`). Si no tienes acceso a la finca activa, **el botón no aparece** (la API responde `403`). Pueden usarlo `dueno`, `staff` y `miembro` (`canConnectSheets`).
 2. Pega la **URL pública del Sheet** (debe estar publicado como CSV o enlace de exportación, ej. `https://docs.google.com/spreadsheets/d/TU_ID/edit#gid=0`).
 3. El sistema convierte la URL a formato `export?format=csv`, descarga y persiste en las `lecturas` de la finca activa (`POST /api/sync-sheets`).
 4. Verás confirmación de éxito o error de conexión.
@@ -339,7 +341,7 @@ Mediciones propias (importadas a memoria desde Excel/Sheets) + clima Open-Meteo 
 Revisa que haya datos en el rango/fecha elegido y que tu sesión siga activa (si expiró, inicia sesión de nuevo).
 
 **Google Sheets dice "Error de autenticación" o no veo el botón.**
-El botón **Conectar Google Sheets** solo aparece para el **dueño de la finca activa**; si eres miembro o staff, usa **Importar Excel/CSV**. Además, la hoja debe estar **publicada/compartida como lector** (enlace `export?format=csv` accesible). Verifica el ID del documento.
+El botón **Conectar Google Sheets** aparece para **dueño, staff y miembro** de la finca activa (`canConnectSheets`); si no tienes membresía, usa **Importar Excel/CSV**. Además, la hoja debe estar **publicada/compartida como lector** (enlace `export?format=csv` accesible). Verifica el ID del documento.
 
 **La página me devuelve al inicio.**
 Tu sesión expiró o no tienes rol suficiente. Inicia sesión de nuevo.
@@ -361,3 +363,9 @@ Tu sesión expiró o no tienes rol suficiente. Inicia sesión de nuevo.
 ---
 
 _Macollo © 2026 — Sistema de Monitoreo Ambiental. Para soporte técnico contacta al administrador del cultivo o al equipo de desarrollo (ver README)._
+
+## Trazabilidad
+
+| Tema              | Código / configuración | Documento relacionado                  | Verificación     |
+| :---------------- | :--------------------- | :------------------------------------- | :--------------- |
+| Flujos de usuario | `src/pages/*.astro`    | [ROUTES](./ROUTES.md), [FAQ](./FAQ.md) | Recorrido manual |

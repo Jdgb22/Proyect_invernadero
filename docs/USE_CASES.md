@@ -1,5 +1,7 @@
 # Casos de Uso
 
+> Verificado contra el código el 2026-11-23. Documento rector: [docs/README.md](./README.md). Parte de la documentación unificada (`docs/UNIFIED/MACOLLO-DOCUMENTACION-UNIFICADA.md`). Identificador: **DOC-05**.
+
 ## Sistema: Macollo - Monitoreo y Simulación de Greenhouse
 
 ### Caso de Uso: CU-001 - Autenticación de Usuario
@@ -162,8 +164,8 @@
 **Flujo básico:**
 
 1. Usuario indica su email o celular registrado
-2. Sistema genera el código, invalida anteriores y lo envía (respuesta con destino enmascarado, ej. `ju***@correo.com`)
-3. Usuario ingresa código + nueva contraseña (mín. 6 en servidor)
+2. Sistema genera el código, invalida anteriores y lo envía. El mensaje muestra el destino enmascarado, pero el campo `identifier` de la respuesta JSON contiene el identificador canónico sin enmascarar (R-08).
+3. Usuario ingresa código + nueva contraseña (mín. 8 en servidor)
 4. Sistema verifica `token + expires > NOW()`, actualiza hash bcrypt e invalida el token
 
 **Post-conditions:**
@@ -171,3 +173,9 @@
 - Contraseña actualizada
 - Usuario puede iniciar sesión con nueva contraseña
 - Token de recuperación invalidado
+
+## Trazabilidad
+
+| Tema          | Código / configuración | Documento relacionado                                                          | Verificación           |
+| :------------ | :--------------------- | :----------------------------------------------------------------------------- | :--------------------- |
+| CU-001…CU-007 | `src/pages/api/*`      | [REQUIREMENTS](./REQUIREMENTS.md), [SEQUENCE_DIAGRAMS](./SEQUENCE_DIAGRAMS.md) | Matriz de trazabilidad |
